@@ -5,7 +5,6 @@
 #include <QOpenGLWidget>
 #include <QMatrix4x4>
 #include <QVector3D>
-#include "logo.h"
 
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
@@ -34,8 +33,6 @@ public:
         void setR(float v);
         float r2() const { return m_r2; }
         void setR2(float v);
-    private slots:
-        void startSecondStage();
 
 protected:
 
@@ -43,7 +40,6 @@ protected:
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *m_vbo;
     QOpenGLVertexArrayObject *m_vao;
-    Logo m_logo;
     int m_projMatrixLoc;
     int m_camMatrixLoc;
     int m_worldMatrixLoc;
