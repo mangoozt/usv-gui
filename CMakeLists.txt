@@ -44,6 +44,9 @@ else()
     mainwindow.ui
     oglwidget.h
     oglwidget.cpp
+    logo.h
+    logo.cpp
+    hellogles3.qrc
   )
 endif()
 

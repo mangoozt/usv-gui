@@ -3,19 +3,59 @@
 
 #include <QWidget>
 #include <QOpenGLWidget>
-#include <gl/GLU.h>
-#include <gl/GL.h>
+#include <QMatrix4x4>
+#include <QVector3D>
+#include "logo.h"
+
+class QOpenGLTexture;
+class QOpenGLShaderProgram;
+class QOpenGLBuffer;
+class QOpenGLVertexArrayObject;
 
 class OGLWidget : public QOpenGLWidget
 {
+
+    Q_OBJECT
+    Q_PROPERTY(float z READ z WRITE setZ)
+    Q_PROPERTY(float r READ r WRITE setR)
+    Q_PROPERTY(float r2 READ r2 WRITE setR2)
 public:
     OGLWidget(QWidget *parent = 0);
     ~OGLWidget();
 
-protected:
     void initializeGL();
-    void resizeGL(int w, int h);
-    void paintGL();
+        void resizeGL(int w, int h);
+        void paintGL();
+
+        float z() const { return m_eye.z(); }
+        void setZ(float v);
+
+        float r() const { return m_r; }
+        void setR(float v);
+        float r2() const { return m_r2; }
+        void setR2(float v);
+    private slots:
+        void startSecondStage();
+
+protected:
+
+    QOpenGLTexture *m_texture;
+    QOpenGLShaderProgram *m_program;
+    QOpenGLBuffer *m_vbo;
+    QOpenGLVertexArrayObject *m_vao;
+    Logo m_logo;
+    int m_projMatrixLoc;
+    int m_camMatrixLoc;
+    int m_worldMatrixLoc;
+    int m_myMatrixLoc;
+    int m_lightPosLoc;
+    QMatrix4x4 m_proj;
+    QMatrix4x4 m_world;
+    QVector3D m_eye;
+    QVector3D m_target;
+    bool m_uniformsDirty;
+    float m_r;
+    float m_r2;
 };
 
 #endif // OGLWIDGET_H

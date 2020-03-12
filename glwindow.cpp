@@ -1,4 +1,54 @@
-#include "oglwidget.h"
+/****************************************************************************
+**
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the examples of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:BSD$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
+**
+** "Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are
+** met:
+**   * Redistributions of source code must retain the above copyright
+**     notice, this list of conditions and the following disclaimer.
+**   * Redistributions in binary form must reproduce the above copyright
+**     notice, this list of conditions and the following disclaimer in
+**     the documentation and/or other materials provided with the
+**     distribution.
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
+**     from this software without specific prior written permission.
+**
+**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "glwindow.h"
 #include <QImage>
 #include <QOpenGLTexture>
 #include <QOpenGLShaderProgram>
@@ -11,9 +61,8 @@
 #include <QSequentialAnimationGroup>
 #include <QTimer>
 
-OGLWidget::OGLWidget(QWidget *parent)
-    :QOpenGLWidget(parent),
-      m_texture(0),
+GLWindow::GLWindow()
+    : m_texture(0),
       m_program(0),
       m_vbo(0),
       m_vao(0),
@@ -53,10 +102,10 @@ OGLWidget::OGLWidget(QWidget *parent)
     rAnim->setLoopCount(-1);
     rAnim->start();
 
-    QTimer::singleShot(4000, this, &OGLWidget::startSecondStage);
+    QTimer::singleShot(4000, this, &GLWindow::startSecondStage);
 }
 
-OGLWidget::~OGLWidget()
+GLWindow::~GLWindow()
 {
     makeCurrent();
     delete m_texture;
@@ -65,7 +114,7 @@ OGLWidget::~OGLWidget()
     delete m_vao;
 }
 
-void OGLWidget::startSecondStage()
+void GLWindow::startSecondStage()
 {
     QPropertyAnimation* r2Anim = new QPropertyAnimation(this, QByteArrayLiteral("r2"));
     r2Anim->setStartValue(0.0f);
@@ -75,21 +124,21 @@ void OGLWidget::startSecondStage()
     r2Anim->start();
 }
 
-void OGLWidget::setZ(float v)
+void GLWindow::setZ(float v)
 {
     m_eye.setZ(v);
     m_uniformsDirty = true;
     update();
 }
 
-void OGLWidget::setR(float v)
+void GLWindow::setR(float v)
 {
     m_r = v;
     m_uniformsDirty = true;
     update();
 }
 
-void OGLWidget::setR2(float v)
+void GLWindow::setR2(float v)
 {
     m_r2 = v;
     m_uniformsDirty = true;
@@ -144,9 +193,9 @@ QByteArray versionedShaderCode(const char *src)
     return versionedSrc;
 }
 
-void OGLWidget::initializeGL()
+void GLWindow::initializeGL()
 {
-     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
 
     if (m_texture) {
         delete m_texture;
@@ -202,14 +251,14 @@ void OGLWidget::initializeGL()
     f->glEnable(GL_CULL_FACE);
 }
 
-void OGLWidget::resizeGL(int w, int h)
+void GLWindow::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
     m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
     m_uniformsDirty = true;
 }
 
-void OGLWidget::paintGL()
+void GLWindow::paintGL()
 {
     // Now use QOpenGLExtraFunctions instead of QOpenGLFunctions as we want to
     // do more than what GL(ES) 2.0 offers.
