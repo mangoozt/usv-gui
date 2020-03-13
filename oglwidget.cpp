@@ -13,9 +13,7 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_vbo(0),
       m_vao(0),
       m_target(0, 0, -1),
-      m_uniformsDirty(true),
-      m_r(0),
-      m_r2(0)
+      m_uniformsDirty(true)
 {
     m_world.setToIdentity();
     m_world.translate(0, 0, -1);
@@ -31,27 +29,6 @@ OGLWidget::~OGLWidget()
     delete m_vao;
 }
 
-void OGLWidget::setZ(float v)
-{
-    m_eye.setZ(v);
-    m_uniformsDirty = true;
-    update();
-}
-
-void OGLWidget::setR(float v)
-{
-    m_r = v;
-    m_uniformsDirty = true;
-    update();
-}
-
-void OGLWidget::setR2(float v)
-{
-    m_r2 = v;
-    m_uniformsDirty = true;
-    update();
-}
-
 static const char *vertexShaderSource =
     "layout(location = 0) in vec4 vertex;\n"
     "out vec3 color;\n"
@@ -59,10 +36,9 @@ static const char *vertexShaderSource =
     "uniform mat4 camMatrix;\n"
     "uniform mat4 worldMatrix;\n"
     "uniform mat4 myMatrix;\n"
-    "uniform sampler2D sampler;\n"
     "void main() {\n"
     "   color = vec3(0.031372549, 0.282352941, 0.282352941);\n"
-    "   gl_Position = projMatrix * camMatrix * worldMatrix * myMatrix * vertex;\n"
+    "   gl_Position = projMatrix * camMatrix * worldMatrix * myMatrix * (vertex + vec4(gl_InstanceID*2,0,0,0));\n"
     "}\n";
 
 static const char *fragmentShaderSource =
@@ -97,9 +73,6 @@ void OGLWidget::initializeGL()
         delete m_texture;
         m_texture = 0;
     }
-    QImage img(":/qtlogo.png");
-    Q_ASSERT(!img.isNull());
-    m_texture = new QOpenGLTexture(img.scaled(32, 36).mirrored());
 
     if (m_program) {
         delete m_program;
@@ -136,11 +109,11 @@ void OGLWidget::initializeGL()
     m_vbo->create();
     m_vbo->bind();
     GLfloat ship[]={
-        0.0f,0.5f,0.0f,
-        0.75f,0.5f,0.0f,
-        1.0f,0.0f,0.3f,
-        0.75f,-0.5f,0.0f,
-        0.0f,-0.5f,0.0f,
+        0.0f,0.3f,0.0f,
+        0.75f,0.3f,0.0f,
+        1.0f,0.0f,0.0f,
+        0.75f,-0.3f,0.0f,
+        0.0f,-0.3f,0.0f,
     };
     m_vbo->allocate(ship, sizeof(ship));
     f->glEnableVertexAttribArray(0);
@@ -168,9 +141,6 @@ void OGLWidget::paintGL()
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_program->bind();
-    m_texture->bind();
-
-
 
     if (m_uniformsDirty) {
         m_uniformsDirty = false;
@@ -178,18 +148,15 @@ void OGLWidget::paintGL()
         camera.lookAt(QVector3D(0,0,1), m_eye + m_target, QVector3D(0, 1, 0));
         m_program->setUniformValue(m_projMatrixLoc, m_proj);
         m_program->setUniformValue(m_camMatrixLoc, camera);
-        QMatrix4x4 wm = m_world;
-        wm.rotate(m_r, 1, 1, 0);
-        m_program->setUniformValue(m_worldMatrixLoc, wm);
+        m_program->setUniformValue(m_worldMatrixLoc, m_world);
         QMatrix4x4 mm;
         mm.setToIdentity();
-        mm.scale(0.1f);
-        mm.translate(QVector3D(-5,0,0));
+        mm.translate(QVector3D(-20,0,20));
         m_program->setUniformValue(m_myMatrixLoc, mm);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
     }
 
     // Now call a function introduced in OpenGL 3.1 / OpenGL ES 3.0. We
     // requested a 3.3 or ES 3.0 context, so we know this will work.
-    f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, 5);
+    f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, 10);
 }

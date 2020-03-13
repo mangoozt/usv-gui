@@ -13,27 +13,13 @@ class QOpenGLVertexArrayObject;
 
 class OGLWidget : public QOpenGLWidget
 {
-
-    Q_OBJECT
-    Q_PROPERTY(float z READ z WRITE setZ)
-    Q_PROPERTY(float r READ r WRITE setR)
-    Q_PROPERTY(float r2 READ r2 WRITE setR2)
 public:
     OGLWidget(QWidget *parent = 0);
     ~OGLWidget();
 
     void initializeGL();
-        void resizeGL(int w, int h);
-        void paintGL();
-
-        float z() const { return m_eye.z(); }
-        void setZ(float v);
-
-        float r() const { return m_r; }
-        void setR(float v);
-        float r2() const { return m_r2; }
-        void setR2(float v);
-
+    void resizeGL(int w, int h);
+    void paintGL();
 protected:
 
     QOpenGLTexture *m_texture;
@@ -50,8 +36,6 @@ protected:
     QVector3D m_eye;
     QVector3D m_target;
     bool m_uniformsDirty;
-    float m_r;
-    float m_r2;
 };
 
 #endif // OGLWIDGET_H
