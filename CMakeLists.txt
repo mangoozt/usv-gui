@@ -28,7 +28,6 @@ find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
 # OpenGL & GLEW library
 find_package(OpenGL)
 
-
 add_subdirectory(usvdata)
 add_executable(USV-gui
     main.cpp
@@ -39,5 +38,7 @@ add_executable(USV-gui
     oglwidget.cpp
     hellogles3.qrc
   )
-
+#if(WIN32)
+#  target_compile_options(usvdata PRIVATE "/MT$<$<CONFIG:Debug>:d>")
+#endif()
 target_link_libraries(USV-gui usvdata Qt5::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES})

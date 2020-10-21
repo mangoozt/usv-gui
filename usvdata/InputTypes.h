@@ -5,329 +5,217 @@
 #include "Defines.h"
 #include "CurvedPath.h"
 #include <string>
-#include "include/rapidjson/pointer.h"
-#include "include/rapidjson/istreamwrapper.h"
 #include <fstream>
 #include <ostream>
 
-namespace USV {
+#include <spotify/json.hpp>
 
-    /**
+namespace USV::InputTypes {
+
+/**
      * \brief Навигационная обстановка собственного судна
      */
-    struct NavigationParameters {
-        NavigationParameters() = default;
+struct NavigationParameters {
+    ShipCategory cat{}; // Категория собственного судна в контексте правила 18 МППСС-72.
 
-        NavigationParameters(ShipCategory cat, double lat, double lon, double sog, double cog, double stw,
-                             double heading, double width, double length, double widthOffset, double lengthOffset,
-                             time_t timestamp) : cat(cat), lat(lat), lon(lon), SOG(sog), COG(cog), STW(stw),
-                                                 heading(heading), width(width), length(length),
-                                                 width_offset(widthOffset), length_offset(lengthOffset),
-                                                 timestamp(timestamp) {}
+    double lat{}; // Широта собственного судна (WGS-84)	Значение с плавающей точкой в градусах. >0 – северная широта, <0 – южная.
+    double lon{}; // Долгота собственного судна (WGS-84) Значение с плавающей точкой в градусах. >0 – восточная долгота, <0 – западная.
+    double SOG{}; // Скорость собственного судна относительно грунта (путевая скорость)	Значение с плавающей точкой в узлах.
+    double COG{}; // Курс собственного судна относительно грунта (путевой угол)	Значение с плавающей точкой в градусах.
+    double STW{}; // Скорость собственного судна относительно воды	Значение с плавающей точкой в узлах
+    double heading{}; // Компасный курс собственного судна	Значение с плавающей точкой в градусах.
+    double width{}; // Ширина судна [meters]
+    double length{}; // Длина судна [meters]
+    double width_offset{}; // Смещение точки измерения координат по ширине относительно левого борта [meters]
+    double length_offset{}; // Смещение точки измерения координат по длине относительно кормы [meters]
+    time_t timestamp{}; // Момент времени (UTC), которому соответствуют остальные параметры	Строка в формате HH-MM-SS.
 
-        explicit NavigationParameters(const rapidjson::Value& doc);
+};
 
-        ShipCategory cat{}; // Категория собственного судна в контексте правила 18 МППСС-72.
-
-        double lat{}; // Широта собственного судна (WGS-84)	Значение с плавающей точкой в градусах. >0 – северная широта, <0 – южная.
-        double lon{}; // Долгота собственного судна (WGS-84) Значение с плавающей точкой в градусах. >0 – восточная долгота, <0 – западная.
-        double SOG{}; // Скорость собственного судна относительно грунта (путевая скорость)	Значение с плавающей точкой в узлах.
-        double COG{}; // Курс собственного судна относительно грунта (путевой угол)	Значение с плавающей точкой в градусах.
-        double STW{}; // Скорость собственного судна относительно воды	Значение с плавающей точкой в узлах
-        double heading{}; // Компасный курс собственного судна	Значение с плавающей точкой в градусах.
-        double width{}; // Ширина судна [meters]
-        double length{}; // Длина судна [meters]
-        double width_offset{}; // Смещение точки измерения координат по ширине относительно левого борта [meters]
-        double length_offset{}; // Смещение точки измерения координат по длине относительно кормы [meters]
-        time_t timestamp{}; // Момент времени (UTC), которому соответствуют остальные параметры	Строка в формате HH-MM-SS.
-
-    };
-
-    std::ostream& operator<<(std::ostream& os, const USV::NavigationParameters& np);
-
-    /**
+/**
      * \brief Описание цели
      */
-    struct VehicleParameters {
-        std::string id; // Идентификатор цели	Строка
-        ShipCategory cat; // Категория судна в контексте правила 18 МППСС-72.
+struct TargetParameters {
+    std::string id; // Идентификатор цели	Строка
+    ShipCategory cat; // Категория судна в контексте правила 18 МППСС-72.
 
-        double lat; // Широта цели (WGS-84)	Значение с плавающей точкой в градусах. > 0 – северная широта, < 0 – южная.
-        double lon; // Долгота цели (WGS-84)	Значение с плавающей точкой в градусах. >0 – восточная долгота, <0 – западная.
-        double SOG; // Скорость цели относительно грунта	Значение с плавающей точкой в узлах
-        double COG; // Курс цели относительно грунта	Значение с плавающей точкой в градусах.
-        double width{0}; // Ширина судна. 0 если данные неизвестны. [meters]
-        double length{0}; // Длина судна. 0 если данные неизвестны. [meters]
-        double width_offset{0}; // Смещение точки измерения координат по ширине относительно левого борта. 0 если данные неизвестны. [miles]
-        double length_offset{0}; // Смещение точки измерения координат по длине относительно кормы. может 0 если данные неизвестны. [miles]
-        double first_detect_dist; // Дистанция первого обнаружения. [miles]
-        double cross_dist{0}; // Дистанция до пересечения курса. Отсутствует, если цель не пересекает курс. [miles]
-        time_t timestamp; // Момент времени (UTC), которому соответствуют остальные параметры. Число секунд, прошедших с 00:00:00 01.01.1970 (UTC)
-    };
+    double lat; // Широта цели (WGS-84)	Значение с плавающей точкой в градусах. > 0 – северная широта, < 0 – южная.
+    double lon; // Долгота цели (WGS-84)	Значение с плавающей точкой в градусах. >0 – восточная долгота, <0 – западная.
+    double SOG; // Скорость цели относительно грунта	Значение с плавающей точкой в узлах
+    double COG; // Курс цели относительно грунта	Значение с плавающей точкой в градусах.
+    double width{0}; // Ширина судна. 0 если данные неизвестны. [meters]
+    double length{0}; // Длина судна. 0 если данные неизвестны. [meters]
+    double width_offset{0}; // Смещение точки измерения координат по ширине относительно левого борта. 0 если данные неизвестны. [miles]
+    double length_offset{0}; // Смещение точки измерения координат по длине относительно кормы. может 0 если данные неизвестны. [miles]
+    double first_detect_dist; // Дистанция первого обнаружения. [miles]
+    double cross_dist{0}; // Дистанция до пересечения курса. Отсутствует, если цель не пересекает курс. [miles]
+    time_t timestamp; // Момент времени (UTC), которому соответствуют остальные параметры. Число секунд, прошедших с 00:00:00 01.01.1970 (UTC)
+};
 
-    bool operator==(const USV::VehicleParameters& a, const USV::VehicleParameters& b);
+typedef std::vector<TargetParameters> TargetsParameters;
 
-    std::ostream& operator<<(std::ostream& os, const USV::VehicleParameters& vp);
+struct Hydrometeorology {
+    double wind_direction{}; //! Направление ветра (абсолютное) [degrees]
+    double wind_speed{}; //! Скорость ветра (абсолятная) [knots]
+    double tide_direction{}; //! Направление течения (абсолютное) [degrees]
+    double tide_speed{}; //! Скорость течения (абсолютное) [knots]
+    double swell{}; //! Волнение
+    double visibility{}; //! Дистанция видимости [nautical miles]
+};
 
-    class NavigationProblem {
-    public:
-        NavigationProblem() = default;
+struct Settings {
+    struct ManeuverCalculation {
 
-        explicit NavigationProblem(const rapidjson::Value& doc);
+        int priority{}; //! Приоритет в расчетах 0 - минимальное время выполения маневра;
+        //! 1 - минимальное отклонение от маршрута
+        //! 2 - минимальная скорость
+        //! Способ выполнения маневра 0 - маневр курсом, 1 - маневр скоростью, 2 - маневром курсом и скоростью.
+        enum class ManeuverWay{
+            Course = 0,
+            Speed = 1,
+            CourseAndSpeed =2
+        };
+        ManeuverWay maneuver_way{};
 
-        std::vector<VehicleParameters> vehicles{};
-    };
+        double safe_diverg_dist{}; //! Безопасная дистанция расхождения [miles]
 
-    std::ostream& operator<<(std::ostream& os, const USV::NavigationProblem& np);
+        double min_diverg_dist{}; //! Минимальная допустимая дистанция расхождения [miles]
 
-    enum GeometryType {
-        GeometryPoint,
-        GeometryLine,
-        GeometryPolygon
-    };
+        double minimal_speed{}; //! Минимальная допустимая скорость [miles / h]
 
-    struct Geometry {
-        explicit Geometry(const rapidjson::Value& doc);
+        double maximal_speed{}; //! Максимальная допустимая скорость [miles / h]
 
-        GeometryType type;
-        std::vector<Polygon> coordinatesPolygon;
-        std::vector<Vector2> coordinatesLine;
-        Vector2 coordinatesPoint;
-    };
+        double forward_speed1{}; //! Скорость ступени 1 (самая низкая) [miles / h]
+        double forward_speed2{}; //! Скорость ступени 2 [miles / h]
+        double forward_speed3{}; //! Скорость ступени 3 [miles / h]
+        double forward_speed4{}; //! Скорость ступени 4 [miles / h]
+        double forward_speed5{}; //! Скорость ступени 5 (самая высокая) [miles / h]
 
-    std::ostream& operator<<(std::ostream& os, const Geometry& geom);
+        double reverse_speed1{}; //! Скорость заднего хода 1 [miles / h]
+        double reverse_speed2{}; //! Скорость заднего хода 2 [miles / h]
 
-    struct FeatureProperties {
-        std::string id;
-        std::string limitation_type;//!< Тип ограничения
-        std::string hardness;//!< Жесткость ограничения. Может принимать значения «hard» или «soft».
-        std::string source_id;//!< Идентифицирует сущность, из которой получено данное ограничение
-        std::string source_object_code; //!< Обозначение (акроним) исходного объекта карты
-        double distance; //!< Обязательный атрибут "distance", должен иметь значение дистанции в милях.
-        double max_course;//!< Пара обязательных атрибутов "min_course", "max_course" задают границы допустимого значения курса в градусах (разрешаются все курсы от min_course по часовой стрелке до max_course).
-        double min_course;
-        double max_speed; //!< задает допустимое значение скорости в узлах [miles/hr].
-    };
+        double max_course_delta{}; //! Максимальное отклонение по курсу от оси маршрута [miles]
 
-    struct Feature {
-        explicit Feature(const rapidjson::Value& doc);
+        double time_advance{}; //! Время упреждения [sec]
 
-        Geometry geometry;
-        FeatureProperties properties;
-    };
+        bool can_leave_route{}; //! Разрешено ли выходить за границы маршрута
 
-    std::ostream& operator<<(std::ostream& os, const USV::Feature& feature);
+        double max_route_deviation{}; //! Максимальное отклоенние от оси маршрута [miles]
 
-    struct FeatureCollection {
-        FeatureCollection() = default;
+        double max_circulation_radius{}; //! Радиус циркуляции, максимальный [miles]
 
-        explicit FeatureCollection(const rapidjson::Value& doc);
+        double min_circulation_radius{}; //! Радиус циркуляции, минимальный [miles]
 
-        std::vector<Feature> features;
-    };
+        double breaking_distance{}; //! Тормозной путь [miles]
 
-    std::ostream& operator<<(std::ostream& os, const USV::FeatureCollection& fc);
+        double run_out_distance{}; //! Дистанция выбега [miles]
 
-    GeometryType GeometryTypeFromString(const std::string& value);
+        double forecast_time{}; //! Время прогнозирования развития обстановки [sec]
+    } manuever_calculation; // End Class Maneuver_Calculation
 
 
-    struct Hydrometeorology {
-        Hydrometeorology() = default;
+    struct SafetyControl {
 
-        double wind_direction{}; //! Направление ветра (абсолютное) [degrees]
+        double cpa{}; //! Допустимая дистанция кратчайшего сближения [miles]
+        double tcpa{}; //! Допустимое время до точки кратчайшего сближения, нарушающего заданное
+        //! значение tcpa [sec]
+        double min_detect_dist{}; //! минимальная дистация обнаружения [miles]
+        double last_moment_dist{}; //! Дистанция последнего момента [miles]
 
-        double wind_speed{}; //! Скорость ветра (абсолятная) [knots]
+        struct SafetyZone {
 
-        double tide_direction{}; //! Направление течения (абсолютное) [degrees]
+            int safety_zone_type{0}; //! Тип зоны безопасности 0 - круг, 1 - сектор, 2 - прямоугольник
 
-        double tide_speed{}; //! Скорость течения (абсолютное) [knots]
+            double radius{}; //! Радиус круглой зоны безопасности [miles]
+            double start_angle{}; //! Начальный угол (пеленг) [degrees]
+            double end_angle{}; //! Конечный угол (пеленг) [degrees]
 
-        double swell{}; //! Волнение
-
-        double visibility{}; //! Дистанция видимости [nautical miles]
-
-        Hydrometeorology(double windDirection, double windSpeed, double tideDirection,
-                         double tideSpeed, double swell, double visibility) : wind_direction(windDirection),
-                                                                              wind_speed(windSpeed),
-                                                                              tide_direction(tideDirection),
-                                                                              tide_speed(tideSpeed),
-                                                                              swell(swell), visibility(visibility) {}
-
-        explicit Hydrometeorology(const rapidjson::Value& doc);
-    };
-
-    std::ostream& operator<<(std::ostream& os, const USV::Hydrometeorology& hydrometeorology);
-
-    struct TargetSettings;
-
-    struct Settings {
-        Settings() = default;
-
-        struct ManeuverCalculation {
-
-            int priority{}; //! Приоритет в расчетах 0 - минимальное время выполения маневра;
-            //! 1 - минимальное отклонение от маршрута
-            //! 2 - минимальная скорость
-            //! Способ выполнения маневра 0 - маневр курсом, 1 - маневр скоростью, 2 - маневром курсом и скоростью.
-            enum class ManeuverWay{
-                Course = 0,
-                Speed = 1,
-                CourseAndSpeed =2
-            };
-            ManeuverWay maneuver_way{};
-
-            double safe_diverg_dist{}; //! Безопасная дистанция расхождения [miles]
-
-            double min_diverg_dist{}; //! Минимальная допустимая дистанция расхождения [miles]
-
-            double minimal_speed{}; //! Минимальная допустимая скорость [miles / h]
-
-            double maximal_speed{}; //! Максимальная допустимая скорость [miles / h]
-
-            double forward_speed1{}; //! Скорость ступени 1 (самая низкая) [miles / h]
-            double forward_speed2{}; //! Скорость ступени 2 [miles / h]
-            double forward_speed3{}; //! Скорость ступени 3 [miles / h]
-            double forward_speed4{}; //! Скорость ступени 4 [miles / h]
-            double forward_speed5{}; //! Скорость ступени 5 (самая высокая) [miles / h]
-
-            double reverse_speed1{}; //! Скорость заднего хода 1 [miles / h]
-            double reverse_speed2{}; //! Скорость заднего хода 2 [miles / h]
-
-            double max_course_delta{}; //! Максимальное отклонение по курсу от оси маршрута [miles]
-
-            double time_advance{}; //! Время упреждения [sec]
-
-            bool can_leave_route{}; //! Разрешено ли выходить за границы маршрута
-
-            double max_route_deviation{}; //! Максимальное отклоенние от оси маршрута [miles]
-
-            double max_circulation_radius{}; //! Радиус циркуляции, максимальный [miles]
-
-            double min_circulation_radius{}; //! Радиус циркуляции, минимальный [miles]
-
-            double breaking_distance{}; //! Тормозной путь [miles]
-
-            double run_out_distance{}; //! Дистанция выбега [miles]
-
-            double forecast_time{}; //! Время прогнозирования развития обстановки [sec]
-
-            ManeuverCalculation() = default;
-
-            explicit ManeuverCalculation(const rapidjson::Value& doc);
-        } manuever_calculation; // End Class Maneuver_Calculation
-
-
-        struct SafetyControl {
-
-            double cpa{}; //! Допустимая дистанция кратчайшего сближения [miles]
-            double tcpa{}; //! Допустимое время до точки кратчайшего сближения, нарушающего заданное
-            //! значение tcpa [sec]
-            double min_detect_dist{}; //! минимальная дистация обнаружения [miles]
-            double last_moment_dist{}; //! Дистанция последнего момента [miles]
-
-            struct SafetyZone {
-
-                int safety_zone_type{0}; //! Тип зоны безопасности 0 - круг, 1 - сектор, 2 - прямоугольник
-
-                double radius{}; //! Радиус круглой зоны безопасности [miles]
-                double start_angle{}; //! Начальный угол (пеленг) [degrees]
-                double end_angle{}; //! Конечный угол (пеленг) [degrees]
-
-                double length{}; //! Длина прямоугольной зоны безопасности [miles]
-                double width{}; //! Ширина прямоугольной зоны безопасности [miles]
-                double lengthOffset{}; //! Смещение центра зоны относительно центра судна по длине
-                //! (в сторону носа) [miles]
-
-                SafetyZone() = default;
-
-                explicit SafetyZone(const rapidjson::Value& doc);
-
-            } safety_zone; //End Class Safety_Zone
-
-
-            SafetyControl() = default;
-
-            explicit SafetyControl(const rapidjson::Value& doc);
-        } safety_control; // End Class Safety_Control
-
-
-        explicit Settings(const rapidjson::Value& doc);
-
-        explicit Settings(const TargetSettings& target_settings);
-
-    };
-
-    struct TargetSettings {
-        TargetSettings() = default;
-
-        struct ManeuverCalculation {
-
-            double safe_diverg_dist{}; //! Безопасная дистанция расхождения [miles]
-
-            double minimal_speed{}; //! Минимальная допустимая скорость [miles / h]
-
-            double maximal_speed{}; //! Максимальная допустимая скорость [miles / h]
-
-            double forward_speed1{}; //! Скорость ступени 1 (самая низкая) [miles / h]
-            double forward_speed2{}; //! Скорость ступени 2 [miles / h]
-            double forward_speed3{}; //! Скорость ступени 3 [miles / h]
-            double forward_speed4{}; //! Скорость ступени 4 [miles / h]
-            double forward_speed5{}; //! Скорость ступени 5 (самая высокая) [miles / h]
-
-            double reverse_speed1{}; //! Скорость заднего хода 1 [miles / h]
-            double reverse_speed2{}; //! Скорость заднего хода 2 [miles / h]
-
-            double max_course_delta{}; //! Максимальное отклонение по курсу от оси маршрута [miles]
-
-            double time_advance{}; //! Время упреждения [sec]
-
-            bool can_leave_route{}; //! Разрешено ли выходить за границы маршрута
-
-            double max_route_deviation{}; //! Максимальное отклоенние от оси маршрута [miles]
-
-            double max_circulation_radius{}; //! Радиус циркуляции, максимальный [miles]
-
-            double min_circulation_radius{}; //! Радиус циркуляции, минимальный [miles]
-
-            double breaking_distance{}; //! Тормозной путь [miles]
-
-            double run_out_distance{}; //! Дистанция выбега [miles]
-
-            double forecast_time{}; //! Время прогнозирования развития обстановки [sec]
-
-            ManeuverCalculation() = default;
-
-            explicit ManeuverCalculation(const rapidjson::Value& doc);
-        } manuever_calculation; // End Class Maneuver_Calculation
-
-        Settings::SafetyControl safety_control;
-
-        explicit TargetSettings(const rapidjson::Value& doc);
-
-        explicit TargetSettings(const Settings& settings);
-
-    }; // End Class Settings
-
-    struct CurvedPathCollection {
-        std::vector<CurvedPath> paths;
-
-        explicit CurvedPathCollection(const rapidjson::Value& doc);
-    };
-
-    std::ostream& operator<<(std::ostream& os, const CurvedPathCollection& cc);
-
-    struct InputData {
-        std::unique_ptr<NavigationParameters> navigationParameters;
-        std::unique_ptr<NavigationProblem> navigationProblem;
-        std::unique_ptr<FeatureCollection> featureCollection;
-        std::unique_ptr<Hydrometeorology> hydrometeorology;
-        std::unique_ptr<CurvedPath> route;
-        std::unique_ptr<Settings> settings;
-        std::unique_ptr<TargetSettings> target_settings;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const USV::InputData& inputData);
+            double length{}; //! Длина прямоугольной зоны безопасности [miles]
+            double width{}; //! Ширина прямоугольной зоны безопасности [miles]
+            double lengthOffset{}; //! Смещение центра зоны относительно центра судна по длине
+            //! (в сторону носа) [miles]
+        } safety_zone; //End Class Safety_Zone
+    } safety_control; // End Class Safety_Control
+};
+
+typedef std::vector<CurvedPath> CurvedPathCollection;
+
+struct InputData {
+    std::unique_ptr<NavigationParameters> navigationParameters;
+    std::unique_ptr<TargetsParameters> navigationProblem;
+    std::unique_ptr<Hydrometeorology> hydrometeorology;
+    std::unique_ptr<CurvedPath> route;
+    //        std::unique_ptr<Settings> settings;
+};
 
 }
 
+namespace spotify {
+namespace json {
+using namespace USV::InputTypes;
+// Specialize spotify::json::default_codec_t to specify default behavior when
+// encoding and decoding objects of certain types.
+
+template <>
+struct default_codec_t<ShipCategory> {
+    static int CatDecode(const ShipCategory cat){
+        return static_cast<int>(cat);
+    }
+
+    static ShipCategory CatEncode(const int cat){
+        return static_cast<ShipCategory>(cat);
+    }
+
+  static auto codec() {
+//    auto codec = codec::enumeration();
+    auto codec = codec::transform(codec::number<int>(),CatDecode,CatEncode);
+    return codec;
+  }
+};
+
+template <>
+struct default_codec_t<NavigationParameters> {
+    static codec::object_t<NavigationParameters> codec() {
+        auto codec = codec::object<NavigationParameters>();
+
+//        const codec::any_codec_t<ShipCategory> cat_codec = any_codec(codec::);
+        codec.required("cat", &NavigationParameters::cat);
+        codec.required("lat", &NavigationParameters::lat);
+        codec.required("lon", &NavigationParameters::lon);
+        codec.required("SOG", &NavigationParameters::SOG);
+        codec.required("COG", &NavigationParameters::COG);
+        codec.required("STW", &NavigationParameters::STW);
+        codec.required("heading", &NavigationParameters::heading);
+        codec.required("width", &NavigationParameters::width);
+        codec.required("length", &NavigationParameters::length);
+        codec.required("width_offset", &NavigationParameters::width_offset);
+        codec.required("length_offset", &NavigationParameters::length_offset);
+        codec.required("timestamp", &NavigationParameters::timestamp);
+        return codec;
+    }
+};
+
+template<>
+struct default_codec_t<TargetParameters> {
+    static codec::object_t<TargetParameters> codec() {
+        auto codec = codec::object<TargetParameters>();
+        codec.required("id", &TargetParameters::id);
+        codec.required("cat", &TargetParameters::cat);
+        codec.required("lat", &TargetParameters::lat);
+        codec.required("lon", &TargetParameters::lon);
+        codec.required("SOG", &TargetParameters::SOG);
+        codec.required("COG", &TargetParameters::COG);
+        codec.optional("width", &TargetParameters::width);
+        codec.optional("length", &TargetParameters::length);
+        codec.optional("width_offset", &TargetParameters::width_offset);
+        codec.optional("length_offset", &TargetParameters::length_offset);
+        codec.required("first_detect_dist", &TargetParameters::first_detect_dist);
+        codec.optional("cross_dist", &TargetParameters::cross_dist);
+        codec.required("timestamp", &TargetParameters::timestamp);
+        return codec;
+    }
+};
+
+}
+}
 #endif // USV_INPUTDATA_H

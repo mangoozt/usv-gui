@@ -7,61 +7,70 @@
 #include <ostream>
 #include <string>
 
+#include <spotify/json.hpp>
+
 namespace USV {
-    class CurvedPath {
+class CurvedPath {
+public:
+    //! \class Segment
+    class Segment {
     public:
-        struct fieldnames{
-            static constexpr auto& items{"items"};
-            static constexpr auto& start_time{"start_time"};
-        };
-        //! \class Segment
-        class Segment {
-        public:
-            struct fieldnames{
-                static constexpr auto& lat{"lat"};
-                static constexpr auto& lon{"lon"};
-                static constexpr auto& begin_angle{"begin_angle"};
-                static constexpr auto& curve{"curve"};
-                static constexpr auto& length{"length"};
-                static constexpr auto& duration{"duration"};
-                static constexpr auto& port_dev{"port_dev"};
-                static constexpr auto& starboard_dev{"starboard_dev"};
-            };
-
-            double lat{}; //! Широта начала сегмента [deg]
-            //! >0 – северная широта, <0 – южная.
-            double lon{}; //! Долгота [deg]
-            //! >0 – восточная долгота, <0 – западная.
-            double begin_angle{}; //! Начальный курс сегмента [deg]
-            double curve{}; //! Кривизна сегмента [1/miles]
-            //! Модуль значения обратен радиусу поворота в милях. Знак значения определяет направление поворота: < 0 – влево, > 0 – вправо.
-            //! Нулевое значение кривизны кодирует линейный сегмент маршрута. Ненулевое – циркуляционный сегмент.
-            double length{}; //!  Длина сегмента [miles]
-            double duration{}; //! Длительность сегмента [sec]
-            double port_dev{}; //! Дистанция до левой границы сегмента [miles]
-            double starboard_dev{}; //! Дистанция до правой границы сегмента [miles]
-
-            Segment(double lat, double lon, double beginAngle, double curve, double length, double duration,
-                    double portDev, double starboardDev) : lat(lat), lon(lon), begin_angle(beginAngle), curve(curve),
-                                                           length(length), duration(duration), port_dev(portDev),
-                                                           starboard_dev(starboardDev) {}
-
-            explicit Segment(const rapidjson::Value& doc);
-        };
-
-        std::vector<Segment> segments; //! Элементы маршрута (сегменты)
-        time_t start_time; //! Время начала маршрута в формате `yyyy.mm.dd-hh:mm:ss`
-
-        explicit CurvedPath(const rapidjson::Value& doc);
-
-        explicit CurvedPath(time_t startTime) : start_time(startTime) {}
-
+        double lat{}; //! Широта начала сегмента [deg]
+        //! >0 – северная широта, <0 – южная.
+        double lon{}; //! Долгота [deg]
+        //! >0 – восточная долгота, <0 – западная.
+        double begin_angle{}; //! Начальный курс сегмента [deg]
+        double curve{}; //! Кривизна сегмента [1/miles]
+        //! Модуль значения обратен радиусу поворота в милях. Знак значения определяет направление поворота: < 0 – влево, > 0 – вправо.
+        //! Нулевое значение кривизны кодирует линейный сегмент маршрута. Ненулевое – циркуляционный сегмент.
+        double length{}; //!  Длина сегмента [miles]
+        double duration{}; //! Длительность сегмента [sec]
+        double port_dev{}; //! Дистанция до левой границы сегмента [miles]
+        double starboard_dev{}; //! Дистанция до правой границы сегмента [miles]
     };
 
-    std::ostream& operator<<(std::ostream& os, const USV::CurvedPath& curvedPath);
+    std::vector<Segment> items; //! Элементы маршрута (сегменты)
+    time_t start_time; //! Время начала маршрута в формате `yyyy.mm.dd-hh:mm:ss`
 
-    std::ostream& operator<<(std::ostream& os, const USV::CurvedPath::Segment& segment);
+    CurvedPath() = default;
 
+    explicit CurvedPath(time_t startTime) : start_time(startTime) {}
+
+};
+}
+
+namespace spotify {
+namespace json {
+using namespace USV;
+// Specialize spotify::json::default_codec_t to specify default behavior when
+// encoding and decoding objects of certain types.
+template <>
+struct default_codec_t<CurvedPath> {
+    static codec::object_t<CurvedPath> codec() {
+        auto codec = codec::object<CurvedPath>();
+        codec.required("items", &CurvedPath::items);
+        codec.required("start_time", &CurvedPath::start_time);
+        return codec;
+    }
+};
+
+template<>
+struct default_codec_t<CurvedPath::Segment> {
+    static codec::object_t<CurvedPath::Segment> codec() {
+        auto codec = codec::object<CurvedPath::Segment>();
+        codec.required("lat", &CurvedPath::Segment::lat);
+        codec.required("lon", &CurvedPath::Segment::lon);
+        codec.required("begin_angle", &CurvedPath::Segment::begin_angle);
+        codec.required("curve", &CurvedPath::Segment::curve);
+        codec.required("length", &CurvedPath::Segment::length);
+        codec.required("duration", &CurvedPath::Segment::duration);
+        codec.optional("port_dev", &CurvedPath::Segment::port_dev);
+        codec.optional("starboard_dev", &CurvedPath::Segment::starboard_dev);
+        return codec;
+    }
+};
+
+}
 }
 
 #endif //USV_CURVEDPATH_H

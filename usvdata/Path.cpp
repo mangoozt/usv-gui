@@ -364,7 +364,7 @@ namespace USV {
 
     Path::Path(const CurvedPath& curved_path, const Frame& reference_frame) : start_time(
             static_cast<double>(curved_path.start_time)) {
-        for (const auto& segment : curved_path.segments) {
+        for (const auto& segment : curved_path.items) {
             Vector2 localPos = reference_frame.fromWgs(segment.lat, segment.lon);
             appendSegment({localPos, degrees_to_radians(segment.begin_angle), segment.curve, segment.length,
                            segment.duration, segment.port_dev, segment.starboard_dev});

@@ -1,15 +1,14 @@
 set(USVDATA_HEADERS
         Vector2.h
+        Angle.h
         )
 
 set(USVDATA_SOURCES
         Frame.h Frame.cpp
-        Geometry.h Geometry.cpp
         InputUtils.h InputUtils.cpp
-        InputTypes.h InputTypes.cpp
-        CurvedPath.h CurvedPath.cpp
+        InputTypes.h CurvedPath.h
         Path.h Path.cpp
-        Angle.h Angle.cpp
+        Angle.cpp
         Defines.h
         )
 
@@ -19,7 +18,9 @@ add_library(usvdata STATIC ${USVDATA_HEADERS} ${USVDATA_SOURCES})
 
 find_package(GeographicLib 1.50.1 REQUIRED)
 target_link_libraries(usvdata ${GeographicLib_LIBRARIES})
-
+set(SPOTIFY_JSON_BUILD_TESTS OFF)
+add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/spotify-json" "vendor/spotify-json" EXCLUDE_FROM_ALL)
+target_link_libraries(usvdata spotify-json)
 
 #if (WIN32)
 #    set_target_properties(usvdata PROPERTIES COMPILE_DEFINITIONS NOMINMAX)
