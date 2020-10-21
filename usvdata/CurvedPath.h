@@ -2,7 +2,6 @@
 #define USV_CURVEDPATH_H
 
 #include "Defines.h"
-#include "include/rapidjson/pointer.h"
 #include <vector>
 #include <ostream>
 #include <string>

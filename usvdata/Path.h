@@ -131,21 +131,6 @@ namespace USV {
             return start_time;
         }
 
-        //! \brief Checks if two paths do not approach each other on a specified distance. At start that distance can be less
-        //! \param path
-        //! \param distance
-        //! \param close_time Time allowed to be in distance zone, if it is violated at start point (-1 = no time)
-        //! \param emergencyDist Distance allowed during close_time (-1 = any distance)
-        //! \return
-        bool checkDistanceClearance(const Path& path, double distance, double close_time = -1, double emergencyDist = -1) const;
-
-        //! \brief Checks if path is satisfies additional kt settings
-        //! \param route
-        //! \param max_route_deviation
-        //! \param max_course_delta [degrees]
-        //! \param can_leave_route
-        //! \return
-        bool checkAdditionalSettings(const Path& route, double max_route_deviation, double max_course_delta, bool can_leave_route) const;
 
         //! \brief Look up for maximum distance between paths (regardless of time)
         //! \param path Second path
@@ -157,12 +142,6 @@ namespace USV {
         //! \return maximum distance between paths
         double maxDistance(const Path& path) const;
 
-        // Checks if vehicle of path is intersecting goals path on its nose course.
-        // if nose course intersection exists, returns distance to intersection point 
-        // if there is no intersection, returns infinity
-        // forcePriority means that goal has priority, so we cant ignore 
-        // nose intersection from the left side
-        double distanceToNoseCourse(Path& goalPath, bool forcePriority = false) const;
     };
 
 }

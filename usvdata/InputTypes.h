@@ -1,7 +1,6 @@
 #ifndef USV_INPUTDATA_H
 #define USV_INPUTDATA_H
 
-#include "Geometry.h"
 #include "Defines.h"
 #include "CurvedPath.h"
 #include <string>

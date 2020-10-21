@@ -236,23 +236,6 @@ namespace USV {
         return smallest;
     }
 
-    bool
-    Path::checkDistanceClearance(const Path& path, double distance, double close_time, double emergencyDist) const {
-        distance = distance * distance;
-        bool not_close = false;
-        for (double t = std::max(start_time,path.start_time); t < std::min(endTime(), path.endTime()); t += DELTA_T) {
-            if (close_time >= 0 && t - start_time > close_time) not_close = true;
-            double curDist = absSq(position(t).point - path.position(t).point);
-            if (curDist < distance) {
-                if (not_close || (curDist < emergencyDist * emergencyDist && emergencyDist > 0))
-                    return false;
-            } else
-                not_close = true;
-        }
-        return not_close;
-    }
-
-
     bool _checkAdditionalSettings(const Path& short_path, const Path& long_path,
                                double max_route_deviation,
                                double max_course_delta,
@@ -296,71 +279,6 @@ namespace USV {
         return can_leave_route || max_route_deviation < 0 || minpath_segment_dist < max_route_deviation;
     }
 
-    bool Path::checkAdditionalSettings(const Path& route,
-                                       const double max_route_deviation,
-                                       double max_course_delta,
-                                       const bool can_leave_route) const {
-        if (max_course_delta < 0 && max_route_deviation < 0) return true;
-
-        for (double t = start_time; t < endTime(); t += 10 * DELTA_T) {
-            auto pos = position(t);
-            auto routeSegment = route.closestSegment(position(t).point);
-            auto sgmDist = routeSegment.first;
-            auto sgm = routeSegment.second->second;
-            if (max_course_delta >= 0 && fabs(wrap_angle(angleDiff(sgm.getBeginAngle().radians(), pos.course.radians())))
-                    > degrees_to_radians(max_course_delta) && fabs(sgm.getCurve()) < 0.0001) {
-                return false;
-            }
-            if (can_leave_route && max_route_deviation >= 0 && sgmDist > max_route_deviation && fabs(sgm.getCurve()) < 0.0001) {
-                return false;
-            }
-            if (!can_leave_route
-                && fabs(sgm.getCurve()) < 0.0001) {
-                auto right_dist = sgm.getStarboardDev();
-                auto left_dist = sgm.getPortDev();
-                auto dist = sgm.distance_signed(pos.point);
-                if ((dist > 0 && dist > right_dist) || (dist < 0 && dist < -left_dist)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-        /*
-        if (max_course_delta < 0 && max_route_deviation < 0) return true;
-        if (segments.empty() || route.segments.empty())
-            return true;
-        max_course_delta = degrees_to_radians(max_course_delta);
-
-        return _checkAdditionalSettings(route, *this, max_route_deviation, max_course_delta, can_leave_route) 
-            && _checkAdditionalSettings(*this, route, max_route_deviation, max_course_delta, can_leave_route);
-        */
-    }
-
-
-    double Path::distanceToNoseCourse(Path& goalPath, bool forcePriority) const {
-        double distance = std::numeric_limits<double>::infinity();
-        double delta_phi = 0.05; // should be related to DELTA_T
-        double not_overtaken_abs_angle = 0.4;
-
-        // exclude save
-        auto init_course = this->segment(start_time)->second.getBeginAngle();
-        auto init_goal_rel_pos = goalPath.position(start_time).point - this->position(start_time).point;
-        auto init_angle = wrap_angle(angleDiff(init_course.radians(), init_goal_rel_pos.phi()));
-        if (!forcePriority && (init_angle < 0 && init_angle > -M_PI)) return distance;
-
-        // too bad!
-        for (double tG = start_time; tG < std::min(endTime(), goalPath.endTime()); tG += DELTA_T) {
-            // nose course intersection
-            auto R = position(tG).point - goalPath.position(tG).point;
-            if (fabs(goalPath.position(tG).course.radians() - R.phi()) < delta_phi) {
-                // to exclude overtakes
-                if (fabs((goalPath.position(tG).course - position(tG).course).radians()) > not_overtaken_abs_angle) {
-                    distance = fmin(R.r(), distance);
-                }
-            }
-        }
-        return distance;
-    }
 
     Path::Path(const CurvedPath& curved_path, const Frame& reference_frame) : start_time(
             static_cast<double>(curved_path.start_time)) {
