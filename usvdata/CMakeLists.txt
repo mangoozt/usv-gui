@@ -7,6 +7,7 @@ set(USVDATA_SOURCES
         Frame.h Frame.cpp
         InputUtils.h InputUtils.cpp
         InputTypes.h CurvedPath.h
+        CaseData.h CaseData.cpp
         Path.h Path.cpp
         Angle.cpp
         Defines.h

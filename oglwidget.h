@@ -5,6 +5,7 @@
 #include <QOpenGLWidget>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include "usvdata/CaseData.h"
 
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
@@ -20,11 +21,13 @@ public:
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
+    void loadData(USV::CaseData &case_data);
 protected:
 
     QOpenGLTexture *m_texture;
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *m_vbo;
+    QOpenGLBuffer *m_vessels;
     QOpenGLVertexArrayObject *m_vao;
     int m_projMatrixLoc;
     int m_camMatrixLoc;

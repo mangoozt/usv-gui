@@ -12,12 +12,13 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_program(0),
       m_vbo(0),
       m_vao(0),
-      m_target(0, 0, -1),
+      m_eye(0,0,20),
+      m_target(0, 0, -20),
       m_uniformsDirty(true)
 {
     m_world.setToIdentity();
-    m_world.translate(0, 0, -1);
-    m_world.rotate(180, 1, 0, 0);
+//    m_world.translate(0, 0, 0);
+//    m_world.rotate(180, 1, 0, 0);
 }
 
 OGLWidget::~OGLWidget()
@@ -30,27 +31,30 @@ OGLWidget::~OGLWidget()
 }
 
 static const char *vertexShaderSource =
-    "layout(location = 0) in vec4 vertex;\n"
-    "out vec3 color;\n"
-    "uniform mat4 projMatrix;\n"
-    "uniform mat4 camMatrix;\n"
-    "uniform mat4 worldMatrix;\n"
-    "uniform mat4 myMatrix;\n"
-    "void main() {\n"
-    "   color = vec3(0.031372549, 0.282352941, 0.282352941);\n"
-    "   gl_Position = projMatrix * camMatrix * worldMatrix * myMatrix * (vertex + vec4(gl_InstanceID*2,0,0,0));\n"
-    "}\n";
+        "layout(location = 0) in vec4 vertex;\n"
+        "layout(location = 1) in vec4 position;\n"
+        "out vec3 color;\n"
+        "uniform mat4 projMatrix;\n"
+        "uniform mat4 camMatrix;\n"
+        "uniform mat4 worldMatrix;\n"
+        "uniform mat4 myMatrix;\n"
+//        "in mediump vec4 position;\n"
+//        "in mediump float angle;\n"
+        "void main() {\n"
+        "   color = vec3(0.031372549, 0.282352941, 0.282352941);\n"
+        "   gl_Position = projMatrix * camMatrix * worldMatrix * myMatrix * (vertex + position);\n"
+        "}\n";
 
 static const char *fragmentShaderSource =
-    "in highp vec3 vert;\n"
-    "in highp vec3 color;\n"
-    "out highp vec4 fragColor;\n"
-    "uniform highp vec3 lightPos;\n"
-    "void main() {\n"
-    "   highp vec3 L = normalize(lightPos - vert);\n"
-    "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * L, 0.0, 1.0);\n"
-    "   fragColor = vec4(col, 1.0);\n"
-    "}\n";
+        "in highp vec3 vert;\n"
+        "in highp vec3 color;\n"
+        "out highp vec4 fragColor;\n"
+        "uniform highp vec3 lightPos;\n"
+        "void main() {\n"
+        "   highp vec3 L = normalize(lightPos - vert);\n"
+        "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * L, 0.0, 1.0);\n"
+        "   fragColor = vec4(col, 1.0);\n"
+        "}\n";
 
 QByteArray versionedShaderCode(const char *src)
 {
@@ -67,7 +71,7 @@ QByteArray versionedShaderCode(const char *src)
 
 void OGLWidget::initializeGL()
 {
-     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    auto *f = QOpenGLContext::currentContext()->extraFunctions();
 
     if (m_texture) {
         delete m_texture;
@@ -120,6 +124,23 @@ void OGLWidget::initializeGL()
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     m_vbo->release();
 
+    m_vessels = new QOpenGLBuffer;
+    m_vessels->create();
+    f->glEnableVertexAttribArray(1);
+    m_vessels->bind();
+    GLfloat positions[]{
+        2.0f,1.0f,0.0f,
+        0.0f,2.0f,0.0f,
+        1.0f,3.0f,0.0f,
+        0.0f,-1.0f,0.0f,
+        0.0f,-2.0f,0.0f
+    };
+    m_vessels->allocate(positions,sizeof(positions));
+
+    f->glVertexAttribDivisor(1, 1);
+    f->glVertexAttribPointer(1,  3, GL_FLOAT, GL_FALSE, 0 * sizeof(float), (void*) ( 0*sizeof(float) ) );
+    m_vessels->release();
+
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
 }
@@ -145,18 +166,23 @@ void OGLWidget::paintGL()
     if (m_uniformsDirty) {
         m_uniformsDirty = false;
         QMatrix4x4 camera;
-        camera.lookAt(QVector3D(0,0,1), m_eye + m_target, QVector3D(0, 1, 0));
+        camera.lookAt(m_eye, m_eye + m_target, QVector3D(0, 1, 0));
         m_program->setUniformValue(m_projMatrixLoc, m_proj);
         m_program->setUniformValue(m_camMatrixLoc, camera);
         m_program->setUniformValue(m_worldMatrixLoc, m_world);
         QMatrix4x4 mm;
         mm.setToIdentity();
-        mm.translate(QVector3D(-20,0,20));
+//        mm.translate(QVector3D(0,0,20));
         m_program->setUniformValue(m_myMatrixLoc, mm);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
     }
 
     // Now call a function introduced in OpenGL 3.1 / OpenGL ES 3.0. We
     // requested a 3.3 or ES 3.0 context, so we know this will work.
-    f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, 10);
+    f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, 5);
+}
+
+void OGLWidget::loadData(USV::CaseData &case_data){
+
+
 }
