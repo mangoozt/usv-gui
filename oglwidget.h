@@ -39,6 +39,7 @@ protected:
     QVector3D m_eye;
     QVector3D m_target;
     bool m_uniformsDirty;
+    USV::CaseData case_data{};
 };
 
 #endif // OGLWIDGET_H

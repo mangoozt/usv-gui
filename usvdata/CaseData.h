@@ -9,15 +9,16 @@
 namespace USV{
 struct Vessel{
     Vector2 position;
-    double course;
-    double color[4]{0,0,0,1};
+    double course; // radians
+    double color[3]{0,0,0};
 };
 
 
 struct CaseData{
-    std::vector<Vessel> vessels;
-    Path route;
+    std::vector<Vessel> vessels{0};
+    Path route{0};
 
+    CaseData() = default;
     CaseData(const InputTypes::InputData& input_data);
 };
 
