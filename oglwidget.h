@@ -28,6 +28,8 @@ protected:
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *m_vbo;
     QOpenGLBuffer *m_vessels;
+    QOpenGLBuffer *m_route;
+    size_t route_points_count;
     QOpenGLVertexArrayObject *m_vao;
     int m_projMatrixLoc;
     int m_camMatrixLoc;

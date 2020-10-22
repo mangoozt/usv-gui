@@ -103,44 +103,39 @@ namespace USV {
 
         explicit Path(const CurvedPath& curved_path, const Frame& reference_frame);
 
+        typedef std::vector<std::pair<double, Segment>> SegmentsType;
+
+        typedef SegmentsType::const_iterator constItr;
+
+    private:
+        SegmentsType segments{};
+
+    public:
         void appendSegment(Segment segment);
 
         Position position(double t) const;
 
-        typedef std::map<double, Segment>::const_iterator constItr;
-
         constItr segment(double t) const;
+
+        inline constItr end() const { return segments.cend(); }
 
         inline bool empty() const { return segments.empty(); };
 
         inline size_t size() const { return segments.size(); };
 
-        inline constItr end() const { return segments.cend(); }
-
-        Position endPosition();
+        Position endPosition() const;
 
         void cut(double t);
 
         inline double endTime() const { return (--segments.end())->first; }
 
-        std::map<double, Segment> segments{};
-
         std::pair<double, constItr> closestSegment(Vector2 point) const;
 
-        double getStartTime() const {
+        inline double getStartTime() const {
             return start_time;
         }
 
-
-        //! \brief Look up for maximum distance between paths (regardless of time)
-        //! \param path Second path
-        //! \return true if distance within limit false otherwise
-        bool checkMaxDistance(const Path& path, double limit) const;
-
-        //! \brief Look up for maximum distance between paths
-        //! \param path Second path
-        //! \return maximum distance between paths
-        double maxDistance(const Path& path) const;
+        std::vector<Vector2> getPointsPath(double angle_increment=5*180/M_PI)const;
 
     };
 

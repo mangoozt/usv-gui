@@ -125,28 +125,9 @@ void OGLWidget::initializeGL()
 
     m_vessels = new QOpenGLBuffer;
     m_vessels->create();
-    f->glEnableVertexAttribArray(1);
-    f->glEnableVertexAttribArray(2);
-    f->glEnableVertexAttribArray(3);
-    m_vessels->bind();
-    GLfloat positions[]{
-        2.0f,1.0f,0.1f,
-        0.0f,2.0f,1.0f,
-        1.0f,3.0f,0.1f,
-        0.0f,-1.0f,1.0f,
-        0.0f,-2.0f,1.0f
-    };
-    m_vessels->allocate(positions,sizeof(positions));
 
-    f->glVertexAttribDivisor(1, 1);
-    f->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 0*sizeof(float) ) );
-
-    f->glVertexAttribDivisor(2, 1);
-    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 2*sizeof(float) ) );
-
-    f->glVertexAttribDivisor(3, 1);
-    f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 3*sizeof(float) ) );
-    m_vessels->release();
+    m_route = new QOpenGLBuffer;
+    m_route->create();
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
@@ -182,26 +163,70 @@ void OGLWidget::paintGL()
         //        mm.translate(QVector3D(0,0,20));
         m_program->setUniformValue(m_myMatrixLoc, mm);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
-        std::vector<GLfloat> spos;
-        for(const auto& v: case_data.vessels){
-            spos.push_back(v.position.x());
-            spos.push_back(v.position.y());
-            spos.push_back(v.course);
-            for(size_t i=0;i<3;++i)
-                spos.push_back(v.color[i]);
-        }
-        m_vessels->bind();
-        m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());
-        m_vessels->release();
 
     }
 
-    // Now call a function introduced in OpenGL 3.1 / OpenGL ES 3.0. We
-    // requested a 3.3 or ES 3.0 context, so we know this will work.
+    // Draw vessels
+    m_vbo->bind();
+    f->glEnableVertexAttribArray(0);
+    f->glEnableVertexAttribArray(1);
+    f->glEnableVertexAttribArray(2);
+    f->glEnableVertexAttribArray(3);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    m_vbo->release();
+
+    m_vessels->bind();
+
+    f->glVertexAttribDivisor(1, 1);
+    f->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 0*sizeof(float) ) );
+
+    f->glVertexAttribDivisor(2, 1);
+    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 2*sizeof(float) ) );
+
+    f->glVertexAttribDivisor(3, 1);
+    f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 3*sizeof(float) ) );
+    m_vessels->release();
+    f->glLineWidth(1.0f);
     f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, case_data.vessels.size());
+
+    // Draw route
+    f->glDisableVertexAttribArray(1);
+    f->glVertexAttrib4f(1, 0.0f,0.0f,0.0f,0.0f);
+    f->glDisableVertexAttribArray(2);
+    f->glVertexAttrib1f(2, 0.0f);
+    f->glDisableVertexAttribArray(3);
+    f->glVertexAttrib3f(3, 0.0f,0.0f,1.0f);
+    m_route->bind();
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    m_route->release();
+    f->glDrawArrays(GL_LINE_STRIP, 0, route_points_count);
+
 }
 
 void OGLWidget::loadData(USV::CaseData &caseData){
     case_data = caseData;
+    std::vector<GLfloat> spos;
+    for(const auto& v: case_data.vessels){
+        spos.push_back(v.position.x());
+        spos.push_back(v.position.y());
+        spos.push_back(v.course);
+        for(size_t i=0;i<3;++i)
+            spos.push_back(v.color[i]);
+    }
+    m_vessels->bind();
+    m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());
+    m_vessels->release();
+    std::vector<GLfloat> route;
+    auto route_points=caseData.route.getPointsPath();
+    for(const auto& v: route_points){
+        route.push_back(v.x());
+        route.push_back(v.y());
+    }
+    m_route->bind();
+    m_route->allocate(route.data(),sizeof(GLfloat)*route.size());
+    route_points_count = route.size()/2;
+    m_route->release();
     m_uniformsDirty = true;
+
 }
