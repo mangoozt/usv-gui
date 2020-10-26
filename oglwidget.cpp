@@ -134,7 +134,7 @@ void OGLWidget::initializeGL()
 void OGLWidget::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
-    m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
+    m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 200.0f);
     m_uniformsDirty = true;
 }
 
@@ -153,8 +153,8 @@ void OGLWidget::paintGL()
         m_uniformsDirty = false;
         QMatrix4x4 camera;
         camera.lookAt(m_eye, m_eye + m_target, QVector3D(0, 1, 0));
-        QMatrix4x4 mm=m_proj * camera * m_world;
-        m_program->setUniformValue(m_myMatrixLoc, mm);
+        m_m=m_proj * camera * m_world;
+        m_program->setUniformValue(m_myMatrixLoc, m_m);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
     }
 
@@ -197,6 +197,15 @@ void OGLWidget::paintGL()
         f->glDrawArrays(GL_LINE_STRIP, path_meta.ptr, path_meta.points_count);
     }
 
+}
+#define PRINT_POINT_3D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<< std::endl;
+#define PRINT_POINT_4D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<<", "<<(point).w() << std::endl;
+QVector3D OGLWidget::screenToWorld(QPoint pos)
+{
+    auto minv=m_m.inverted();
+    QVector4D point_normalized=QVector4D(pos.x()/(float)width()*2-1, 1-pos.y()/(float)height()*2, 0.0f, 1.0f);
+    auto position = point_normalized*minv;
+    return QVector3D(position.x()*position.w(),position.y()*position.w(),0);
 }
 
 void OGLWidget::loadData(USV::CaseData &caseData){
@@ -241,10 +250,25 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
     m_vessels->release();
 }
 
+
+
+void OGLWidget::mousePressEvent(QMouseEvent *event){
+    std::cout << "clicked at postion: "<<event->x()<<", "<<event->y()<< std::endl;
+    auto point = screenToWorld(event->pos());
+    PRINT_POINT_3D(point)
+}
+
 void OGLWidget::wheelEvent ( QWheelEvent * event )
 {
-    m_eye.setZ(std::clamp(m_eye.z()+event->delta()*0.001f,1.0f,100.0f));
-    std::cout << m_eye.x()<<", "<<m_eye.y()<<", "<<m_eye.z() << std::endl;
+    auto zoom =std::clamp(m_eye.z() - event->delta()/240.0f, 0.0f,200.0f);
+    auto dzoom = (zoom-m_eye.z())/zoom;
+    auto m_position = screenToWorld(event->pos());
+    m_eye=m_eye-dzoom*(m_position-m_eye);
+    m_eye.setX(std::clamp(m_eye.x(),-200.0f,200.0f));
+    m_eye.setY(std::clamp(m_eye.y(),-200.0f,200.0f));
+    m_target.setX(m_eye.x());
+    m_target.setY(m_eye.y());
+    PRINT_POINT_3D(m_eye)
     m_uniformsDirty = true;
     this->update();
 }

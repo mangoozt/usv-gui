@@ -22,9 +22,11 @@ public:
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
+    QVector3D screenToWorld(QPoint pos);
     void loadData(USV::CaseData &case_data);
     void updatePositions(const std::vector<USV::Vessel>& vessels);
     void wheelEvent ( QWheelEvent * event );
+    void mousePressEvent(QMouseEvent* event);
     void keyPressEvent(QKeyEvent *event);
 signals:
     void keyCaught(QKeyEvent *e);
@@ -50,6 +52,7 @@ protected:
     int m_lightPosLoc;
     QMatrix4x4 m_proj;
     QMatrix4x4 m_world;
+    QMatrix4x4 m_m;
     QVector3D m_eye;
     QVector3D m_target;
     bool m_uniformsDirty;
