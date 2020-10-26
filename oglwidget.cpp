@@ -5,6 +5,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLExtraFunctions>
+#include <iostream>
 
 OGLWidget::OGLWidget(QWidget *parent)
     :QOpenGLWidget(parent),
@@ -41,7 +42,6 @@ static const char *vertexShaderSource =
         "   mat4 rot = mat4(cos(w),sin(w),0,0, -sin(w),cos(w),0,0, 0,0,1,0, 0,0,0,1);\n"
         "   mat4 translate = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, position.x,position.y,position.z,1);\n"
         "   color = col;\n"
-        "   gl_Position = projMatrix * camMatrix * worldMatrix *(rot*translate*vertex);\n"
         "   gl_Position = myMatrix *(translate*rot*vertex);\n"
         "}\n";
 
