@@ -202,18 +202,30 @@ void Path::appendSegment(Path::Segment segment) {
 
 Path::constItr Path::segment(double t) const {
     if (t > 0){
-        auto itr = segments.begin();
-        while(itr!=segments.end() && itr->first > t){
-            itr++;
+        constItr it;
+        auto first = segments.begin();
+        auto count = segments.size();
+        while (count > 0) {
+            it = first;
+            auto step = count / 2;
+            std::advance(it, step);
+            if (it->first< t) {
+                first = ++it;
+                count -= step + 1;
+            }
+            else
+                count = step;
         }
-        if(itr!=segments.end()) return itr;
+
+        if(first!=segments.end()) return first;
     }
     throw std::out_of_range("Time exceeds duration of path");
 }
 
 Path::Position Path::position(double t) const {
     auto segment_it = segment(t);
-    return segment_it->second.position(t + segment_it->second._duration - segment_it->first);
+    auto time=t + segment_it->second._duration - segment_it->first;
+    return segment_it->second.position(time);
 }
 
 void Path::cut(double t) {
