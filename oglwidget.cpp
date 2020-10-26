@@ -260,12 +260,12 @@ void OGLWidget::mousePressEvent(QMouseEvent *event){
 
 void OGLWidget::wheelEvent ( QWheelEvent * event )
 {
+    auto nx = event->x()/(float)width()*2-1;
+    auto ny = 1-event->y()/(float)height()*2;
     auto delta = event->delta()/240.0f;
-    auto m_position = screenToWorld(event->pos());
-    auto m_position_rel_n=(m_position-m_eye).normalized();
     m_eye.setZ(std::clamp(m_eye.z() - delta, 0.0f,200.0f));
-    m_eye.setX(std::clamp(m_eye.x() + delta*m_position_rel_n.x(),-200.0f,200.0f));
-    m_eye.setY(std::clamp(m_eye.y() + delta*m_position_rel_n.y(),-200.0f,200.0f));
+    m_eye.setX(std::clamp(m_eye.x() + delta*nx,-200.0f,200.0f));
+    m_eye.setY(std::clamp(m_eye.y() + delta*ny,-200.0f,200.0f));
     m_target.setX(m_eye.x());
     m_target.setY(m_eye.y());
     PRINT_POINT_3D(m_eye)
