@@ -253,10 +253,46 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
 
 
 void OGLWidget::mousePressEvent(QMouseEvent *event){
+    setCursor(Qt::ClosedHandCursor);
     std::cout << "clicked at postion: "<<event->x()<<", "<<event->y()<< std::endl;
-    auto point = screenToWorld(event->pos());
-    PRINT_POINT_3D(point)
+    mouse_press_point = event->pos();
+    PRINT_POINT_3D(screenToWorld(mouse_press_point))
 }
+
+void OGLWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    setCursor(Qt::OpenHandCursor);
+}
+
+
+void OGLWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if(event->buttons() & Qt::LeftButton)
+    {
+        auto diff= QPointF(mouse_press_point-event->pos());
+        mouse_press_point = event->pos();
+
+        diff.setX(diff.x()*2.0f/width());
+        diff.setY(diff.y()*2.0f/height());
+
+        float fov_rad = 45.0f * M_PI / 180.0;
+        float tan_fov=tan(fov_rad / 2.0);
+        auto r=m_eye.z();
+        float xtrans = diff.x() * r * tan_fov * (width()/(float)height());
+        float ytrans = -diff.y() * r * tan_fov;
+
+        m_eye.setZ(std::clamp(m_eye.z(), 0.0f,200.0f));
+        m_eye.setX(std::clamp(m_eye.x()+xtrans,-200.0f,200.0f));
+        m_eye.setY(std::clamp(m_eye.y()+ytrans,-200.0f,200.0f));
+
+        m_target.setX(m_eye.x());
+        m_target.setY(m_eye.y());
+        PRINT_POINT_3D(m_eye)
+        m_uniformsDirty = true;
+        update();
+    }
+}
+
 
 void OGLWidget::wheelEvent ( QWheelEvent * event )
 {

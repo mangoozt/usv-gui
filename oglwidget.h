@@ -27,6 +27,8 @@ public:
     void updatePositions(const std::vector<USV::Vessel>& vessels);
     void wheelEvent ( QWheelEvent * event );
     void mousePressEvent(QMouseEvent* event);
+    void mouseReleaseEvent(QMouseEvent*event);
+    void mouseMoveEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
 signals:
     void keyCaught(QKeyEvent *e);
@@ -43,6 +45,7 @@ protected:
         pathVBOMeta(size_t ptr, size_t points_count,QVector4D color):ptr(ptr),points_count(points_count),color(color){};
     };
     std::vector<pathVBOMeta> m_paths_meta;
+    QPoint mouse_press_point;
 
     QOpenGLVertexArrayObject *m_vao;
     int m_projMatrixLoc;
