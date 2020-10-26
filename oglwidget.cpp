@@ -239,3 +239,25 @@ void OGLWidget::wheelEvent ( QWheelEvent * event )
     m_uniformsDirty = true;
     this->update();
 }
+void OGLWidget::keyPressEvent(QKeyEvent *event) {
+    using namespace Qt;
+    switch(event->key()){
+    case Key_W:
+        m_eye.setY(std::clamp(m_eye.y()+0.1f,-60.0f,60.0f));
+        break;
+    case Key_S:
+        m_eye.setY(std::clamp(m_eye.y()-0.1f,-60.0f,60.0f));
+        break;
+    case Key_D:
+        m_eye.setX(std::clamp(m_eye.x()+0.1f,-60.0f,60.0f));
+        break;
+    case Key_A:
+        m_eye.setX(std::clamp(m_eye.x()-0.1f,-60.0f,60.0f));
+        break;
+    default:
+        return;
+    }
+    std::cout << m_eye.x()<<", "<<m_eye.y()<<", "<<m_eye.z() << std::endl;
+    m_uniformsDirty = true;
+    this->update();
+}

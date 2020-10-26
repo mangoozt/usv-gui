@@ -24,6 +24,9 @@ public:
     void paintGL();
     void loadData(USV::CaseData &case_data);
     void wheelEvent ( QWheelEvent * event );
+    void keyPressEvent(QKeyEvent *event);
+signals:
+    void keyCaught(QKeyEvent *e);
 protected:
     QOpenGLTexture *m_texture;
     QOpenGLShaderProgram *m_program;
