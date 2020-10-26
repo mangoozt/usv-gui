@@ -14,7 +14,7 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_vbo(0),
       m_vao(0),
       m_eye(0,0,20),
-      m_target(0, 0, -20),
+      m_target(0, 0, 0),
       m_uniformsDirty(true)
 {
     m_world.setToIdentity();
@@ -152,7 +152,7 @@ void OGLWidget::paintGL()
     if (m_uniformsDirty) {
         m_uniformsDirty = false;
         QMatrix4x4 camera;
-        camera.lookAt(m_eye, m_eye + m_target, QVector3D(0, 1, 0));
+        camera.lookAt(m_eye, m_target, QVector3D(0, 1, 0));
         m_m=m_proj * camera * m_world;
         m_program->setUniformValue(m_myMatrixLoc, m_m);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
@@ -291,6 +291,8 @@ void OGLWidget::keyPressEvent(QKeyEvent *event) {
         return;
     }
     std::cout << m_eye.x()<<", "<<m_eye.y()<<", "<<m_eye.z() << std::endl;
+    m_target.setX(m_eye.x());
+    m_target.setY(m_eye.y());
     m_uniformsDirty = true;
     this->update();
 }
