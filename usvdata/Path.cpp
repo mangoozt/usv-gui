@@ -275,8 +275,8 @@ std::vector<Vector2> Path::getPointsPath(const double angle_increment)const{
             double sign = s._curve>0?1:-1;
             size_t n=dangle/angle_increment;
             for(size_t i=0;i<n;++i){
-                auto x_ = std::sin(angle_increment*n);
-                auto y_ = sign * (1 - std::cos(angle_increment*n));
+                auto x_ = std::sin(angle_increment*i);
+                auto y_ = sign * (1 - std::cos(angle_increment*i));
                 points.push_back(s._start_point+ r*Vector2(x_ * b_cos - y_ * b_sin, x_ * b_sin + y_ * b_cos));
             }
         } else {

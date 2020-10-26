@@ -135,7 +135,7 @@ namespace USV {
             return start_time;
         }
 
-        std::vector<Vector2> getPointsPath(double angle_increment=5*180/M_PI)const;
+        std::vector<Vector2> getPointsPath(double angle_increment=2.0/180*M_PI)const;
 
     };
 
