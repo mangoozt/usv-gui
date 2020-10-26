@@ -139,12 +139,29 @@ struct Settings {
 
 typedef std::vector<CurvedPath> CurvedPathCollection;
 
+struct Maneuver{
+    enum class SolutionType {
+        Solved = 0,
+        SolvedWithViolations,
+        NotSolved
+    };
+
+    SolutionType solution_type;
+    CurvedPath path;
+    std::string msg;
+    std::string solver_name;
+};
+
+typedef std::vector<Maneuver> Maneuvers;
+
 struct InputData {
     std::unique_ptr<NavigationParameters> navigationParameters;
     std::unique_ptr<TargetsParameters> navigationProblem;
     std::unique_ptr<Hydrometeorology> hydrometeorology;
     std::unique_ptr<CurvedPath> route;
     //        std::unique_ptr<Settings> settings;
+    std::unique_ptr<Maneuvers> maneuvers;
+    std::unique_ptr<CurvedPathCollection> targets_paths;
 };
 
 }
@@ -211,6 +228,27 @@ struct default_codec_t<TargetParameters> {
         codec.required("first_detect_dist", &TargetParameters::first_detect_dist);
         codec.optional("cross_dist", &TargetParameters::cross_dist);
         codec.required("timestamp", &TargetParameters::timestamp);
+        return codec;
+    }
+};
+
+template<>
+struct default_codec_t<Maneuver> {
+    static int SolutionTypeDecode(const Maneuver::SolutionType cat){
+        return static_cast<int>(cat);
+    }
+
+    static Maneuver::SolutionType SolutionTypeEncode(const int cat){
+        return static_cast<Maneuver::SolutionType>(cat);
+    }
+
+    static codec::object_t<Maneuver> codec() {
+        auto codec = codec::object<Maneuver>();
+        auto type_codec = codec::transform(codec::number<int>(),SolutionTypeDecode,SolutionTypeEncode);
+        codec.required("solution_type", &Maneuver::solution_type, type_codec);
+        codec.required("path", &Maneuver::path);
+        codec.required("msg", &Maneuver::msg);
+        codec.required("solver_name", &Maneuver::solver_name);
         return codec;
     }
 };

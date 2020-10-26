@@ -10,5 +10,11 @@ CaseData::CaseData(const InputTypes::InputData& input_data):route(0){
         vessels.push_back({frame.fromWgs(target.lat,target.lon),target.COG/180*M_PI,{0,1,0}});
     }
     route = Path(*input_data.route,frame);
+    for(const auto&path:*input_data.targets_paths)
+        targets_maneuvers.emplace_back(path,frame);
+
+    for(const auto&path:*input_data.maneuvers)
+        maneuvers.emplace_back(path.path,frame);
+
 };
 }
