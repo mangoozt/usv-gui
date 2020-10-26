@@ -25,13 +25,19 @@ public:
     void loadData(USV::CaseData &case_data);
     void wheelEvent ( QWheelEvent * event );
 protected:
-
     QOpenGLTexture *m_texture;
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *m_vbo;
     QOpenGLBuffer *m_vessels;
-    QOpenGLBuffer *m_route;
-    size_t route_points_count;
+    QOpenGLBuffer *m_paths;
+    struct pathVBOMeta{
+        size_t ptr;
+        size_t points_count;
+        QVector4D color;
+        pathVBOMeta(size_t ptr, size_t points_count,QVector4D color):ptr(ptr),points_count(points_count),color(color){};
+    };
+    std::vector<pathVBOMeta> m_paths_meta;
+
     QOpenGLVertexArrayObject *m_vao;
     int m_projMatrixLoc;
     int m_camMatrixLoc;

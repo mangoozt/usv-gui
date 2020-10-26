@@ -36,14 +36,13 @@ static const char *vertexShaderSource =
         "layout(location = 2) in float w;\n"
         "layout(location = 3) in vec3 col;\n"
         "out vec3 color;\n"
-        "uniform mat4 projMatrix;\n"
-        "uniform mat4 camMatrix;\n"
-        "uniform mat4 worldMatrix;\n"
         "uniform mat4 myMatrix;\n"
         "void main() {\n"
-        "   mat4 rot = mat4(cos(w), sin(w),0,0,-sin(w), cos(w), 0,0,0, 0, 1, 0,0, 0, 0, 1);\n"
+        "   mat4 rot = mat4(cos(w),sin(w),0,0, -sin(w),cos(w),0,0, 0,0,1,0, 0,0,0,1);\n"
+        "   mat4 translate = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, position.x,position.y,position.z,1);\n"
         "   color = col;\n"
-        "   gl_Position = projMatrix * camMatrix * worldMatrix * myMatrix *(rot*vertex + position);\n"
+        "   gl_Position = projMatrix * camMatrix * worldMatrix *(rot*translate*vertex);\n"
+        "   gl_Position = myMatrix *(translate*rot*vertex);\n"
         "}\n";
 
 static const char *fragmentShaderSource =
@@ -88,9 +87,6 @@ void OGLWidget::initializeGL()
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, versionedShaderCode(fragmentShaderSource));
     m_program->link();
 
-    m_projMatrixLoc = m_program->uniformLocation("projMatrix");
-    m_camMatrixLoc = m_program->uniformLocation("camMatrix");
-    m_worldMatrixLoc = m_program->uniformLocation("worldMatrix");
     m_myMatrixLoc = m_program->uniformLocation("myMatrix");
     m_lightPosLoc = m_program->uniformLocation("lightPos");
 
@@ -126,8 +122,8 @@ void OGLWidget::initializeGL()
     m_vessels = new QOpenGLBuffer;
     m_vessels->create();
 
-    m_route = new QOpenGLBuffer;
-    m_route->create();
+    m_paths = new QOpenGLBuffer;
+    m_paths->create();
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
@@ -155,15 +151,9 @@ void OGLWidget::paintGL()
         m_uniformsDirty = false;
         QMatrix4x4 camera;
         camera.lookAt(m_eye, m_eye + m_target, QVector3D(0, 1, 0));
-        m_program->setUniformValue(m_projMatrixLoc, m_proj);
-        m_program->setUniformValue(m_camMatrixLoc, camera);
-        m_program->setUniformValue(m_worldMatrixLoc, m_world);
-        QMatrix4x4 mm;
-        mm.setToIdentity();
-        //        mm.translate(QVector3D(0,0,20));
+        QMatrix4x4 mm=m_proj * camera * m_world;
         m_program->setUniformValue(m_myMatrixLoc, mm);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
-
     }
 
     // Draw vessels
@@ -187,6 +177,7 @@ void OGLWidget::paintGL()
     f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 3*sizeof(float) ) );
     m_vessels->release();
     f->glLineWidth(1.0f);
+
     f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, case_data.vessels.size());
 
     // Draw route
@@ -195,12 +186,14 @@ void OGLWidget::paintGL()
     f->glDisableVertexAttribArray(2);
     f->glVertexAttrib1f(2, 0.0f);
     f->glDisableVertexAttribArray(3);
-    f->glVertexAttrib3f(3, 0.0f,0.0f,1.0f);
-    m_route->bind();
+    m_paths->bind();
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    m_route->release();
-    f->glDrawArrays(GL_LINE_STRIP, 0, route_points_count);
+    m_paths->release();
+    for(const auto& path_meta:m_paths_meta){
+        f->glVertexAttrib3f(3, path_meta.color.x(),path_meta.color.y(),path_meta.color.z());
+        f->glDrawArrays(GL_LINE_STRIP, path_meta.ptr, path_meta.points_count);
+    }
 
 }
 
@@ -217,22 +210,31 @@ void OGLWidget::loadData(USV::CaseData &caseData){
     m_vessels->bind();
     m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());
     m_vessels->release();
-    std::vector<GLfloat> route;
-    auto route_points=caseData.route.getPointsPath();
-    for(const auto& v: route_points){
-        route.push_back(v.x());
-        route.push_back(v.y());
-    }
-    m_route->bind();
-    m_route->allocate(route.data(),sizeof(GLfloat)*route.size());
-    route_points_count = route.size()/2;
-    m_route->release();
-    m_uniformsDirty = true;
 
+    std::vector<GLfloat> paths;
+    auto path_points=case_data.route.getPointsPath();
+    for(const auto& v: path_points){
+        paths.push_back(v.x());
+        paths.push_back(v.y());
+    }
+    m_paths_meta.clear();
+    m_paths_meta.emplace_back(0,path_points.size(),QVector4D(0,0,1.0f,0));
+    for(const auto &path:case_data.targets_maneuvers){
+        path_points=path.getPointsPath();
+        size_t ptr=paths.size()/2;
+        for(const auto& v: path_points){
+            paths.push_back(v.x());
+            paths.push_back(v.y());
+        }
+        m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0,0,0,0));
+    }
+    m_paths->bind();
+    m_paths->allocate(paths.data(),sizeof(GLfloat)*paths.size());
+    m_paths->release();
 }
 void OGLWidget::wheelEvent ( QWheelEvent * event )
 {
-    m_eye = {0,0,std::clamp(m_eye.z()+event->delta()*0.001f,1.0f,100.0f)};
+    m_eye.setZ(std::clamp(m_eye.z()+event->delta()*0.001f,1.0f,100.0f));
     std::cout << m_eye.x()<<", "<<m_eye.y()<<", "<<m_eye.z() << std::endl;
     m_uniformsDirty = true;
     this->update();
