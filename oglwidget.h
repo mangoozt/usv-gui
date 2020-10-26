@@ -5,6 +5,7 @@
 #include <QOpenGLWidget>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QWheelEvent>
 #include "usvdata/CaseData.h"
 
 class QOpenGLTexture;
@@ -22,6 +23,7 @@ public:
     void resizeGL(int w, int h);
     void paintGL();
     void loadData(USV::CaseData &case_data);
+    void wheelEvent ( QWheelEvent * event );
 protected:
 
     QOpenGLTexture *m_texture;

@@ -230,3 +230,10 @@ void OGLWidget::loadData(USV::CaseData &caseData){
     m_uniformsDirty = true;
 
 }
+void OGLWidget::wheelEvent ( QWheelEvent * event )
+{
+    m_eye = {0,0,std::clamp(m_eye.z()+event->delta()*0.001f,1.0f,100.0f)};
+    std::cout << m_eye.x()<<", "<<m_eye.y()<<", "<<m_eye.z() << std::endl;
+    m_uniformsDirty = true;
+    this->update();
+}
