@@ -23,6 +23,7 @@ public:
     void resizeGL(int w, int h);
     void paintGL();
     void loadData(USV::CaseData &case_data);
+    void updatePositions(const std::vector<USV::Vessel>& vessels);
     void wheelEvent ( QWheelEvent * event );
     void keyPressEvent(QKeyEvent *event);
 signals:
@@ -52,6 +53,7 @@ protected:
     QVector3D m_eye;
     QVector3D m_target;
     bool m_uniformsDirty;
+public:
     USV::CaseData case_data{};
 };
 

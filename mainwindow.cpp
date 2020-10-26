@@ -29,3 +29,22 @@ void MainWindow::on_openButton_clicked()
     OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
     ogl_widget->loadData(caseData);
 }
+
+void MainWindow::on_timeSlider_valueChanged(int value)
+{
+    OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
+    auto& case_data=ogl_widget->case_data;
+    auto starttime=case_data.route.getStartTime();
+    auto endtime=case_data.route.endTime();
+    auto time = starttime+(endtime-starttime)*value/101;
+    std::vector<USV::Vessel> vessels;
+
+    auto position = case_data.route.position(time);
+    vessels.push_back({position.point,position.course.radians(),{0,1,0}});
+    for(const auto&path: ogl_widget->case_data.targets_maneuvers){
+        auto position = path.position(time);
+        vessels.push_back({position.point,position.course.radians(),{0,0,1}});
+    }
+    ogl_widget->updatePositions(vessels);
+    ogl_widget->update();
+}

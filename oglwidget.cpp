@@ -29,6 +29,8 @@ OGLWidget::~OGLWidget()
     delete m_program;
     delete m_vbo;
     delete m_vao;
+    delete m_vessels;
+    delete m_paths;
 }
 
 static const char *vertexShaderSource =
@@ -199,17 +201,8 @@ void OGLWidget::paintGL()
 
 void OGLWidget::loadData(USV::CaseData &caseData){
     case_data = caseData;
-    std::vector<GLfloat> spos;
-    for(const auto& v: case_data.vessels){
-        spos.push_back(v.position.x());
-        spos.push_back(v.position.y());
-        spos.push_back(v.course);
-        for(size_t i=0;i<3;++i)
-            spos.push_back(v.color[i]);
-    }
-    m_vessels->bind();
-    m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());
-    m_vessels->release();
+
+    updatePositions(case_data.vessels);
 
     std::vector<GLfloat> paths;
     auto path_points=case_data.route.getPointsPath();
@@ -232,6 +225,22 @@ void OGLWidget::loadData(USV::CaseData &caseData){
     m_paths->allocate(paths.data(),sizeof(GLfloat)*paths.size());
     m_paths->release();
 }
+
+void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
+    case_data.vessels=vessels;
+    std::vector<GLfloat> spos;
+    for(const auto& v: vessels){
+        spos.push_back(v.position.x());
+        spos.push_back(v.position.y());
+        spos.push_back(v.course);
+        for(size_t i=0;i<3;++i)
+            spos.push_back(v.color[i]);
+    }
+    m_vessels->bind();
+    m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());
+    m_vessels->release();
+}
+
 void OGLWidget::wheelEvent ( QWheelEvent * event )
 {
     m_eye.setZ(std::clamp(m_eye.z()+event->delta()*0.001f,1.0f,100.0f));
