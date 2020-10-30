@@ -17,8 +17,8 @@ set(USVDATA_SOURCES
 
 add_library(usvdata STATIC ${USVDATA_HEADERS} ${USVDATA_SOURCES})
 
-find_package(GeographicLib 1.50.1 REQUIRED)
-target_link_libraries(usvdata ${GeographicLib_LIBRARIES})
+find_package(GeographicLib 1.50.1 REQUIRED STATIC)
+target_link_libraries(usvdata ${GeographicLib_STATIC_LIBRARIES})
 set(SPOTIFY_JSON_BUILD_TESTS OFF)
 add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/spotify-json" "vendor/spotify-json" EXCLUDE_FROM_ALL)
 target_link_libraries(usvdata spotify-json)
