@@ -159,7 +159,7 @@ struct InputData {
     std::unique_ptr<TargetsParameters> navigationProblem;
     std::unique_ptr<Hydrometeorology> hydrometeorology;
     std::unique_ptr<CurvedPath> route;
-    //        std::unique_ptr<Settings> settings;
+    std::unique_ptr<Settings> settings;
     std::unique_ptr<Maneuvers> maneuvers;
     std::unique_ptr<CurvedPathCollection> targets_paths;
 };
@@ -249,6 +249,69 @@ struct default_codec_t<Maneuver> {
         codec.required("path", &Maneuver::path);
         codec.required("msg", &Maneuver::msg);
         codec.required("solver_name", &Maneuver::solver_name);
+        return codec;
+    }
+};
+
+template<>
+struct default_codec_t<Settings> {
+    static int ManeuverWayDecode(const Settings::ManeuverCalculation::ManeuverWay m_type){
+        return static_cast<int>(m_type);
+    }
+
+    static Settings::ManeuverCalculation::ManeuverWay ManeuverWayEncode(const int m_type){
+        return static_cast<Settings::ManeuverCalculation::ManeuverWay>(m_type);
+    }
+
+    static codec::object_t<Settings> codec() {
+
+        using ManeuverCalculation=Settings::ManeuverCalculation;
+        auto maneuver_calc = codec::object<ManeuverCalculation>();
+        maneuver_calc.required("priority",&ManeuverCalculation::priority);
+        auto type_codec = codec::transform(codec::number<int>(), ManeuverWayDecode, ManeuverWayEncode);
+        maneuver_calc.required("maneuver_way",&ManeuverCalculation::maneuver_way,type_codec);
+        maneuver_calc.required("safe_diverg_dist",&ManeuverCalculation::safe_diverg_dist);
+        maneuver_calc.required("min_diverg_dist",&ManeuverCalculation::min_diverg_dist);
+        maneuver_calc.required("minimal_speed",&ManeuverCalculation::minimal_speed);
+        maneuver_calc.required("maximal_speed",&ManeuverCalculation::maximal_speed);
+        maneuver_calc.required("forward_speed1",&ManeuverCalculation::forward_speed1);
+        maneuver_calc.required("forward_speed2",&ManeuverCalculation::forward_speed2);
+        maneuver_calc.required("forward_speed3",&ManeuverCalculation::forward_speed3);
+        maneuver_calc.required("forward_speed4",&ManeuverCalculation::forward_speed4);
+        maneuver_calc.required("forward_speed5",&ManeuverCalculation::forward_speed5);
+        maneuver_calc.required("reverse_speed1",&ManeuverCalculation::reverse_speed1);
+        maneuver_calc.required("reverse_speed2",&ManeuverCalculation::reverse_speed2);
+        maneuver_calc.required("max_course_delta",&ManeuverCalculation::max_course_delta);
+        maneuver_calc.required("time_advance",&ManeuverCalculation::time_advance);
+        maneuver_calc.required("can_leave_route",&ManeuverCalculation::can_leave_route);
+        maneuver_calc.required("max_route_deviation",&ManeuverCalculation::max_route_deviation);
+        maneuver_calc.required("max_circulation_radius",&ManeuverCalculation::max_circulation_radius);
+        maneuver_calc.required("min_circulation_radius",&ManeuverCalculation::min_circulation_radius);
+        maneuver_calc.required("breaking_distance",&ManeuverCalculation::breaking_distance);
+        maneuver_calc.required("run_out_distance",&ManeuverCalculation::run_out_distance);
+        maneuver_calc.required("forecast_time",&ManeuverCalculation::forecast_time);
+
+        using SafetyControl=Settings::SafetyControl;
+        auto safety_control = codec::object<SafetyControl>();
+        safety_control.required("cpa",&SafetyControl::cpa);
+        safety_control.required("tcpa",&SafetyControl::tcpa);
+        safety_control.required("min_detect_dist",&SafetyControl::min_detect_dist);
+        safety_control.required("last_moment_dist",&SafetyControl::last_moment_dist);
+
+        auto safety_zone = codec::object<SafetyControl::SafetyZone>();
+        safety_zone.required("safety_zone_type",&SafetyControl::SafetyZone::safety_zone_type);
+        safety_zone.optional("radius",&SafetyControl::SafetyZone::radius);
+        safety_zone.optional("start_angle",&SafetyControl::SafetyZone::start_angle);
+        safety_zone.optional("end_angle",&SafetyControl::SafetyZone::end_angle);
+        safety_zone.optional("length",&SafetyControl::SafetyZone::length);
+        safety_zone.optional("width",&SafetyControl::SafetyZone::width);
+        safety_zone.optional("lengthOffset",&SafetyControl::SafetyZone::lengthOffset);
+
+        safety_control.required("safety_zone",&SafetyControl::safety_zone,safety_zone);
+
+        auto codec = codec::object<Settings>();
+        codec.required("maneuver_calculation", &Settings::manuever_calculation, maneuver_calc);
+        codec.required("safety_control", &Settings::safety_control, safety_control);
         return codec;
     }
 };

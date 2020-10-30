@@ -35,7 +35,8 @@ signals:
 protected:
     QOpenGLTexture *m_texture;
     QOpenGLShaderProgram *m_program;
-    QOpenGLBuffer *m_vbo;
+    QOpenGLBuffer *m_ship_vbo;
+    QOpenGLBuffer *m_circle_vbo;
     QOpenGLBuffer *m_vessels;
     QOpenGLBuffer *m_paths;
     struct pathVBOMeta{

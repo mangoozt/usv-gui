@@ -7,11 +7,14 @@
 #include <QOpenGLExtraFunctions>
 #include <iostream>
 
+#define CIRCLE_POINTS_N 360
+
 OGLWidget::OGLWidget(QWidget *parent)
     :QOpenGLWidget(parent),
       m_texture(0),
       m_program(0),
-      m_vbo(0),
+      m_ship_vbo(0),
+      m_circle_vbo(0),
       m_vao(0),
       m_eye(0,0,20),
       m_target(0, 0, 0),
@@ -27,24 +30,26 @@ OGLWidget::~OGLWidget()
     makeCurrent();
     delete m_texture;
     delete m_program;
-    delete m_vbo;
+    delete m_ship_vbo;
+    delete m_circle_vbo;
     delete m_vao;
     delete m_vessels;
     delete m_paths;
 }
-
 static const char *vertexShaderSource =
         "layout(location = 0) in vec4 vertex;\n"
         "layout(location = 1) in vec4 position;\n"
         "layout(location = 2) in float w;\n"
         "layout(location = 3) in vec3 col;\n"
+        "layout(location = 4) in float scale;\n"
         "out vec3 color;\n"
         "uniform mat4 myMatrix;\n"
         "void main() {\n"
         "   mat4 rot = mat4(cos(w),sin(w),0,0, -sin(w),cos(w),0,0, 0,0,1,0, 0,0,0,1);\n"
         "   mat4 translate = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, position.x,position.y,position.z,1);\n"
+        "   mat4 m_scale = mat4(scale,0,0,0, 0,scale,0,0, 0,0,scale,0, 0,0,0,1);\n"
         "   color = col;\n"
-        "   gl_Position = myMatrix *(translate*rot*vertex);\n"
+        "   gl_Position = myMatrix *(translate*rot*m_scale*vertex);\n"
         "}\n";
 
 static const char *fragmentShaderSource =
@@ -101,25 +106,48 @@ void OGLWidget::initializeGL()
     if (m_vao->create())
         m_vao->bind();
 
-    if (m_vbo) {
-        delete m_vbo;
-        m_vbo = 0;
+    if (m_ship_vbo) {
+        delete m_ship_vbo;
+        m_ship_vbo = 0;
     }
     m_program->bind();
-    m_vbo = new QOpenGLBuffer;
-    m_vbo->create();
-    m_vbo->bind();
+    m_ship_vbo = new QOpenGLBuffer;
+    m_ship_vbo->create();
+    m_ship_vbo->bind();
     GLfloat ship[]={
-        0.0f,0.3f,0.0f,
-        0.75f,0.3f,0.0f,
-        1.0f,0.0f,0.0f,
-        0.75f,-0.3f,0.0f,
-        0.0f,-0.3f,0.0f,
+        -0.43301270189f*0.2, 0.5f*0.2,0.0f,
+        -0.43301270189f*0.2,-0.5f*0.2,0.0f,
+         0.43301270189f*0.2, 0.0f,0.0f,
     };
-    m_vbo->allocate(ship, sizeof(ship));
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    m_vbo->release();
+    m_ship_vbo->allocate(ship, sizeof(ship));
+    m_ship_vbo->release();
+
+//    if (m_circle_vbo) {
+//        delete m_circle_vbo;
+//        m_circle_vbo = 0;
+//    }
+
+    {
+        std::vector<GLfloat> circles;
+        size_t circle_N{CIRCLE_POINTS_N};
+        circles.reserve(circle_N*2);
+        double x{1};
+        double y{0};
+        double sin_ = std::sin(M_2PI/(float)circle_N);
+        double cos_ = std::cos(M_2PI/(float)circle_N);
+        for(size_t i=0; i<circle_N;++i){
+            circles.push_back(x);
+            circles.push_back(y);
+            auto x_=x;
+            x=cos_*x - sin_*y;
+            y=sin_*x_ + cos_*y;
+        }
+        m_circle_vbo=new QOpenGLBuffer;
+        m_circle_vbo->create();
+        m_circle_vbo->bind();
+        m_circle_vbo->allocate(circles.data(), sizeof(GLfloat)*circles.size());
+        m_circle_vbo->release();
+    }
 
     m_vessels = new QOpenGLBuffer;
     m_vessels->create();
@@ -159,28 +187,40 @@ void OGLWidget::paintGL()
     }
 
     // Draw vessels
-    m_vbo->bind();
+    m_ship_vbo->bind();
     f->glEnableVertexAttribArray(0);
     f->glEnableVertexAttribArray(1);
     f->glEnableVertexAttribArray(2);
     f->glEnableVertexAttribArray(3);
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    m_vbo->release();
+    m_ship_vbo->release();
 
     m_vessels->bind();
 
     f->glVertexAttribDivisor(1, 1);
-    f->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 0*sizeof(float) ) );
+    f->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 0*sizeof(float) ) );
 
     f->glVertexAttribDivisor(2, 1);
-    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 2*sizeof(float) ) );
+    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 2*sizeof(float) ) );
 
     f->glVertexAttribDivisor(3, 1);
-    f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) ( 3*sizeof(float) ) );
+    f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 3*sizeof(float) ) );
+    f->glVertexAttrib1f(4,1.0f);
     m_vessels->release();
     f->glLineWidth(1.0f);
+//    f->glFrontFace(GL_CW);
+    f->glDrawArraysInstanced(GL_TRIANGLES, 0, 3, case_data.vessels.size());
 
-    f->glDrawArraysInstanced(GL_LINE_LOOP, 0, 5, case_data.vessels.size());
+    // Circle
+    m_circle_vbo->bind();
+    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    m_circle_vbo->release();
+    m_vessels->bind();
+    f->glEnableVertexAttribArray(4);
+    f->glVertexAttribDivisor(4, 1);
+    f->glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 6*sizeof(float) ) );
+    m_vessels->release();
+    f->glDrawArraysInstanced(GL_LINE_STRIP, 0, CIRCLE_POINTS_N, case_data.vessels.size());
 
     // Draw route
     f->glDisableVertexAttribArray(1);
@@ -188,10 +228,16 @@ void OGLWidget::paintGL()
     f->glDisableVertexAttribArray(2);
     f->glVertexAttrib1f(2, 0.0f);
     f->glDisableVertexAttribArray(3);
+    f->glDisableVertexAttribArray(4);
+    f->glVertexAttrib1f(4,1.0f);
     m_paths->bind();
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     m_paths->release();
+    f->glLineWidth(2.0f);
+    f->glEnable( GL_LINE_SMOOTH );
+    f->glEnable(GL_BLEND);
+    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for(const auto& path_meta:m_paths_meta){
         f->glVertexAttrib3f(3, path_meta.color.x(),path_meta.color.y(),path_meta.color.z());
         f->glDrawArrays(GL_LINE_STRIP, path_meta.ptr, path_meta.points_count);
@@ -244,6 +290,7 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
         spos.push_back(v.course);
         for(size_t i=0;i<3;++i)
             spos.push_back(v.color[i]);
+        spos.push_back(v.radius);
     }
     m_vessels->bind();
     m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());

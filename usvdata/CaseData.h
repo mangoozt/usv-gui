@@ -11,6 +11,7 @@ struct Vessel{
     Vector2 position;
     double course; // radians
     double color[3]{0,0,0};
+    double radius;
 };
 
 

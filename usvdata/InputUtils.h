@@ -20,8 +20,9 @@ void load_from_json_file(std::unique_ptr<T>& data, const std::filesystem::path& 
     std::stringstream buffer;
     buffer << ifs.rdbuf();
     data = std::make_unique<T>();
-    if(!try_decode<T>(*data,buffer.str()))
-        throw std::runtime_error("Failed to parse "+filename.filename().string());
+    *data = decode<T>(buffer.str());
+//    if(!try_decode<T>(*data,buffer.str()))
+//        throw std::runtime_error("Failed to parse "+filename.filename().string());
 }
 
 }

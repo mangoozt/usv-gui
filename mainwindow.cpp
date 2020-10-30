@@ -40,10 +40,10 @@ void MainWindow::on_timeSlider_valueChanged(int value)
     std::vector<USV::Vessel> vessels;
 
     auto position = case_data.route.position(time);
-    vessels.push_back({position.point,position.course.radians(),{0,1,0}});
-    for(const auto&path: ogl_widget->case_data.targets_maneuvers){
-        auto position = path.position(time);
-        vessels.push_back({position.point,position.course.radians(),{0,0,1}});
+    vessels.push_back({position.point,position.course.radians(),{0,1,0},case_data.vessels[0].radius});
+    for(size_t i=0; i<case_data.targets_maneuvers.size();++i){
+        auto position = case_data.targets_maneuvers[i].position(time);
+        vessels.push_back({position.point,position.course.radians(),{0,0,1},case_data.vessels[i+1].radius});
     }
     ogl_widget->updatePositions(vessels);
     ogl_widget->update();
