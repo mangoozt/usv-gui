@@ -33,10 +33,11 @@ void MainWindow::on_openButton_clicked()
 void MainWindow::on_timeSlider_valueChanged(int value)
 {
     OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
+    QSlider *time_slider = findChild<QSlider*>("timeSlider");
     auto& case_data=ogl_widget->case_data;
     auto starttime=case_data.route.getStartTime();
     auto endtime=case_data.route.endTime();
-    auto time = starttime+(endtime-starttime)*value/101;
+    auto time = starttime+(endtime-starttime)*value/(time_slider->maximum()+1);
     std::vector<USV::Vessel> vessels;
 
     auto position = case_data.route.position(time);
