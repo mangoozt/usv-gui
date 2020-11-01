@@ -7,15 +7,24 @@
 #include <vector>
 
 namespace USV{
+
+struct Color{
+    double r;
+    double g;
+    double b;
+    double a{1};
+};
+
 struct Vessel{
     Vector2 position;
     double course; // radians
-    double color[3]{0,0,0};
     double radius;
+    Color color{0,0,0};
 };
 
 
 struct CaseData{
+    double radius;
     std::vector<Vessel> vessels{0};
     Path route{0};
     std::vector<Path> targets_maneuvers;

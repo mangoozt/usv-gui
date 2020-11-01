@@ -257,8 +257,6 @@ QVector3D OGLWidget::screenToWorld(QPoint pos)
 void OGLWidget::loadData(USV::CaseData &caseData){
     case_data = caseData;
 
-    updatePositions(case_data.vessels);
-
     std::vector<GLfloat> paths;
     auto path_points=case_data.route.getPointsPath();
     for(const auto& v: path_points){
@@ -276,10 +274,20 @@ void OGLWidget::loadData(USV::CaseData &caseData){
         }
         m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0,0,0,0));
     }
+    for(const auto& path:case_data.maneuvers){
+        path_points=path.getPointsPath();
+        size_t ptr=paths.size()/2;
+        for(const auto& v: path_points){
+            paths.push_back(v.x());
+            paths.push_back(v.y());
+        }
+        m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0.5f,0.5f,0.5f,0));
+    }
     m_paths->bind();
     m_paths->allocate(paths.data(),sizeof(GLfloat)*paths.size());
     m_paths->release();
 }
+
 
 void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
     case_data.vessels=vessels;
@@ -288,8 +296,9 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
         spos.push_back(v.position.x());
         spos.push_back(v.position.y());
         spos.push_back(v.course);
-        for(size_t i=0;i<3;++i)
-            spos.push_back(v.color[i]);
+        spos.push_back(v.color.r);
+        spos.push_back(v.color.g);
+        spos.push_back(v.color.b);
         spos.push_back(v.radius);
     }
     m_vessels->bind();

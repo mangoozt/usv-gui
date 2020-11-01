@@ -25,9 +25,40 @@ void MainWindow::on_openButton_clicked()
     std::cout<<fileName.toStdString();
     auto dir_path = std::filesystem::path(fileName.toStdString()).parent_path();
     auto input_data = USV::InputUtils::loadInputData(dir_path);
-    USV::CaseData caseData = USV::CaseData(input_data);
+    USV::CaseData case_data = USV::CaseData(input_data);
     OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
-    ogl_widget->loadData(caseData);
+    ogl_widget->loadData(case_data);
+    QSlider *time_slider = findChild<QSlider*>("timeSlider");
+    time_slider->setValue(time_slider->minimum());
+    update_time(case_data.route.getStartTime(),ogl_widget);
+}
+
+namespace{
+void push_position(double time, const USV::Path &path, std::vector<USV::Vessel> &vessels, USV::Color& color, double radius){
+    try{
+        auto position = path.position(time);
+        vessels.push_back({position.point, position.course.radians(), radius, color});
+    }catch(std::out_of_range){
+
+    }
+}
+}
+void MainWindow::update_time(double time, OGLWidget* ogl_widget){
+    std::vector<USV::Vessel> vessels;
+    auto& case_data=ogl_widget->case_data;
+    USV::Color color{0,1,0};
+    push_position(time, case_data.route, vessels, color, case_data.radius);
+
+    color={0,0,1};
+    for(size_t i=0; i<case_data.targets_maneuvers.size();++i)
+        push_position(time, case_data.targets_maneuvers[i], vessels, color, case_data.radius);
+
+    color={0.8,0.8,0.8};
+    for(const auto &maneuver: case_data.maneuvers)
+        push_position(time, maneuver, vessels, color, case_data.radius);
+
+    ogl_widget->updatePositions(vessels);
+    ogl_widget->update();
 }
 
 void MainWindow::on_timeSlider_valueChanged(int value)
@@ -38,14 +69,5 @@ void MainWindow::on_timeSlider_valueChanged(int value)
     auto starttime=case_data.route.getStartTime();
     auto endtime=case_data.route.endTime();
     auto time = starttime+(endtime-starttime)*value/(time_slider->maximum()+1);
-    std::vector<USV::Vessel> vessels;
-
-    auto position = case_data.route.position(time);
-    vessels.push_back({position.point,position.course.radians(),{0,1,0},case_data.vessels[0].radius});
-    for(size_t i=0; i<case_data.targets_maneuvers.size();++i){
-        auto position = case_data.targets_maneuvers[i].position(time);
-        vessels.push_back({position.point,position.course.radians(),{0,0,1},case_data.vessels[i+1].radius});
-    }
-    ogl_widget->updatePositions(vessels);
-    ogl_widget->update();
+    update_time(time, ogl_widget);
 }
