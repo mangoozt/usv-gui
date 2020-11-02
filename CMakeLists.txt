@@ -24,6 +24,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    endif()
 #endif()
 
+set(Qt5_USE_STATIC_LIBS ON)
+set(Qt5_USE_STATIC_RUNTIME ON)
+
+if(MSVC)
+    add_compile_options(/W4)
+
+else()
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules)
+endif()
+
 find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
 # OpenGL & GLEW library
 find_package(OpenGL)
@@ -38,6 +49,7 @@ add_executable(USV-gui
     oglwidget.cpp
     hellogles3.qrc
   )
+set_property(TARGET USV-gui PROPERTY WIN32_EXECUTABLE true)
 #if(WIN32)
 #  target_compile_options(usvdata PRIVATE "/MT$<$<CONFIG:Debug>:d>")
 #endif()
