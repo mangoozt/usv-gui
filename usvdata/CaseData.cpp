@@ -11,5 +11,5 @@ CaseData::CaseData(const InputTypes::InputData& input_data): radius(input_data.s
     for(const auto&path:*input_data.maneuvers)
         maneuvers.emplace_back(path.path,frame);
 
-};
+}
 }

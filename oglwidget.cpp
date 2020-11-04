@@ -115,9 +115,9 @@ void OGLWidget::initializeGL()
     m_ship_vbo->create();
     m_ship_vbo->bind();
     GLfloat ship[]={
-        -0.43301270189f*0.2, 0.5f*0.2,0.0f,
-        -0.43301270189f*0.2,-0.5f*0.2,0.0f,
-         0.43301270189f*0.2, 0.0f,0.0f,
+        -0.43301270189f*0.2f, 0.5f*0.2f,0.0f,
+        -0.43301270189f*0.2f,-0.5f*0.2f,0.0f,
+         0.43301270189f*0.2f, 0.0f,0.0f,
     };
     m_ship_vbo->allocate(ship, sizeof(ship));
     m_ship_vbo->release();
@@ -145,7 +145,7 @@ void OGLWidget::initializeGL()
         m_circle_vbo=new QOpenGLBuffer;
         m_circle_vbo->create();
         m_circle_vbo->bind();
-        m_circle_vbo->allocate(circles.data(), sizeof(GLfloat)*circles.size());
+        m_circle_vbo->allocate(circles.data(), (int)(sizeof(GLfloat)*circles.size()));
         m_circle_vbo->release();
     }
 
@@ -209,7 +209,7 @@ void OGLWidget::paintGL()
     m_vessels->release();
     f->glLineWidth(1.0f);
 //    f->glFrontFace(GL_CW);
-    f->glDrawArraysInstanced(GL_TRIANGLES, 0, 3, case_data.vessels.size());
+    f->glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei)case_data.vessels.size());
 
     // Circle
     m_circle_vbo->bind();
@@ -220,7 +220,7 @@ void OGLWidget::paintGL()
     f->glVertexAttribDivisor(4, 1);
     f->glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 6*sizeof(float) ) );
     m_vessels->release();
-    f->glDrawArraysInstanced(GL_LINE_STRIP, 0, CIRCLE_POINTS_N, case_data.vessels.size());
+    f->glDrawArraysInstanced(GL_LINE_STRIP, 0, CIRCLE_POINTS_N, (GLsizei)case_data.vessels.size());
 
     // Draw route
     f->glDisableVertexAttribArray(1);
@@ -240,7 +240,7 @@ void OGLWidget::paintGL()
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for(const auto& path_meta:m_paths_meta){
         f->glVertexAttrib3f(3, path_meta.color.x(),path_meta.color.y(),path_meta.color.z());
-        f->glDrawArrays(GL_LINE_STRIP, path_meta.ptr, path_meta.points_count);
+        f->glDrawArrays(GL_LINE_STRIP, (GLint)path_meta.ptr, (GLsizei)path_meta.points_count);
     }
 
 }
@@ -284,7 +284,7 @@ void OGLWidget::loadData(USV::CaseData &caseData){
         m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0.5f,0.5f,0.5f,0));
     }
     m_paths->bind();
-    m_paths->allocate(paths.data(),sizeof(GLfloat)*paths.size());
+    m_paths->allocate(paths.data(),(int)(sizeof(GLfloat)*paths.size()));
     m_paths->release();
 }
 
@@ -302,7 +302,7 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
         spos.push_back(v.radius);
     }
     m_vessels->bind();
-    m_vessels->allocate(spos.data(),sizeof(GLfloat)*spos.size());
+    m_vessels->allocate(spos.data(), (int)(sizeof(GLfloat)*spos.size()));
     m_vessels->release();
 }
 
@@ -331,8 +331,8 @@ void OGLWidget::mouseMoveEvent(QMouseEvent *event)
         diff.setX(diff.x()*2.0f/width());
         diff.setY(diff.y()*2.0f/height());
 
-        float fov_rad = 45.0f * M_PI / 180.0;
-        float tan_fov=tan(fov_rad / 2.0);
+        double fov_rad = 45.0 * M_PI / 180.0;
+        float tan_fov=(float)tan(fov_rad / 2.0);
         auto r=m_eye.z();
         float xtrans = diff.x() * r * tan_fov * (width()/(float)height());
         float ytrans = -diff.y() * r * tan_fov;
@@ -352,9 +352,10 @@ void OGLWidget::mouseMoveEvent(QMouseEvent *event)
 
 void OGLWidget::wheelEvent ( QWheelEvent * event )
 {
-    auto nx = event->x()/(float)width()*2-1;
-    auto ny = 1-event->y()/(float)height()*2;
-    auto delta = event->delta()/240.0f;
+    auto pos = event->position();
+    float nx = pos.x()/(float)width()*2-1;
+    float ny = 1-pos.y()/(float)height()*2;
+    float delta = event->angleDelta().y()/240.0f;
     m_eye.setZ(std::clamp(m_eye.z() - delta, 0.0f,200.0f));
     m_eye.setX(std::clamp(m_eye.x() + delta*nx,-200.0f,200.0f));
     m_eye.setY(std::clamp(m_eye.y() + delta*ny,-200.0f,200.0f));
