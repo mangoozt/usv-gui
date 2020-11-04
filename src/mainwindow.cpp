@@ -1,9 +1,9 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "QFileDialog"
-#include <iostream>
-#include "./usvdata/InputUtils.h"
+#include "usvdata/InputUtils.h"
 #include "usvdata/CaseData.h"
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

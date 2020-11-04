@@ -15,8 +15,13 @@ set(USVDATA_SOURCES
 
 add_library(usvdata STATIC ${USVDATA_HEADERS} ${USVDATA_SOURCES})
 
+if(UNIX)
+  set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/modules)
+endif()
+
+set (GeographicLib_USE_STATIC_LIBS ON)
 find_package(GeographicLib 1.50.1 REQUIRED STATIC)
-target_link_libraries(usvdata PUBLIC ${GeographicLib_STATIC_LIBRARIES})
+target_link_libraries(usvdata PUBLIC ${GeographicLib_LIBRARIES})
 
 set(SPOTIFY_JSON_BUILD_TESTS OFF)
 add_subdirectory("${PROJECT_SOURCE_DIR}/../vendor/spotify-json" "vendor/spotify-json" EXCLUDE_FROM_ALL)
@@ -32,6 +37,7 @@ set_target_properties(usvdata PROPERTIES $<$<BOOL:WIN32>:COMPILE_DEFINITIONS NOM
 if(MSVC)
     target_compile_options(usvdata PRIVATE /W4)
 else()
-    target_compile_options(usvdata PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(usvdata PRIVATE -Wall -Wextra -pedantic -Werror -Wno-unused-variable -lstdc++fs)
+    target_link_libraries(usvdata PRIVATE stdc++fs)
 endif()
 
