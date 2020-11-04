@@ -208,7 +208,6 @@ void OGLWidget::paintGL()
     f->glVertexAttrib1f(4,1.0f);
     m_vessels->release();
     f->glLineWidth(1.0f);
-//    f->glFrontFace(GL_CW);
     f->glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei)case_data.vessels.size());
 
     // Circle
@@ -222,7 +221,7 @@ void OGLWidget::paintGL()
     m_vessels->release();
     f->glDrawArraysInstanced(GL_LINE_STRIP, 0, CIRCLE_POINTS_N, (GLsizei)case_data.vessels.size());
 
-    // Draw route
+    // Draw paths
     f->glDisableVertexAttribArray(1);
     f->glVertexAttrib4f(1, 0.0f,0.0f,0.0f,0.0f);
     f->glDisableVertexAttribArray(2);
