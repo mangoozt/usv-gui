@@ -11,33 +11,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# QtCreator supports the following variables for Android, which are identical to qmake Android variables.
-# Check http://doc.qt.io/qt-5/deployment-android.html for more information.
-# They need to be set before the find_package(Qt5 ...) call.
-
-#if(ANDROID)
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-#    if (ANDROID_ABI STREQUAL "armeabi-v7a")
-#        set(ANDROID_EXTRA_LIBS
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
-#    endif()
-#endif()
-
 set(Qt5_USE_STATIC_LIBS ON)
 set(Qt5_USE_STATIC_RUNTIME ON)
 
-if(MSVC)
-    add_compile_options(/W4)
-
-else()
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
-    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/modules)
-endif()
-
 find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
-# OpenGL & GLEW library
-find_package(OpenGL)
 
 add_subdirectory(usvdata)
 add_executable(USV-gui
@@ -48,9 +25,8 @@ add_executable(USV-gui
     oglwidget.h
     oglwidget.cpp
     hellogles3.qrc
-  )
+    )
+
 set_property(TARGET USV-gui PROPERTY WIN32_EXECUTABLE true)
-#if(WIN32)
-#  target_compile_options(usvdata PRIVATE "/MT$<$<CONFIG:Debug>:d>")
-#endif()
-target_link_libraries(USV-gui usvdata Qt5::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES})
+
+target_link_libraries(USV-gui usvdata Qt5::Widgets Qt5::OpenGL)

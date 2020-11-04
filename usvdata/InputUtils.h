@@ -9,10 +9,12 @@
 
 namespace USV::InputUtils {
 
-InputTypes::InputData loadInputData(const std::filesystem::path & data_directory);
+namespace fs=std::filesystem;
+
+InputTypes::InputData loadInputData(const fs::path & data_directory);
 
 template<typename T>
-void load_from_json_file(std::unique_ptr<T>& data, const std::filesystem::path& filename) {
+void load_from_json_file(std::unique_ptr<T>& data, const fs::path& filename) {
     using namespace spotify::json;
 
     if (filename.empty()) return;
