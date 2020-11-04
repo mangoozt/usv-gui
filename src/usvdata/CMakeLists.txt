@@ -19,7 +19,7 @@ find_package(GeographicLib 1.50.1 REQUIRED STATIC)
 target_link_libraries(usvdata PUBLIC ${GeographicLib_STATIC_LIBRARIES})
 
 set(SPOTIFY_JSON_BUILD_TESTS OFF)
-add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/spotify-json" "vendor/spotify-json" EXCLUDE_FROM_ALL)
+add_subdirectory("${PROJECT_SOURCE_DIR}/../vendor/spotify-json" "vendor/spotify-json" EXCLUDE_FROM_ALL)
 if(MSVC)
   target_compile_options(double-conversion PRIVATE "/MD$<$<CONFIG:Debug>:d>")
   target_compile_options("spotify-json" PRIVATE "/MD$<$<CONFIG:Debug>:d>")
