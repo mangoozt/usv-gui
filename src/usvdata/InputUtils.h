@@ -19,6 +19,7 @@ void load_from_json_file(std::unique_ptr<T>& data, const fs::path& filename) {
 
     if (filename.empty()) return;
     std::ifstream ifs(filename);
+    if(!ifs.good()) return;
     std::stringstream buffer;
     buffer << ifs.rdbuf();
     data = std::make_unique<T>();
