@@ -28,6 +28,7 @@ struct CaseData{
     std::vector<Vessel> vessels{0};
     Path route{0};
     std::vector<Path> targets_maneuvers;
+    std::vector<Path> targets_real_maneuvers;
     std::vector<Path> maneuvers;
 
     CaseData() = default;

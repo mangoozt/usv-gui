@@ -162,6 +162,7 @@ struct InputData {
     std::unique_ptr<Settings> settings;
     std::unique_ptr<Maneuvers> maneuvers;
     std::unique_ptr<CurvedPathCollection> targets_paths;
+    std::unique_ptr<CurvedPathCollection> targets_real_paths;
 };
 
 }

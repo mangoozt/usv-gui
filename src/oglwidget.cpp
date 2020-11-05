@@ -273,6 +273,15 @@ void OGLWidget::loadData(USV::CaseData &caseData){
         }
         m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0,0,0,0));
     }
+    for(const auto &path:case_data.targets_real_maneuvers){
+        path_points=path.getPointsPath();
+        size_t ptr=paths.size()/2;
+        for(const auto& v: path_points){
+            paths.push_back(v.x());
+            paths.push_back(v.y());
+        }
+        m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0.7f,0.7f,0.5f,0));
+    }
     for(const auto& path:case_data.maneuvers){
         path_points=path.getPointsPath();
         size_t ptr=paths.size()/2;

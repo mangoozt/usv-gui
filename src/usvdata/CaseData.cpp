@@ -8,6 +8,11 @@ CaseData::CaseData(const InputTypes::InputData& input_data): radius(input_data.s
     if(input_data.targets_paths)
         for(const auto&path:*input_data.targets_paths)
             targets_maneuvers.emplace_back(path,frame);
+
+    if(input_data.targets_real_paths)
+        for(const auto&path:*input_data.targets_real_paths)
+            targets_real_maneuvers.emplace_back(path,frame);
+
     if(input_data.maneuvers)
         for(const auto&path:*input_data.maneuvers)
             maneuvers.emplace_back(path.path,frame);
