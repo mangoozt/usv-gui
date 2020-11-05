@@ -172,7 +172,7 @@ void OGLWidget::paintGL()
     // do more than what GL(ES) 2.0 offers.
     QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
 
-    f->glClearColor(0.984313725f, 0.984313725f, 0.984313725f, 1);
+    f->glClearColor(0.6235294117647059f, 0.8313725490196079f, 0.984313725490196f, 1);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_program->bind();
