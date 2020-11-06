@@ -4,17 +4,14 @@
 #include "InputTypes.h"
 #include <string>
 #include <stdexcept>
-#include <filesystem>
 #include <sstream>
 
 namespace USV::InputUtils {
 
-namespace fs=std::filesystem;
-
-InputTypes::InputData loadInputData(const fs::path & data_directory);
+InputTypes::InputData loadInputData(const std::string & data_directory);
 
 template<typename T>
-void load_from_json_file(std::unique_ptr<T>& data, const fs::path& filename) {
+void load_from_json_file(std::unique_ptr<T>& data, const std::string& filename) {
     using namespace spotify::json;
 
     if (filename.empty()) return;
@@ -24,7 +21,7 @@ void load_from_json_file(std::unique_ptr<T>& data, const fs::path& filename) {
     buffer << ifs.rdbuf();
     data = std::make_unique<T>();
     if(!try_decode<T>(*data,buffer.str()))
-        throw std::runtime_error("Failed to parse "+filename.filename().string());
+        throw std::runtime_error("Failed to parse "+filename);
 }
 
 }

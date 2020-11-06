@@ -1,18 +1,21 @@
 #include "InputUtils.h"
 
 namespace USV::InputUtils {
-namespace fs=std::filesystem;
 
-InputTypes::InputData loadInputData(const fs::path & data_directory){
-    namespace fs = std::filesystem;
+InputTypes::InputData loadInputData(const std::string & data_directory){
     InputTypes::InputData inputData;
-    load_from_json_file(inputData.navigationParameters, fs::path(data_directory)/"nav-data.json");
-    load_from_json_file(inputData.navigationProblem, fs::path(data_directory)/"target-data.json");
-    load_from_json_file(inputData.route, fs::path(data_directory)/"route-data.json");
-    load_from_json_file(inputData.maneuvers, fs::path(data_directory)/"maneuver.json");
-    load_from_json_file(inputData.targets_paths, fs::path(data_directory)/"target-maneuvers.json");
-    load_from_json_file(inputData.targets_real_paths, fs::path(data_directory)/"real-target-maneuvers.json");
-    load_from_json_file(inputData.settings, fs::path(data_directory)/"settings.json");
+#ifdef _WIN32
+    char sep{'\\'};
+#else
+    char sep{'/'};
+#endif
+    load_from_json_file(inputData.navigationParameters, data_directory+sep+"nav-data.json");
+    load_from_json_file(inputData.navigationProblem, data_directory+sep+"target-data.json");
+    load_from_json_file(inputData.route, data_directory+sep+"route-data.json");
+    load_from_json_file(inputData.maneuvers, data_directory+sep+"maneuver.json");
+    load_from_json_file(inputData.targets_paths, data_directory+sep+"target-maneuvers.json");
+    load_from_json_file(inputData.targets_real_paths, data_directory+sep+"real-target-maneuvers.json");
+    load_from_json_file(inputData.settings, data_directory+sep+"settings.json");
     return inputData;
 }
 

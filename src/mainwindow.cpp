@@ -20,11 +20,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_openButton_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open json file"), "", tr("Json Files (*.json)"));
-    std::cout<<fileName.toStdString();
-    auto dir_path = std::filesystem::path(fileName.toStdString()).parent_path();
-    auto input_data = USV::InputUtils::loadInputData(dir_path);
+    auto filePath = QFileDialog::getExistingDirectory(this, "Select Folder");
+    auto input_data = USV::InputUtils::loadInputData(filePath.toStdString());
     USV::CaseData case_data = USV::CaseData(input_data);
     OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
     ogl_widget->loadData(case_data);
