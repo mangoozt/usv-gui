@@ -74,4 +74,4 @@ Thumbs.db
 *.exe
 
 #Qt build folders
-/build-*
+/build*

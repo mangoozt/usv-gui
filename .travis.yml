@@ -1,0 +1,11 @@
+language: cpp
+os: windows
+
+services:
+  - docker
+
+script:
+  - export build_dir=`pwd` && build_dir=`cygpath -w $build_dir`
+  - docker pull mangoozt/qt5-buildtools:msvc2019-static
+  - docker run --mount type=bind,source=$build_dir/,target="C:\src" -w="C:\src" mangoozt/qt5-buildtools:msvc2019-static powershell -noexit "& C:\src\scripts\build-win.ps1"
+  
