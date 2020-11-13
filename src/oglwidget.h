@@ -7,6 +7,8 @@
 #include <QVector3D>
 #include <QWheelEvent>
 #include "usvdata/CaseData.h"
+#include "text.h"
+
 
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
@@ -60,6 +62,7 @@ protected:
     QVector3D m_eye;
     QVector3D m_target;
     bool m_uniformsDirty;
+    Text *text;
 public:
     USV::CaseData case_data{};
 };

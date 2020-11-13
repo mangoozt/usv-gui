@@ -24,6 +24,8 @@ add_executable(USV-gui
     mainwindow.ui
     oglwidget.h
     oglwidget.cpp
+    text.cpp
+    resources.qrc
     )
 
 set_property(TARGET USV-gui PROPERTY WIN32_EXECUTABLE true)
