@@ -243,8 +243,13 @@ void OGLWidget::paintGL()
         f->glDrawArrays(GL_LINE_STRIP, (GLint)path_meta.ptr, (GLsizei)path_meta.points_count);
     }
     m_program->release();
-    text->renderText(" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+\\/():;%&`'*#$=[]@^{}_~\"><–—«»“”|",{0,20},QRect(0,0,width(),height()),{1,0,0},0);
-
+    for(size_t i=0;i<case_data.vessel_names.size();++i){
+        auto& vessel= case_data.vessels[i];
+        auto v = QVector4D(vessel.position.x(),vessel.position.y(),0,1);
+        auto p = m_m * v;
+        p/=p.w();
+        text->renderText(case_data.vessel_names[i],{(p.x()+1)*0.5*width(),(1-p.y())*0.5*height()},this->rect());
+    }
 }
 #define PRINT_POINT_3D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<< std::endl;
 #define PRINT_POINT_4D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<<", "<<(point).w() << std::endl;
