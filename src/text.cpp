@@ -38,6 +38,7 @@ Text::Glyph::Glyph(QString string){
 
 Text::Text(QFile & fontfile, QImage& bitmap):texture(bitmap)
 {
+    texture.setWrapMode(QOpenGLTexture::WrapMode::ClampToBorder);
     invH=1.0f/bitmap.height();
     invW=1.0f/bitmap.width();
     if (fontfile.open(QIODevice::ReadOnly))
@@ -69,8 +70,8 @@ Text::Text(QFile & fontfile, QImage& bitmap):texture(bitmap)
 }
 
 
-void Text::renderText(std::string text, QPointF position, QRect window, QVector3D color, float angle){
-    auto pos = QVector3D((position.x()*2)/window.width(),(-position.y()*2)/window.height(),0);
+void Text::renderText(std::string text, QPoint position, QRect window, QVector3D color, float angle){
+    auto pos = QVector3D((position.x()*2.0)/window.width(),(-position.y()*2.0)/window.height(),0);
     QMatrix4x4 proj_mat;
     proj_mat.translate(pos);
     proj_mat.ortho(0,window.width(),window.height(),0,1,-1);

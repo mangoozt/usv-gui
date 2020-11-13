@@ -248,7 +248,10 @@ void OGLWidget::paintGL()
         auto v = QVector4D(vessel.position.x(),vessel.position.y(),0,1);
         auto p = m_m * v;
         p/=p.w();
-        text->renderText(case_data.vessel_names[i],{(p.x()+1)*0.5*width(),(1-p.y())*0.5*height()},this->rect());
+        auto x = int((p.x()+1.0f)*0.5f*width());
+        auto y= int((1.0f-p.y())*0.5f*height());
+        QPoint point(x,y);
+        text->renderText(case_data.vessel_names[i], point, this->rect());
     }
 }
 #define PRINT_POINT_3D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<< std::endl;

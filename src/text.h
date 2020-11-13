@@ -26,7 +26,7 @@ public:
 
     Text(QFile & fontfile, QImage& texture);
     ~Text();
-    void renderText(std::string text, QPointF position, QRect window, QVector3D color={0,0,0}, float angle=0);
+    void renderText(std::string text, QPoint position, QRect window, QVector3D color={0,0,0}, float angle=0);
 private:
     QHash<char,Glyph> glyphs;
     QOpenGLTexture texture;
