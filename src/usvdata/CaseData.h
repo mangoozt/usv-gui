@@ -26,6 +26,7 @@ struct Vessel{
 struct CaseData{
     double radius;
     std::vector<Vessel> vessels{0};
+    std::vector<std::string> vessel_names{};
     Path route{0};
     std::vector<Path> targets_maneuvers;
     std::vector<Path> targets_real_maneuvers;

@@ -35,6 +35,7 @@ OGLWidget::~OGLWidget()
     delete m_vao;
     delete m_vessels;
     delete m_paths;
+    delete text;
 }
 static const char *vertexShaderSource =
         "layout(location = 0) in vec4 vertex;\n"
@@ -122,11 +123,6 @@ void OGLWidget::initializeGL()
     m_ship_vbo->allocate(ship, sizeof(ship));
     m_ship_vbo->release();
 
-//    if (m_circle_vbo) {
-//        delete m_circle_vbo;
-//        m_circle_vbo = 0;
-//    }
-
     {
         std::vector<GLfloat> circles;
         size_t circle_N{CIRCLE_POINTS_N};
@@ -157,6 +153,11 @@ void OGLWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
+    {
+        QFile fontfile(":/resource/font.fnt");
+        QImage fontimage(":/resource/font.png");
+        text=new Text(fontfile,fontimage);
+    }
 }
 
 void OGLWidget::resizeGL(int w, int h)
@@ -241,7 +242,17 @@ void OGLWidget::paintGL()
         f->glVertexAttrib3f(3, path_meta.color.x(),path_meta.color.y(),path_meta.color.z());
         f->glDrawArrays(GL_LINE_STRIP, (GLint)path_meta.ptr, (GLsizei)path_meta.points_count);
     }
-
+    m_program->release();
+    for(size_t i=0;i<case_data.vessel_names.size();++i){
+        auto& vessel= case_data.vessels[i];
+        auto v = QVector4D(vessel.position.x(),vessel.position.y(),0,1);
+        auto p = m_m * v;
+        p/=p.w();
+        auto x = int((p.x()+1.0f)*0.5f*width());
+        auto y= int((1.0f-p.y())*0.5f*height());
+        QPoint point(x,y);
+        text->renderText(case_data.vessel_names[i], point, this->rect());
+    }
 }
 #define PRINT_POINT_3D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<< std::endl;
 #define PRINT_POINT_4D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<<", "<<(point).w() << std::endl;
