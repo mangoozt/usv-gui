@@ -63,8 +63,11 @@ protected:
     QVector3D m_target;
     bool m_uniformsDirty;
     Text *text;
+    std::unique_ptr<USV::CaseData> case_data_;
 public:
-    USV::CaseData case_data{};
+    const USV::CaseData* case_data() const {
+        return case_data_.get();
+    }
 };
 
 #endif // OGLWIDGET_H

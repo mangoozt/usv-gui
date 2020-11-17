@@ -153,6 +153,7 @@ void OGLWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
+    f->glClearColor(0.678f, 0.847f, 0.902f, 1);
     {
         QFile fontfile(":/resource/font.fnt");
         QImage fontimage(":/resource/font.png");
@@ -169,13 +170,12 @@ void OGLWidget::resizeGL(int w, int h)
 
 void OGLWidget::paintGL()
 {
-    // Now use QOpenGLExtraFunctions instead of QOpenGLFunctions as we want to
-    // do more than what GL(ES) 2.0 offers.
+    if(case_data_ == nullptr) return;
+    auto &case_data=*case_data_;
+
     QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
 
-    f->glClearColor(0.6235294117647059f, 0.8313725490196079f, 0.984313725490196f, 1);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     m_program->bind();
 
     if (m_uniformsDirty) {
@@ -265,17 +265,17 @@ QVector3D OGLWidget::screenToWorld(QPoint pos)
 }
 
 void OGLWidget::loadData(USV::CaseData &caseData){
-    case_data = caseData;
+    case_data_ = std::make_unique<USV::CaseData>(caseData);
 
     std::vector<GLfloat> paths;
-    auto path_points=case_data.route.getPointsPath();
+    auto path_points=case_data_->route.getPointsPath();
     for(const auto& v: path_points){
         paths.push_back(v.x());
         paths.push_back(v.y());
     }
     m_paths_meta.clear();
     m_paths_meta.emplace_back(0,path_points.size(),QVector4D(0,0,1.0f,0));
-    for(const auto &path:case_data.targets_maneuvers){
+    for(const auto &path:case_data_->targets_maneuvers){
         path_points=path.getPointsPath();
         size_t ptr=paths.size()/2;
         for(const auto& v: path_points){
@@ -284,7 +284,7 @@ void OGLWidget::loadData(USV::CaseData &caseData){
         }
         m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0,0,0,0));
     }
-    for(const auto &path:case_data.targets_real_maneuvers){
+    for(const auto &path:case_data_->targets_real_maneuvers){
         path_points=path.getPointsPath();
         size_t ptr=paths.size()/2;
         for(const auto& v: path_points){
@@ -293,7 +293,7 @@ void OGLWidget::loadData(USV::CaseData &caseData){
         }
         m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0.7f,0.7f,0.5f,0));
     }
-    for(const auto& path:case_data.maneuvers){
+    for(const auto& path:case_data_->maneuvers){
         path_points=path.getPointsPath();
         size_t ptr=paths.size()/2;
         for(const auto& v: path_points){
@@ -309,7 +309,7 @@ void OGLWidget::loadData(USV::CaseData &caseData){
 
 
 void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
-    case_data.vessels=vessels;
+    case_data_->vessels=vessels;
     std::vector<GLfloat> spos;
     for(const auto& v: vessels){
         spos.push_back(v.position.x());
@@ -384,6 +384,8 @@ void OGLWidget::wheelEvent ( QWheelEvent * event )
     m_uniformsDirty = true;
     this->update();
 }
+
+
 void OGLWidget::keyPressEvent(QKeyEvent *event) {
     using namespace Qt;
     switch(event->key()){
