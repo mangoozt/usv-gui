@@ -119,6 +119,7 @@ void Text::renderText(std::string text, QPoint position, QRect window, QVector3D
         x += ch.orig_w;
     }
     m_program->release();
+    f->glDisable(GL_BLEND);
 }
 
 

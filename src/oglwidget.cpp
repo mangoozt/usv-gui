@@ -15,6 +15,7 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_program(0),
       m_ship_vbo(0),
       m_circle_vbo(0),
+      m_plane(0),
       m_vao(0),
       m_eye(0,0,20),
       m_target(0, 0, 0),
@@ -33,6 +34,7 @@ OGLWidget::~OGLWidget()
     delete m_ship_vbo;
     delete m_circle_vbo;
     delete m_vao;
+    delete m_plane;
     delete m_vessels;
     delete m_paths;
     delete text;
@@ -107,6 +109,22 @@ void OGLWidget::initializeGL()
     if (m_vao->create())
         m_vao->bind();
 
+    if (m_plane) {
+        delete m_plane;
+        m_plane = 0;
+    }
+    m_plane = new QOpenGLBuffer;
+    m_plane->create();
+    m_plane->bind();
+    GLfloat plane[]={
+        -40.0f,40.0f,-0.1f,
+        -40.0f, -40.0f,-0.1f,
+        40.0f,-40.0f,-0.1f,
+        40.0f,40.0f,-0.1f,
+    };
+    m_plane->allocate(plane,sizeof (plane));
+    m_plane->release();
+
     if (m_ship_vbo) {
         delete m_ship_vbo;
         m_ship_vbo = 0;
@@ -153,7 +171,7 @@ void OGLWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
-    f->glClearColor(0.678f, 0.847f, 0.902f, 1);
+    f->glClearColor(0.0f, 0.0f, 0.0f, 1);
     {
         QFile fontfile(":/resource/font.fnt");
         QImage fontimage(":/resource/font.png");
@@ -185,6 +203,37 @@ void OGLWidget::paintGL()
         m_m=m_proj * camera * m_world;
         m_program->setUniformValue(m_myMatrixLoc, m_m);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
+    }
+
+    f->glEnable(GL_LINE_SMOOTH);
+    f->glEnable(GL_BLEND);
+    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    f->glDisableVertexAttribArray(1);
+    f->glVertexAttrib4f(1, 0.0f,0.0f,0.0f,0.0f);
+    f->glDisableVertexAttribArray(2);
+    f->glVertexAttrib1f(2, 0.0f);
+    f->glDisableVertexAttribArray(3);
+    f->glDisableVertexAttribArray(4);
+    f->glVertexAttrib1f(4,1.0f);
+
+    //Draw plane
+    m_plane->bind();
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    m_plane->release();
+    f->glVertexAttrib3f(3, 0.678f, 0.847f, 0.902f);
+    f->glDrawArrays(GL_TRIANGLE_FAN,0,4);
+
+    // Draw paths
+    m_paths->bind();
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    m_paths->release();
+    f->glLineWidth(3.0f);
+
+    for(const auto& path_meta:m_paths_meta){
+        f->glVertexAttrib3f(3, path_meta.color.x(),path_meta.color.y(),path_meta.color.z());
+        f->glDrawArrays(GL_LINE_STRIP, (GLint)path_meta.ptr, (GLsizei)path_meta.points_count);
     }
 
     // Draw vessels
@@ -220,28 +269,9 @@ void OGLWidget::paintGL()
     f->glVertexAttribDivisor(4, 1);
     f->glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 6*sizeof(float) ) );
     m_vessels->release();
-    f->glDrawArraysInstanced(GL_LINE_STRIP, 0, CIRCLE_POINTS_N, (GLsizei)case_data.vessels.size());
-
-    // Draw paths
-    f->glDisableVertexAttribArray(1);
-    f->glVertexAttrib4f(1, 0.0f,0.0f,0.0f,0.0f);
-    f->glDisableVertexAttribArray(2);
-    f->glVertexAttrib1f(2, 0.0f);
-    f->glDisableVertexAttribArray(3);
-    f->glDisableVertexAttribArray(4);
-    f->glVertexAttrib1f(4,1.0f);
-    m_paths->bind();
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    m_paths->release();
     f->glLineWidth(2.0f);
-    f->glEnable( GL_LINE_SMOOTH );
-    f->glEnable(GL_BLEND);
-    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for(const auto& path_meta:m_paths_meta){
-        f->glVertexAttrib3f(3, path_meta.color.x(),path_meta.color.y(),path_meta.color.z());
-        f->glDrawArrays(GL_LINE_STRIP, (GLint)path_meta.ptr, (GLsizei)path_meta.points_count);
-    }
+    f->glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei)case_data.vessels.size());
+
     m_program->release();
     for(size_t i=0;i<case_data.vessel_names.size();++i){
         auto& vessel= case_data.vessels[i];

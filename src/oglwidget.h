@@ -41,6 +41,7 @@ protected:
     QOpenGLBuffer *m_circle_vbo;
     QOpenGLBuffer *m_vessels;
     QOpenGLBuffer *m_paths;
+    QOpenGLBuffer *m_plane;
     struct pathVBOMeta{
         size_t ptr;
         size_t points_count;
