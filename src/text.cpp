@@ -71,13 +71,14 @@ Text::Text(QFile & fontfile, QImage& bitmap):texture(bitmap)
 
 
 void Text::renderText(std::string text, QPoint position, QRect window, QVector3D color, float angle){
-    auto pos = QVector3D((position.x()*2.0)/window.width(),(-position.y()*2.0)/window.height(),0);
+    auto pos = QVector3D(position.x(), position.y(), 1);
     QMatrix4x4 proj_mat;
+    proj_mat.ortho(0,window.width(),window.height(),0,-1,1);
     proj_mat.translate(pos);
-    proj_mat.ortho(0,window.width(),window.height(),0,1,-1);
     proj_mat.rotate(angle,0,0,1.0f);
 
     auto *f = QOpenGLContext::currentContext()->extraFunctions();
+    f->glDepthMask(GL_FALSE);
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
@@ -120,6 +121,7 @@ void Text::renderText(std::string text, QPoint position, QRect window, QVector3D
     }
     m_program->release();
     f->glDisable(GL_BLEND);
+    f->glDepthMask(GL_TRUE);
 }
 
 
