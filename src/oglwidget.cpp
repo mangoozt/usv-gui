@@ -7,7 +7,15 @@
 #include <QOpenGLExtraFunctions>
 #include <iostream>
 
+#define FOV 60
+#define CAMERA_ANGLE 30
 #define CIRCLE_POINTS_N 360
+
+#define PRINT_POINT_2D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<< std::endl;
+#define PRINT_POINT_3D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<< std::endl;
+#define PRINT_POINT_4D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<<", "<<(point).w() << std::endl;
+#define PRINT_ANGLE(angle) std::cout <<#angle<< ": "<<(angle)*180.0/M_PI<< std::endl;
+#define PRINT_VAR(var) std::cout <<#var<< ": "<<(var)<< std::endl;
 
 OGLWidget::OGLWidget(QWidget *parent)
     :QOpenGLWidget(parent),
@@ -22,8 +30,6 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_uniformsDirty(true)
 {
     m_world.setToIdentity();
-    //    m_world.translate(0, 0, 0);
-    //    m_world.rotate(180, 1, 0, 0);
 }
 
 OGLWidget::~OGLWidget()
@@ -171,7 +177,8 @@ void OGLWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
-    f->glClearColor(0.0f, 0.0f, 0.0f, 1);
+    f->glClearColor(1.0f, 1.0f, 1.0f, 1);
+
     {
         QFile fontfile(":/resource/font.fnt");
         QImage fontimage(":/resource/font.png");
@@ -181,8 +188,6 @@ void OGLWidget::initializeGL()
 
 void OGLWidget::resizeGL(int w, int h)
 {
-    m_proj.setToIdentity();
-    m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 200.0f);
     m_uniformsDirty = true;
 }
 
@@ -194,12 +199,22 @@ void OGLWidget::paintGL()
     QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
 
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    f->glEnable(GL_DEPTH_TEST);
     m_program->bind();
 
+    PRINT_POINT_3D(m_eye)
     if (m_uniformsDirty) {
         m_uniformsDirty = false;
+        m_proj.setToIdentity();
         QMatrix4x4 camera;
-        camera.lookAt(m_eye, m_target, QVector3D(0, 1, 0));
+        auto eye = QVector3D(m_eye.x(),m_eye.y()-(float)std::tan(CAMERA_ANGLE/180.0f*M_PI)*m_eye.z(),m_eye.z());
+        auto phi_rad = FOV/360.0f*M_PI;
+        auto alpha_rad = CAMERA_ANGLE/180.0f*M_PI;
+        auto z_cos_phi = m_eye.z()*std::cos(phi_rad);
+
+        m_proj.perspective(FOV, GLfloat(width()) / height(), z_cos_phi / std::cos(alpha_rad-phi_rad)-1, z_cos_phi / std::cos(alpha_rad+phi_rad)+1);
+        auto target = QVector3D(m_eye.x(),m_eye.y(),0)*2.0f-eye;
+        camera.lookAt(eye, target, QVector3D(0, 1, 0));
         m_m=m_proj * camera * m_world;
         m_program->setUniformValue(m_myMatrixLoc, m_m);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
@@ -284,14 +299,17 @@ void OGLWidget::paintGL()
         text->renderText(case_data.vessel_names[i], point, this->rect());
     }
 }
-#define PRINT_POINT_3D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<< std::endl;
-#define PRINT_POINT_4D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<<", "<<(point).z()<<", "<<(point).w() << std::endl;
+
 QVector3D OGLWidget::screenToWorld(QPoint pos)
 {
+    QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
+    makeCurrent();
     auto minv=m_m.inverted();
-    QVector4D point_normalized=QVector4D(pos.x()/(float)width()*2-1, 1-pos.y()/(float)height()*2, 0.0f, 1.0f);
-    auto position = point_normalized*minv;
-    return QVector3D(position.x()*position.w(),position.y()*position.w(),0);
+    float depth_z = 1.0f;
+    f->glReadPixels(pos.x(), height()-pos.y(), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_z);
+    QVector4D point_normalized=QVector4D(pos.x()/(float)width()*2-1, 1-pos.y()/(float)height()*2, depth_z*2.0-1.0, 1.0f);
+    auto position = minv*point_normalized;
+    return QVector3D(position/position.w());
 }
 
 void OGLWidget::loadData(USV::CaseData &caseData){
@@ -361,7 +379,7 @@ void OGLWidget::mousePressEvent(QMouseEvent *event){
     setCursor(Qt::ClosedHandCursor);
     std::cout << "clicked at postion: "<<event->x()<<", "<<event->y()<< std::endl;
     mouse_press_point = event->pos();
-    PRINT_POINT_3D(screenToWorld(mouse_press_point))
+    PRINT_POINT_3D(screenToWorld(mouse_press_point));
 }
 
 void OGLWidget::mouseReleaseEvent(QMouseEvent *event)
@@ -369,30 +387,20 @@ void OGLWidget::mouseReleaseEvent(QMouseEvent *event)
     setCursor(Qt::OpenHandCursor);
 }
 
-
 void OGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if(event->buttons() & Qt::LeftButton)
     {
-        auto diff= QPointF(mouse_press_point-event->pos());
+        auto p = screenToWorld(mouse_press_point);
         mouse_press_point = event->pos();
+        auto p1 = screenToWorld(mouse_press_point);
 
-        diff.setX(diff.x()*2.0f/width());
-        diff.setY(diff.y()*2.0f/height());
+        auto trans = p-p1;
 
-        double fov_rad = 45.0 * M_PI / 180.0;
-        float tan_fov=(float)tan(fov_rad / 2.0);
-        auto r=m_eye.z();
-        float xtrans = diff.x() * r * tan_fov * (width()/(float)height());
-        float ytrans = -diff.y() * r * tan_fov;
+        m_eye.setZ(std::clamp(m_eye.z(), 2.0f,200.0f));
+        m_eye.setX(std::clamp(m_eye.x()+trans.x(),-200.0f,200.0f));
+        m_eye.setY(std::clamp(m_eye.y()+trans.y(),-200.0f,200.0f));
 
-        m_eye.setZ(std::clamp(m_eye.z(), 0.0f,200.0f));
-        m_eye.setX(std::clamp(m_eye.x()+xtrans,-200.0f,200.0f));
-        m_eye.setY(std::clamp(m_eye.y()+ytrans,-200.0f,200.0f));
-
-        m_target.setX(m_eye.x());
-        m_target.setY(m_eye.y());
-        PRINT_POINT_3D(m_eye)
         m_uniformsDirty = true;
         update();
     }
@@ -405,12 +413,9 @@ void OGLWidget::wheelEvent ( QWheelEvent * event )
     float nx = pos.x()/(float)width()*2-1;
     float ny = 1-pos.y()/(float)height()*2;
     float delta = event->angleDelta().y()/240.0f;
-    m_eye.setZ(std::clamp(m_eye.z() - delta, 0.0f,200.0f));
+    m_eye.setZ(std::clamp(m_eye.z() - delta, 2.0f,200.0f));
     m_eye.setX(std::clamp(m_eye.x() + delta*nx,-200.0f,200.0f));
     m_eye.setY(std::clamp(m_eye.y() + delta*ny,-200.0f,200.0f));
-    m_target.setX(m_eye.x());
-    m_target.setY(m_eye.y());
-    PRINT_POINT_3D(m_eye)
     m_uniformsDirty = true;
     this->update();
 }
@@ -434,9 +439,6 @@ void OGLWidget::keyPressEvent(QKeyEvent *event) {
     default:
         return;
     }
-    std::cout << m_eye.x()<<", "<<m_eye.y()<<", "<<m_eye.z() << std::endl;
-    m_target.setX(m_eye.x());
-    m_target.setY(m_eye.y());
     m_uniformsDirty = true;
     this->update();
 }

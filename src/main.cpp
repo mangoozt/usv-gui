@@ -21,10 +21,11 @@ int main(int argc, char *argv[])
 //    QSurfaceFormat::setDefaultFormat(fmt);
 
     QSurfaceFormat format;
-    format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
     format.setVersion(3, 2);
     format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setDepthBufferSize(24);
+    format.setSamples(0);
     QSurfaceFormat::setDefaultFormat(format);
 
     QApplication a(argc, argv);
