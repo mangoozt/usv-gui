@@ -8,7 +8,7 @@
 #include <QWheelEvent>
 #include "usvdata/CaseData.h"
 #include "text.h"
-
+#include "glgrid.h"
 
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
@@ -41,7 +41,6 @@ protected:
     QOpenGLBuffer *m_circle_vbo;
     QOpenGLBuffer *m_vessels;
     QOpenGLBuffer *m_paths;
-    QOpenGLBuffer *m_plane;
     struct pathVBOMeta{
         size_t ptr;
         size_t points_count;
@@ -64,6 +63,7 @@ protected:
     QVector3D m_target;
     bool m_uniformsDirty;
     Text *text;
+    GLGrid *grid;
     std::unique_ptr<USV::CaseData> case_data_;
 public:
     const USV::CaseData* case_data() const {

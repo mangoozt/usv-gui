@@ -23,7 +23,6 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_program(0),
       m_ship_vbo(0),
       m_circle_vbo(0),
-      m_plane(0),
       m_vao(0),
       m_eye(0,0,20),
       m_target(0, 0, 0),
@@ -40,10 +39,10 @@ OGLWidget::~OGLWidget()
     delete m_ship_vbo;
     delete m_circle_vbo;
     delete m_vao;
-    delete m_plane;
     delete m_vessels;
     delete m_paths;
     delete text;
+    delete grid;
 }
 static const char *vertexShaderSource =
         "layout(location = 0) in vec4 vertex;\n"
@@ -115,22 +114,6 @@ void OGLWidget::initializeGL()
     if (m_vao->create())
         m_vao->bind();
 
-    if (m_plane) {
-        delete m_plane;
-        m_plane = 0;
-    }
-    m_plane = new QOpenGLBuffer;
-    m_plane->create();
-    m_plane->bind();
-    GLfloat plane[]={
-        -40.0f,40.0f,-0.1f,
-        -40.0f, -40.0f,-0.1f,
-        40.0f,-40.0f,-0.1f,
-        40.0f,40.0f,-0.1f,
-    };
-    m_plane->allocate(plane,sizeof (plane));
-    m_plane->release();
-
     if (m_ship_vbo) {
         delete m_ship_vbo;
         m_ship_vbo = 0;
@@ -184,6 +167,7 @@ void OGLWidget::initializeGL()
         QImage fontimage(":/resource/font.png");
         text=new Text(fontfile,fontimage);
     }
+    grid = new GLGrid();
 }
 
 void OGLWidget::resizeGL(int w, int h)
@@ -230,15 +214,10 @@ void OGLWidget::paintGL()
     f->glDisableVertexAttribArray(3);
     f->glDisableVertexAttribArray(4);
     f->glVertexAttrib1f(4,1.0f);
-
+    m_program->release();
     //Draw plane
-    m_plane->bind();
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    m_plane->release();
-    f->glVertexAttrib3f(3, 0.678f, 0.847f, 0.902f);
-    f->glDrawArrays(GL_TRIANGLE_FAN,0,4);
-
+    grid->render(m_m);
+    m_program->bind();
     // Draw paths
     m_paths->bind();
     f->glEnableVertexAttribArray(0);

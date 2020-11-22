@@ -25,6 +25,7 @@ add_executable(USV-gui
     oglwidget.h
     oglwidget.cpp
     text.cpp
+    glgrid.cpp
     resources.qrc
     )
 
