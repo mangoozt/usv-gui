@@ -60,6 +60,7 @@ protected:
     QMatrix4x4 m_world;
     QMatrix4x4 m_m;
     QVector3D m_eye;
+    float rotation;
     QVector3D m_target;
     bool m_uniformsDirty;
     Text *text;

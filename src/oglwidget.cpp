@@ -25,6 +25,7 @@ OGLWidget::OGLWidget(QWidget *parent)
       m_circle_vbo(0),
       m_vao(0),
       m_eye(0,0,20),
+      rotation(M_PI*0.5),
       m_target(0, 0, 0),
       m_uniformsDirty(true)
 {
@@ -125,7 +126,7 @@ void OGLWidget::initializeGL()
     GLfloat ship[]={
         -0.43301270189f*0.2f, 0.5f*0.2f,0.0f,
         -0.43301270189f*0.2f,-0.5f*0.2f,0.0f,
-         0.43301270189f*0.2f, 0.0f,0.0f,
+        0.43301270189f*0.2f, 0.0f,0.0f,
     };
     m_ship_vbo->allocate(ship, sizeof(ship));
     m_ship_vbo->release();
@@ -187,18 +188,19 @@ void OGLWidget::paintGL()
     m_program->bind();
 
     PRINT_POINT_3D(m_eye)
-    if (m_uniformsDirty) {
+            if (m_uniformsDirty) {
         m_uniformsDirty = false;
         m_proj.setToIdentity();
         QMatrix4x4 camera;
-        auto eye = QVector3D(m_eye.x(),m_eye.y()-(float)std::tan(CAMERA_ANGLE/180.0f*M_PI)*m_eye.z(),m_eye.z());
+        auto r= (float)std::tan(CAMERA_ANGLE/180.0f*M_PI)*m_eye.z();
+        auto eye = QVector3D(m_eye.x()-r*std::cos(rotation),m_eye.y()-r*std::sin(rotation),m_eye.z());
         auto phi_rad = FOV/360.0f*M_PI;
         auto alpha_rad = CAMERA_ANGLE/180.0f*M_PI;
         auto z_cos_phi = m_eye.z()*std::cos(phi_rad);
 
         m_proj.perspective(FOV, GLfloat(width()) / height(), z_cos_phi / std::cos(alpha_rad-phi_rad)-1, z_cos_phi / std::cos(alpha_rad+phi_rad)+1);
         auto target = QVector3D(m_eye.x(),m_eye.y(),0)*2.0f-eye;
-        camera.lookAt(eye, target, QVector3D(0, 1, 0));
+        camera.lookAt(eye, target, QVector3D(0, 0, 1));
         m_m=m_proj * camera * m_world;
         m_program->setUniformValue(m_myMatrixLoc, m_m);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
@@ -368,21 +370,39 @@ void OGLWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void OGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    if(event->buttons() & Qt::LeftButton)
+    if(event->buttons() & (Qt::LeftButton | Qt::MiddleButton))
     {
         auto p = screenToWorld(mouse_press_point);
         mouse_press_point = event->pos();
         auto p1 = screenToWorld(mouse_press_point);
 
-        auto trans = p-p1;
+        auto dp = p-p1;
 
-        m_eye.setZ(std::clamp(m_eye.z(), 2.0f,200.0f));
-        m_eye.setX(std::clamp(m_eye.x()+trans.x(),-200.0f,200.0f));
-        m_eye.setY(std::clamp(m_eye.y()+trans.y(),-200.0f,200.0f));
-
+        if(event->buttons() & (Qt::LeftButton)){
+            m_eye.setZ(std::clamp(m_eye.z(), 2.0f,200.0f));
+            m_eye.setX(std::clamp(m_eye.x()+dp.x(),-200.0f,200.0f));
+            m_eye.setY(std::clamp(m_eye.y()+dp.y(),-200.0f,200.0f));
+        }else{
+            p = p - QVector3D(m_eye.x(),m_eye.y(),0);
+            dp.setZ(0);
+            rotation += QVector3D::crossProduct(p,dp).z()/p.lengthSquared();
+        }
         m_uniformsDirty = true;
         update();
-    }
+    }else
+        if(event->buttons() & Qt::MiddleButton)
+        {
+            auto p = screenToWorld(mouse_press_point);
+            mouse_press_point = event->pos();
+            auto p1 = screenToWorld(mouse_press_point);
+            auto d = mouse_press_point-event->pos();
+            mouse_press_point = event->pos();
+
+            rotation+=d.x()*1.0/180*M_PI;
+
+            m_uniformsDirty = true;
+            update();
+        }
 }
 
 
@@ -404,20 +424,31 @@ void OGLWidget::keyPressEvent(QKeyEvent *event) {
     using namespace Qt;
     switch(event->key()){
     case Key_W:
-        m_eye.setY(std::clamp(m_eye.y()+0.1f,-60.0f,60.0f));
+        m_eye.setY(std::clamp(m_eye.y()+0.1f*std::sin(rotation),-60.0f,60.0f));
+        m_eye.setX(std::clamp(m_eye.x()+0.1f*std::cos(rotation),-60.0f,60.0f));
         break;
     case Key_S:
-        m_eye.setY(std::clamp(m_eye.y()-0.1f,-60.0f,60.0f));
+        m_eye.setY(std::clamp(m_eye.y()-0.1f*std::sin(rotation),-60.0f,60.0f));
+        m_eye.setX(std::clamp(m_eye.x()-0.1f*std::cos(rotation),-60.0f,60.0f));
         break;
     case Key_D:
-        m_eye.setX(std::clamp(m_eye.x()+0.1f,-60.0f,60.0f));
+        m_eye.setX(std::clamp(m_eye.x()+0.1f*std::sin(rotation),-60.0f,60.0f));
+        m_eye.setY(std::clamp(m_eye.y()-0.1f*std::cos(rotation),-60.0f,60.0f));
         break;
     case Key_A:
-        m_eye.setX(std::clamp(m_eye.x()-0.1f,-60.0f,60.0f));
+        m_eye.setX(std::clamp(m_eye.x()-0.1f*std::sin(rotation),-60.0f,60.0f));
+        m_eye.setY(std::clamp(m_eye.y()+0.1f*std::cos(rotation),-60.0f,60.0f));
+        break;
+    case Key_E:
+        rotation+=1.0/18*M_PI;
+        break;
+    case Key_Q:
+        rotation-=1.0/18*M_PI;
         break;
     default:
         return;
     }
-    m_uniformsDirty = true;
+    PRINT_VAR(rotation)
+            m_uniformsDirty = true;
     this->update();
 }
