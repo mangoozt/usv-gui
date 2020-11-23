@@ -59,6 +59,7 @@ void MainWindow::update_time(double time, OGLWidget* ogl_widget){
         push_position(time, maneuver, vessels, color, case_data->radius);
 
     ogl_widget->updatePositions(vessels);
+    ogl_widget->updateTime(time/3600);
     ogl_widget->update();
 }
 

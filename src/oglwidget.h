@@ -9,6 +9,7 @@
 #include "usvdata/CaseData.h"
 #include "text.h"
 #include "glgrid.h"
+#include "glsea.h"
 
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
@@ -27,6 +28,7 @@ public:
     QVector3D screenToWorld(QPoint pos);
     void loadData(USV::CaseData &case_data);
     void updatePositions(const std::vector<USV::Vessel>& vessels);
+    void updateTime(float t);
     void wheelEvent ( QWheelEvent * event );
     void mousePressEvent(QMouseEvent* event);
     void mouseReleaseEvent(QMouseEvent*event);
@@ -65,6 +67,8 @@ protected:
     bool m_uniformsDirty;
     Text *text;
     GLGrid *grid;
+    GLSea *sea;
+    float time{0.0f};
     std::unique_ptr<USV::CaseData> case_data_;
 public:
     const USV::CaseData* case_data() const {

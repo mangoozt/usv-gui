@@ -7,8 +7,8 @@
 #include <QOpenGLExtraFunctions>
 #include <iostream>
 
-#define FOV 60
-#define CAMERA_ANGLE 30
+#define FOV 75
+#define CAMERA_ANGLE 45
 #define CIRCLE_POINTS_N 360
 
 #define PRINT_POINT_2D(point) std::cout <<#point<< ": "<<(point).x()<<", "<<(point).y()<< std::endl;
@@ -44,6 +44,7 @@ OGLWidget::~OGLWidget()
     delete m_paths;
     delete text;
     delete grid;
+    delete sea;
 }
 static const char *vertexShaderSource =
         "layout(location = 0) in vec4 vertex;\n"
@@ -161,7 +162,7 @@ void OGLWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
-    f->glClearColor(1.0f, 1.0f, 1.0f, 1);
+//    f->glClearColor(1.0f, 1.0f, 1.0f, 1);
 
     {
         QFile fontfile(":/resource/font.fnt");
@@ -169,6 +170,13 @@ void OGLWidget::initializeGL()
         text=new Text(fontfile,fontimage);
     }
     grid = new GLGrid();
+    {
+        QImage tex(":/resource/Water_001_DISP.png");
+        QImage tex_norm(":resource/Water_001_NORM.jpg");
+        QImage spec(":resource/Water_001_SPEC.jpg");
+//        tex_norm=tex_norm.mirrored();
+        sea = new GLSea(tex,tex_norm,spec);
+    }
 }
 
 void OGLWidget::resizeGL(int w, int h)
@@ -187,13 +195,14 @@ void OGLWidget::paintGL()
     f->glEnable(GL_DEPTH_TEST);
     m_program->bind();
 
-    PRINT_POINT_3D(m_eye)
-            if (m_uniformsDirty) {
+    auto r= (float)std::tan(CAMERA_ANGLE/180.0f*M_PI)*m_eye.z();
+    auto eye = QVector3D(m_eye.x()-r*std::cos(rotation),m_eye.y()-r*std::sin(rotation),m_eye.z());
+
+    if (m_uniformsDirty) {
         m_uniformsDirty = false;
         m_proj.setToIdentity();
         QMatrix4x4 camera;
-        auto r= (float)std::tan(CAMERA_ANGLE/180.0f*M_PI)*m_eye.z();
-        auto eye = QVector3D(m_eye.x()-r*std::cos(rotation),m_eye.y()-r*std::sin(rotation),m_eye.z());
+
         auto phi_rad = FOV/360.0f*M_PI;
         auto alpha_rad = CAMERA_ANGLE/180.0f*M_PI;
         auto z_cos_phi = m_eye.z()*std::cos(phi_rad);
@@ -218,6 +227,7 @@ void OGLWidget::paintGL()
     f->glVertexAttrib1f(4,1.0f);
     m_program->release();
     //Draw plane
+    sea->render(m_m,eye,time);
     grid->render(m_m);
     m_program->bind();
     // Draw paths
@@ -354,7 +364,10 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
     m_vessels->release();
 }
 
-
+void OGLWidget::updateTime(float t)
+{
+    time=t;
+}
 
 void OGLWidget::mousePressEvent(QMouseEvent *event){
     setCursor(Qt::ClosedHandCursor);

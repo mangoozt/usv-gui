@@ -21,15 +21,16 @@ static const char *fragmentShaderSource =
         "#extension GL_OES_standard_derivatives : enable\n"
         "in highp vec3 vert;\n"
         "out highp vec4 fragColor;\n"
-        "uniform highp vec3 color;\n"
-        "uniform highp vec3 bg_color;\n"
+        "uniform highp vec4 color;\n"
+        "uniform highp vec4 bg_color;\n"
         "void main() {\n"
         "   vec2 coord = vert.xy;\n"
         "   vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord);\n"
         "   vec2 rgrid = abs(fract(coord) - 0.5) / fwidth(coord);\n"
         "   float rline = min(rgrid.x, rgrid.y);\n"
-        "   float line = min(grid.x, grid.y);\n"
-        "   fragColor = vec4(mix(bg_color,color,1.0 - min(min(rline*1.5,line), 1.0)),1.0);\n"
+        "   float line = min(grid.x, grid.y);"
+//        "   float k = ;\n"
+        "   fragColor = mix(bg_color,color,1.0 - min(min(rline*1.5,line), 1.0));\n"
         "}\n";
 
 GLGrid::GLGrid()
@@ -41,8 +42,8 @@ GLGrid::GLGrid()
     m_program->bind();
     m_viewMatrixLoc = m_program->uniformLocation("m_view");
     m_colorLoc = m_program->uniformLocation("color");
-    m_program->setUniformValue(m_colorLoc, QVector3D(135,206,250)/255);
-    m_program->setUniformValue(m_program->uniformLocation("bg_color"), QVector3D(1.0,1.0,1.0));
+    m_program->setUniformValue(m_colorLoc, QVector4D(135,206,250,120)/255);
+    m_program->setUniformValue(m_program->uniformLocation("bg_color"), QVector4D(1.0,1.0,1.0,0.0));
     m_program->release();
     vbo = new QOpenGLBuffer;
     GLfloat plane[]={
@@ -58,6 +59,8 @@ GLGrid::GLGrid()
 
 void GLGrid::render(QMatrix4x4 &view_matrix){
     QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
+    f->glEnable(GL_BLEND);
+    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
     m_program->setUniformValue(m_viewMatrixLoc, view_matrix);
     vbo->bind();
@@ -67,8 +70,10 @@ void GLGrid::render(QMatrix4x4 &view_matrix){
     f->glVertexAttrib3f(3, 0.678f, 0.847f, 0.902f);
     f->glDrawArrays(GL_TRIANGLE_FAN,0,4);
     m_program->release();
+    f->glDisable(GL_BLEND);
 }
 
 GLGrid::~GLGrid(){
     delete m_program;
+    delete vbo;
 }

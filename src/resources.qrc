@@ -2,5 +2,9 @@
     <qresource prefix="/">
         <file>resource/font.fnt</file>
         <file>resource/font.png</file>
+        <file>resource/TestNormalMap.png</file>
+        <file>resource/Water_001_NORM.jpg</file>
+        <file>resource/Water_001_DISP.png</file>
+        <file>resource/Water_001_SPEC.jpg</file>
     </qresource>
 </RCC>

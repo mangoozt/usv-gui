@@ -82,7 +82,7 @@ void Text::renderText(std::string text, QPoint position, QRect window, QVector3D
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
-    texture.bind();
+    texture.bind(0);
     text_vbo->bind();
 
     f->glEnableVertexAttribArray(0);
@@ -128,4 +128,5 @@ void Text::renderText(std::string text, QPoint position, QRect window, QVector3D
 
 Text::~Text(){
     delete m_program;
+    delete text_vbo;
 }
