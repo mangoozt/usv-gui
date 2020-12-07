@@ -1,8 +1,8 @@
 #ifndef USV_INPUTDATA_H
 #define USV_INPUTDATA_H
 
-#include "Defines.h"
 #include "CurvedPath.h"
+#include "Restrictions.h"
 #include <string>
 #include <fstream>
 #include <ostream>
@@ -152,18 +152,47 @@ struct Maneuver{
     std::string solver_name;
 };
 
-typedef std::vector<Maneuver> Maneuvers;
+    typedef std::vector<Maneuver> Maneuvers;
 
-struct InputData {
-    std::unique_ptr<NavigationParameters> navigationParameters;
-    std::unique_ptr<TargetsParameters> navigationProblem;
-    std::unique_ptr<Hydrometeorology> hydrometeorology;
-    std::unique_ptr<CurvedPath> route;
-    std::unique_ptr<Settings> settings;
-    std::unique_ptr<Maneuvers> maneuvers;
-    std::unique_ptr<CurvedPathCollection> targets_paths;
-    std::unique_ptr<CurvedPathCollection> targets_real_paths;
-};
+    struct InputData {
+        std::unique_ptr<NavigationParameters> navigationParameters;
+        std::unique_ptr<TargetsParameters> navigationProblem;
+        std::unique_ptr<Hydrometeorology> hydrometeorology;
+        std::unique_ptr<CurvedPath> route;
+        std::unique_ptr<Settings> settings;
+        std::unique_ptr<Maneuvers> maneuvers;
+        std::unique_ptr<CurvedPathCollection> targets_paths;
+        std::unique_ptr<CurvedPathCollection> targets_real_paths;
+        std::unique_ptr<FeatureCollection> constraints;
+    };
+
+    enum class RestrictionType {
+        Hard,
+        Soft
+    };
+
+    enum class GeometryType {
+        GeometryPoint,
+        GeometryLine,
+        GeometryPolygon
+    };
+
+    struct Geometry {
+        GeometryType type;
+        std::vector<std::vector<Vector2>> coordinatesPolygon;
+        std::vector<Vector2> coordinatesLine;
+        Vector2 coordinatesPoint;
+    };
+
+    struct Feature {
+        Geometry geometry;
+        ::USV::Restrictions::FeatureProperties properties;
+    };
+
+    struct FeatureCollection {
+        std::vector<Feature> features;
+    };
+
 
 }
 
@@ -317,6 +346,103 @@ struct default_codec_t<Settings> {
     }
 };
 
+    }
 }
+
+namespace spotify {
+    namespace json {
+        using namespace USV::InputTypes;
+
+        template<>
+        struct default_codec_t<Vector2> {
+            static auto codec() {
+                return codec::transform(
+                        codec::pair(codec::number<double>(), codec::number<double>()),
+                        [](const Vector2& p) { return std::make_pair(p.x(), p.y()); },
+                        [](const std::pair<double, double>& p) { return Vector2(p.first, p.second); });
+            }
+        };
+
+        template<>
+        struct default_codec_t<Geometry> {
+            static auto codec() {
+                codec::object_t<Geometry> codec_point;
+                codec_point.required("type", codec::eq(std::string("Point")));
+                codec_point.required("type", &Geometry::type,
+                                     spotify::json::codec::ignore(GeometryType::GeometryPoint));
+                codec_point.required("coordinates", &Geometry::coordinatesPoint);
+
+                codec::object_t<Geometry> codec_polygon;
+                codec_polygon.required("type", codec::eq(std::string("Polygon")));
+                codec_polygon.required("type", &Geometry::type,
+                                       spotify::json::codec::ignore(GeometryType::GeometryPoint));
+                codec_polygon.required("coordinates", &Geometry::coordinatesPolygon);
+
+                codec::object_t<Geometry> codec_linestring;
+                codec_linestring.required("type", codec::eq(std::string("LineString")));
+                codec_linestring.required("type", &Geometry::type,
+                                          spotify::json::codec::ignore(GeometryType::GeometryPoint));
+                codec_linestring.required("coordinates", &Geometry::coordinatesLine);
+
+                return codec::one_of(codec_point, codec_linestring, codec_polygon);
+            }
+        };
+
+        template<>
+        struct default_codec_t<Feature> {
+            static codec::object_t<Feature> codec() {
+                auto codec = codec::object<Feature>();
+                codec.required("properties", &Feature::properties);
+                codec.required("geometry", &Feature::geometry);
+                return codec;
+            }
+        };
+
+        template<>
+        struct default_codec_t<FeatureCollection> {
+            static codec::object_t<FeatureCollection> codec() {
+                auto codec = codec::object<FeatureCollection>();
+                codec.required("features", &FeatureCollection::features);
+                return codec;
+            }
+        };
+
+        template<>
+        struct default_codec_t<USV::Restrictions::FeatureProperties> {
+            using FP = USV::Restrictions::FeatureProperties;
+            using LT = USV::Restrictions::LimitationType;
+            using RT = USV::Restrictions::RestrictionType;
+
+            static codec::object_t<FP> codec() {
+                const static auto limitation_type_codec = codec::enumeration<LT, std::string>(
+                        {
+                                {LT::point_approach_prohibition,     "point_approach_prohibition"},
+                                {LT::line_crossing_prohibition,      "line_crossing_prohibition"},
+                                {LT::zone_entering_prohibition,      "zone_entering_prohibition"},
+                                {LT::zone_leaving_prohibition,       "zone_leaving_prohibition"},
+                                {LT::movement_parameters_limitation, "movement_parameters_limitation"}
+                        });
+
+                const static auto hardness_type_codec = codec::enumeration<RT, std::string>(
+                        {
+                                {RT::Hard, "hard"},
+                                {RT::Soft, "soft"}
+                        });
+
+                auto codec = codec::object<FP>();
+                codec.required("id", &FP::id);
+                codec.required("limitation_type", &FP::limitation_type, limitation_type_codec);
+                codec.required("hardness", &FP::hardness, hardness_type_codec);
+                codec.required("source_id", &FP::source_id);
+                codec.required("source_object_code", &FP::source_object_code);
+
+                codec.optional("max_course", &FP::max_course);
+                codec.optional("min_course", &FP::min_course);
+                codec.optional("max_speed", &FP::max_speed);
+                return codec;
+            }
+        };
+
+    }
 }
 #endif // USV_INPUTDATA_H

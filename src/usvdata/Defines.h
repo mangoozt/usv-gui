@@ -45,12 +45,6 @@ namespace USV {
         double width;
         double lengthOffset;
     };
-
-    enum class RestrictionType {
-        Hard,
-        Soft,
-        None
-    };
     
 }
 #endif // USV_DEFINES_H

@@ -11,6 +11,7 @@ set(USVDATA_SOURCES
         Path.h Path.cpp
         Angle.cpp
         Defines.h
+        Restrictions.h Restrictions.cpp
         )
 
 add_library(usvdata STATIC ${USVDATA_HEADERS} ${USVDATA_SOURCES})

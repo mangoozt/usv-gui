@@ -10,6 +10,7 @@
 #include "text.h"
 #include "glgrid.h"
 #include "glsea.h"
+#include "glrestrictions.h"
 
 class QOpenGLTexture;
 class QOpenGLShaderProgram;
@@ -68,10 +69,11 @@ protected:
     Text *text;
     GLGrid *grid;
     GLSea *sea;
+    GLRestrictions* restrictions;
     float time{0.0f};
     std::unique_ptr<USV::CaseData> case_data_;
 public:
-    const USV::CaseData* case_data() const {
+    [[nodiscard]] const USV::CaseData* case_data() const {
         return case_data_.get();
     }
 };

@@ -16,6 +16,7 @@ InputTypes::InputData loadInputData(const std::string & data_directory){
     load_from_json_file(inputData.targets_paths, data_directory+sep+"target-maneuvers.json");
     load_from_json_file(inputData.targets_real_paths, data_directory+sep+"real-target-maneuvers.json");
     load_from_json_file(inputData.settings, data_directory+sep+"settings.json");
+    load_from_json_file(inputData.constraints, data_directory+sep+"constraints.json");
     return inputData;
 }
 

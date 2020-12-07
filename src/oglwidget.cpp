@@ -45,6 +45,7 @@ OGLWidget::~OGLWidget()
     delete text;
     delete grid;
     delete sea;
+    delete restrictions;
 }
 static const char *vertexShaderSource =
         "layout(location = 0) in vec4 vertex;\n"
@@ -167,7 +168,7 @@ void OGLWidget::initializeGL()
     {
         QFile fontfile(":/resource/font.fnt");
         QImage fontimage(":/resource/font.png");
-        text=new Text(fontfile,fontimage);
+        text = new Text(fontfile, fontimage);
     }
     grid = new GLGrid();
     {
@@ -175,8 +176,10 @@ void OGLWidget::initializeGL()
         QImage tex_norm(":resource/Water_001_NORM.jpg");
         QImage spec(":resource/Water_001_SPEC.jpg");
 //        tex_norm=tex_norm.mirrored();
-        sea = new GLSea(tex,tex_norm,spec);
+        sea = new GLSea(tex, tex_norm, spec);
     }
+
+    restrictions = new GLRestrictions();
 }
 
 void OGLWidget::resizeGL(int w, int h)
@@ -229,6 +232,7 @@ void OGLWidget::paintGL()
     //Draw plane
     sea->render(m_m,eye,time);
     grid->render(m_m);
+    restrictions->render(m_m, eye);
     m_program->bind();
     // Draw paths
     m_paths->bind();
@@ -332,18 +336,20 @@ void OGLWidget::loadData(USV::CaseData &caseData){
         }
         m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0.7f,0.7f,0.5f,0));
     }
-    for(const auto& path:case_data_->maneuvers){
-        path_points=path.getPointsPath();
-        size_t ptr=paths.size()/2;
-        for(const auto& v: path_points){
+    for(const auto& path:case_data_->maneuvers) {
+        path_points = path.getPointsPath();
+        size_t ptr = paths.size() / 2;
+        for (const auto& v: path_points) {
             paths.push_back(v.x());
             paths.push_back(v.y());
         }
-        m_paths_meta.emplace_back(ptr,path_points.size(),QVector4D(0.5f,0.5f,0.5f,0));
+        m_paths_meta.emplace_back(ptr, path_points.size(), QVector4D(0.5f, 0.5f, 0.5f, 0));
     }
     m_paths->bind();
-    m_paths->allocate(paths.data(),(int)(sizeof(GLfloat)*paths.size()));
+    m_paths->allocate(paths.data(), (int) (sizeof(GLfloat) * paths.size()));
     m_paths->release();
+
+    restrictions->load_restrictions(caseData.restrictions);
 }
 
 
