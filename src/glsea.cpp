@@ -161,9 +161,8 @@ GLSea::~GLSea()
     delete ibo;
 }
 
-void GLSea::render(QMatrix4x4 &view_matrix, QVector3D eyePos, float time)
-{
-    QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
+void GLSea::render(QMatrix4x4& view_matrix, QVector3D eyePos, double time) {
+    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
     f->glDepthMask(GL_FALSE);
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -172,7 +171,7 @@ void GLSea::render(QMatrix4x4 &view_matrix, QVector3D eyePos, float time)
     tex.bind(2);
     spec_tex.bind(4);
     m_program->setUniformValue(m_viewMatrixLoc, view_matrix);
-    m_program->setUniformValue(m_timeLoc, (time*10));
+    m_program->setUniformValue(m_timeLoc, (float) std::fmod(time, 10) * 10.0f);
     m_program->setUniformValue(m_viewLoc, eyePos);
     vbo->bind();
     ibo->bind();

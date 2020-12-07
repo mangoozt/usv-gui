@@ -370,7 +370,7 @@ void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels){
     m_vessels->release();
 }
 
-void OGLWidget::updateTime(float t)
+void OGLWidget::updateTime(double t)
 {
     time=t;
 }

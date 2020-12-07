@@ -10,7 +10,7 @@ class GLSea
 public:
     GLSea(QImage& texture, QImage& normal, QImage &specular);
     ~GLSea();
-    void render(QMatrix4x4 &view_matrix, QVector3D eyePos, float time=0);
+    void render(QMatrix4x4 &view_matrix, QVector3D eyePos, double time=0);
 private:
     void prepare_grid();
     QOpenGLShaderProgram *m_program;
