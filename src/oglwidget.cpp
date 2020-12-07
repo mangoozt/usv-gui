@@ -343,7 +343,7 @@ void OGLWidget::loadData(USV::CaseData &caseData){
             paths.push_back(v.x());
             paths.push_back(v.y());
         }
-        m_paths_meta.emplace_back(ptr, path_points.size(), QVector4D(0.5f, 0.5f, 0.5f, 0));
+        m_paths_meta.emplace_back(ptr, path_points.size(), QVector4D(0.1f, 0.8f, 0.1f, 0));
     }
     m_paths->bind();
     m_paths->allocate(paths.data(), (int) (sizeof(GLfloat) * paths.size()));

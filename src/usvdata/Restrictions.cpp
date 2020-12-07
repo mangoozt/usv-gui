@@ -8,6 +8,30 @@ namespace USV::Restrictions {
         inline Vector2 geoJSONToLocal(const Vector2& point, const USV::Frame& reference_frame) {
             return reference_frame.fromWgs(point.y(), point.x());
         }
+
+        bool pointInRing(const ring_type& ring, const Vector2& point) {
+            bool c = false;
+            for (size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++) {
+                if (((ring[i].y() > point.y()) != (ring[j].y() > point.y())) &&
+                    (point.x() <
+                     (ring[j].x() - ring[i].x()) * (point.y() - ring[i].y()) /
+                     (ring[j].y() - ring[i].y()) + ring[i].x()))
+                    c = !c;
+            }
+            return c;
+        };
+
+        bool pointInPolygon(const Polygon& polygon, const Vector2& point) {
+            if (pointInRing(polygon.rings[0], point)) {
+                size_t c = 1;
+                for (size_t i = 1; i < polygon.rings.size(); ++i) {
+                    if (pointInRing(polygon.rings[i], point))
+                        ++c;
+                }
+                return c % 2 == 1;
+            }
+            return false;
+        }
     }
 
     LineString lineToLocal(const std::vector<Vector2>& line, const USV::Frame& reference_frame) {
@@ -81,12 +105,14 @@ namespace USV::Restrictions {
 
     void Limitations::add_zone_entering_prohibition(Polygon& polygon,
                                                     std::deque<FeatureProperties>::const_iterator features_ptr) {
-        zone_entering_prohibitions.push_back({polygon, std::move(features_ptr)});
+        if (!pointInPolygon(polygon, {0, 0}))
+            zone_entering_prohibitions.push_back({polygon, std::move(features_ptr)});
     }
 
     void Limitations::add_zone_leaving_prohibition(Polygon& polygon,
                                                    std::deque<FeatureProperties>::const_iterator features_ptr) {
-        zone_leaving_prohibitions.push_back({polygon, std::move(features_ptr)});
+        if (pointInPolygon(polygon, {0, 0}))
+            zone_leaving_prohibitions.push_back({polygon, std::move(features_ptr)});
     }
 
     void Limitations::add_movement_parameters_limitation(Polygon& polygon,

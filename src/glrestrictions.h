@@ -6,6 +6,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 #include <QOpenGLTexture>
+#include <utility>
 
 class GLRestrictions {
 
@@ -24,13 +25,36 @@ private:
         QOpenGLBuffer* vbo;
         QOpenGLBuffer* ibo;
         size_t indices_count;
+        QVector3D color;
     public:
-        explicit Polygon(const USV::Restrictions::Polygon&);
+        Polygon(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
 
         Polygon(Polygon&& o) noexcept:
-                vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count) {}
+                vbo(std::exchange(o.vbo, nullptr)),
+                ibo(std::exchange(o.ibo, nullptr)),
+                indices_count(o.indices_count),
+                color(o.color) {}
 
         ~Polygon();
+
+        void render(QOpenGLShaderProgram* m_program);
+    };
+
+    class Contour {
+        QOpenGLBuffer* vbo;
+        std::vector<GLuint> start_ptrs;
+        QVector3D color;
+    public:
+        Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
+
+        Contour(Contour&& o) noexcept:
+                vbo(std::exchange(o.vbo, nullptr)),
+                start_ptrs(std::move(o.start_ptrs)),
+                color(o.color) {}
+
+        ~Contour(){
+            delete vbo;
+        };
 
         void render(QOpenGLShaderProgram* m_program);
     };
@@ -40,6 +64,7 @@ private:
     int m_viewLoc;
     int m_timeLoc;
     std::vector<Polygon> glpolygons;
+    std::vector<Contour> glcontours;
 };
 
 
