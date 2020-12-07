@@ -218,9 +218,6 @@ void OGLWidget::paintGL()
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
     }
 
-    f->glEnable(GL_LINE_SMOOTH);
-    f->glEnable(GL_BLEND);
-    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     f->glDisableVertexAttribArray(1);
     f->glVertexAttrib4f(1, 0.0f,0.0f,0.0f,0.0f);
     f->glDisableVertexAttribArray(2);
@@ -233,11 +230,16 @@ void OGLWidget::paintGL()
     sea->render(m_m,eye,time);
     grid->render(m_m);
     restrictions->render(m_m, eye);
+
     m_program->bind();
+    f->glEnable(GL_LINE_SMOOTH);
+    f->glEnable(GL_BLEND);
+    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // Draw paths
     m_paths->bind();
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    f->glVertexAttrib4f(1, 0.0f,0.0f,0.0f,0.0f);
     m_paths->release();
     f->glLineWidth(3.0f);
 
@@ -266,9 +268,9 @@ void OGLWidget::paintGL()
     f->glVertexAttribDivisor(3, 1);
     f->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 3*sizeof(float) ) );
     f->glVertexAttrib1f(4,1.0f);
-    m_vessels->release();
     f->glLineWidth(1.0f);
     f->glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei)case_data.vessels.size());
+    m_vessels->release();
 
     // Circle
     m_circle_vbo->bind();
@@ -278,10 +280,13 @@ void OGLWidget::paintGL()
     f->glEnableVertexAttribArray(4);
     f->glVertexAttribDivisor(4, 1);
     f->glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) ( 6*sizeof(float) ) );
-    m_vessels->release();
     f->glLineWidth(2.0f);
     f->glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei)case_data.vessels.size());
-
+    f->glVertexAttribDivisor(1, 0);
+    f->glVertexAttribDivisor(2, 0);
+    f->glVertexAttribDivisor(3, 0);
+    f->glVertexAttribDivisor(4, 0);
+    m_vessels->release();
     m_program->release();
     for(size_t i=0;i<case_data.vessel_names.size();++i){
         auto& vessel= case_data.vessels[i];

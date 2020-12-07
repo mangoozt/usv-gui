@@ -32,6 +32,18 @@ namespace USV::Restrictions {
             }
             return false;
         }
+
+        bool clockwiseRing(const ring_type& ring) {
+            double sum = 0;
+            const std::size_t len = ring.size();
+            std::size_t i, j;
+            for (i = 0, j = len > 0 ? len - 1 : 0; i < len; j = i++) {
+                const auto& p1 = ring[i];
+                const auto& p2 = ring[j];
+                sum += (p2.x() - p1.x()) * (p1.y() + p2.y());
+            }
+            return (sum > 0);
+        }
     }
 
     LineString lineToLocal(const std::vector<Vector2>& line, const USV::Frame& reference_frame) {
@@ -53,6 +65,8 @@ namespace USV::Restrictions {
                 ring.push_back(geoJSONToLocal(point, frame));
             ring.pop_back();
         }
+        if (clockwiseRing(poly.rings[0]))
+            std::reverse(poly.rings[0].begin(), poly.rings[0].end());
         return poly;
     }
 

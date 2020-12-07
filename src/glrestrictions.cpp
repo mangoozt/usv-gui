@@ -9,7 +9,7 @@
 static const char* vertexShaderSource =
         "#version 330\n"
         "layout(location = 0) in vec4 vertex;\n"
-        "layout(location = 1) in vec4 position;\n"
+        "layout(location = 1) in vec3 normal;\n"
         "out highp mat3 TBN;"
         "uniform mat4 m_view;\n"
         "out highp VERTEX_OUT{"
@@ -17,8 +17,7 @@ static const char* vertexShaderSource =
         "} vertex_out;"
         "void main() {\n"
         "   gl_Position = m_view * vertex;\n"
-        "   vec3 Normal = vec3(0, 0, 1);\n"
-        "   Normal = normalize(Normal);\n"
+        "   vec3 Normal = normalize(normal);\n"
         "   vec3 Tangent = normalize(vec3(Normal.z,0,-Normal.y));"
         "   vec3 Tangent2 = normalize(vec3(0,Normal.z,-Normal.x));"
         "   TBN = mat3(Tangent,Tangent2,Normal);"
@@ -106,7 +105,7 @@ GLRestrictions::~GLRestrictions() {
 
 void GLRestrictions::render(QMatrix4x4& view_matrix, QVector3D eyePos) {
     QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    f->glDepthMask(GL_FALSE);
+//    f->glDepthMask(GL_FALSE);
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
@@ -145,6 +144,7 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
 
 void GLRestrictions::Polygon::render(QOpenGLShaderProgram* program) {
     QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
+    program->bind();
     program->setUniformValue(program->uniformLocation("material.ambient"), color);
     program->setUniformValue(program->uniformLocation("material.diffuse"), color * 0.8);
     program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255,255,255) / 400);
@@ -152,11 +152,15 @@ void GLRestrictions::Polygon::render(QOpenGLShaderProgram* program) {
     vbo->bind();
     ibo->bind();
     int vertexLocation = program->attributeLocation("vertex");
+    int normalLocation = program->attributeLocation("normal");
+    program->disableAttributeArray(normalLocation);
+    program->setAttributeValue(normalLocation,QVector3D(0.0,0.0,1.0));
     program->enableAttributeArray(vertexLocation);
     program->setAttributeBuffer(vertexLocation, GL_FLOAT, GL_FALSE, 2, 0);
     f->glDrawElements(GL_TRIANGLES, indices_count, GL_UNSIGNED_INT, 0);
     ibo->release();
     vbo->release();
+    program->release();
 }
 
 namespace mapbox::util {
@@ -178,13 +182,10 @@ namespace mapbox::util {
 } // namespace mapbox
 
 GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, const QVector3D& color) : color(color) {
-    // The index type.
-    using N = GLuint;
-    using Point = std::array<GLfloat, 2>;
     // Run tessellation
     // Returns array of indices that refer to the vertices of the input polygon.
     // Three subsequent indices form a triangle. Output triangles are clockwise.
-    std::vector<N> indices = mapbox::earcut<N>(polygon.rings);
+    std::vector<Index> indices = mapbox::earcut<Index>(polygon.rings);
     indices_count = indices.size();
     std::vector<Point> vertices;
     for (auto& ring:polygon.rings)
@@ -208,14 +209,113 @@ GLRestrictions::Polygon::~Polygon() {
     delete ibo;
 }
 
-GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color) : color(color) {
-    // The index type.
-    using N = GLuint;
-    using Point = std::array<GLfloat, 2>;
+void GLRestrictions::Isle::render(QOpenGLShaderProgram* program) {
+    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
+    program->bind();
+    program->setUniformValue(program->uniformLocation("material.ambient"), color);
+    program->setUniformValue(program->uniformLocation("material.diffuse"), color * 0.8);
+    program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
+    program->setUniformValue(program->uniformLocation("material.shininess"), 16);
+    vbo->bind();
+    ibo->bind();
+    int vertexLocation = program->attributeLocation("vertex");
+    int normLocation = program->attributeLocation("normal");
+    f->glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GLfloat), (void*) (0 * sizeof(GLfloat)));
+    program->enableAttributeArray(vertexLocation);
+    f->glVertexAttribPointer(normLocation, 3, GL_FLOAT, GL_FALSE, 6*sizeof(GLfloat), (void*) (3 * sizeof(GLfloat)));
+    program->enableAttributeArray(normLocation);
+
+    f->glDrawElements(GL_TRIANGLES, indices_count, GL_UNSIGNED_INT, 0);
+//    f->glDisableVertexAttribArray(vertexLocation);
+//    f->glDisableVertexAttribArray(normLocation);
+    ibo->release();
+    vbo->release();
+    program->release();
+}
+
+GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color) : color(color) {
+    using Point6 = std::array<GLfloat, 6>;
+    const auto z = 0.2f;
     // Run tessellation
     // Returns array of indices that refer to the vertices of the input polygon.
     // Three subsequent indices form a triangle. Output triangles are clockwise.
-    std::vector<N> indices = mapbox::earcut<N>(polygon.rings);
+    std::vector<Index> indices = mapbox::earcut<Index>(polygon.rings);
+
+    std::vector<Point6> vertices;
+    for (auto& ring:polygon.rings)
+        for (auto& point:ring)
+            vertices.push_back({(GLfloat) point.x(), (GLfloat) point.y(), z, 0, 0, 1});
+
+
+    // build sidewall
+    GLuint r = polygon.rings[0].size();
+    auto s = vertices.size();
+    for (GLuint i = 0; i < polygon.rings[0].size(); ++i) {
+        USV::Vector2 d, d1;
+        if (i == 0)
+            d = polygon.rings[0][i] - polygon.rings[0][i - 1 + r];
+        else
+            d = polygon.rings[0][i] - polygon.rings[0][i - 1];
+
+        if (i == r - 1)
+            d1 = polygon.rings[0][0] - polygon.rings[0][i];
+        else
+            d1 = polygon.rings[0][i + 1] - polygon.rings[0][i];
+
+        // prev
+        // top
+        vertices.push_back(
+                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), z,
+                 static_cast<float>(-d.y()), static_cast<float>(d.x()), 0});
+        // bottom
+        vertices.push_back(
+                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), -5 * z,
+                 static_cast<float>(-d.y()), static_cast<float>(d.x()), 0});
+        // next
+        //top
+        vertices.push_back(
+                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), z,
+                 static_cast<float>(-d1.y()), static_cast<float>(d1.x()), 0});
+        //bottom
+        vertices.push_back(
+                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), -5 * z,
+                 static_cast<float>(-d1.y()), static_cast<float>(d1.x()), 0});
+    }
+
+    r=4*(r);
+    for (GLuint j = 0; j < polygon.rings[0].size(); ++j) {
+        // indices
+        indices.push_back(s + 4 * j - 1 + r);
+        indices.push_back(s + 4 * j - 2 + r);
+        indices.push_back(s + 4 * j + 1);
+        indices.push_back(s + 4 * j - 2 + r);
+        indices.push_back(s + 4 * j);
+        indices.push_back(s + 4 * j + 1);
+        r = 0;
+    }
+
+
+    indices_count = indices.size();
+    vbo = new QOpenGLBuffer();
+    ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+    vbo->create();
+    ibo->create();
+    vbo->bind();
+    vbo->allocate(vertices.data(), sizeof(Point6) * vertices.size());
+    vbo->release();
+    ibo->bind();
+    ibo->allocate(indices.data(), sizeof(GLuint) * indices.size());
+    ibo->release();
+
+}
+
+GLRestrictions::Isle::~Isle() {
+    delete vbo;
+    delete ibo;
+}
+
+
+GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color) : color(color) {
     std::vector<Point> vertices;
     for (auto& ring:polygon.rings) {
         start_ptrs.push_back(vertices.size());
@@ -233,14 +333,24 @@ GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, cons
 
 void GLRestrictions::Contour::render(QOpenGLShaderProgram* program) {
     QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
+    program->bind();
     program->setUniformValue(program->uniformLocation("material.ambient"), color);
     program->setUniformValue(program->uniformLocation("material.diffuse"), color * 0.8);
     program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255,255,255) / 400);
     program->setUniformValue(program->uniformLocation("material.shininess"), 16);
     vbo->bind();
-    f->glVertexAttribPointer(program->attributeLocation("vertex"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+    int vertexLocation = program->attributeLocation("vertex");
+    program->enableAttributeArray(vertexLocation);
+    int normalLocation = program->attributeLocation("normal");
+    program->setAttributeValue(normalLocation,QVector3D(0.0,0.0,1.0));
+    f->glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
     vbo->release();
-    f->glLineWidth(2.0f);
+    f->glLineWidth(3.0f);
     for (size_t i = 0, j = 1; j < start_ptrs.size(); i = j++)
         f->glDrawArrays(GL_LINE_LOOP, start_ptrs[i], start_ptrs[j] - start_ptrs[i]);
+
+    f->glDisableVertexAttribArray(vertexLocation);
+    f->glDisableVertexAttribArray(normalLocation);
+    program->release();
 }
