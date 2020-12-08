@@ -144,9 +144,9 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
     QVector3D c_soft{1.0, 0.8, 0.0};
     for (auto& limitation:restrictions.soft.ZoneEnteringProhibitions()) {
         if (limitation._ptr->source_object_code == "LNDARE")
-            glisles.emplace_back(limitation.polygon, c_hard);
+            glisles.emplace_back(limitation.polygon, c_soft);
         else
-            glcontours.emplace_back(limitation.polygon, c_hard);
+            glcontours.emplace_back(limitation.polygon, c_soft);
     }
     QVector3D c_movement{0.9, 0.9, 0.9};
     for (auto& limitation:restrictions.soft.MovementParametersLimitations()) {

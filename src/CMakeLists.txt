@@ -31,6 +31,6 @@ add_executable(USV-gui
         earcut.h
         glrestrictions.cpp glrestrictions.h)
 
-set_property(TARGET USV-gui PROPERTY WIN32_EXECUTABLE true)
+set_property(TARGET USV-gui PROPERTY $<$<CONFIG:Debug>:WIN32_EXECUTABLE true>)
 
 target_link_libraries(USV-gui usvdata Qt5::Widgets Qt5::OpenGL)
