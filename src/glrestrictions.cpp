@@ -1,7 +1,7 @@
 #include "glrestrictions.h"
 #include "earcut.h"
+#include "glgrid.h"
 #include <cmath>
-#include <iostream>
 #include <array>
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
@@ -47,7 +47,7 @@ static const char* fragmentShaderSource =
         "in highp VERTEX_OUT{"
         "   vec3 highp FragPos;"
         "} vertex_out;"
-        ""
+        "vec4 xygrid(vec2 coord, vec4 color,vec4 gridcolor);\n"
         "void main() {\n"
         "   vec3 norm = normalize(TBN[2]);"
         // ambient
@@ -62,12 +62,13 @@ static const char* fragmentShaderSource =
         "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);\n"
         "   vec3 specular = light.specular * (spec * material.specular);\n"
         "   vec3 result = ambient + diffuse + specular;\n"
-        "   fragColor = vec4(result, 1.0);\n"
+        "   fragColor = xygrid(vertex_out.FragPos.xy, vec4(result, 1.0), vec4(135,135,135,255)/255);\n"
         "}\n";
 
 GLRestrictions::GLRestrictions() {
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
+    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, GLGrid::xyGridShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->link();
     m_program->bind();
@@ -212,8 +213,8 @@ GLRestrictions::Polygon::~Polygon() {
 void GLRestrictions::Isle::render(QOpenGLShaderProgram* program) {
     QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
     program->bind();
-    program->setUniformValue(program->uniformLocation("material.ambient"), color);
-    program->setUniformValue(program->uniformLocation("material.diffuse"), color * 0.8);
+    program->setUniformValue(program->uniformLocation("material.ambient"), color*0.5);
+    program->setUniformValue(program->uniformLocation("material.diffuse"), color);
     program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
     program->setUniformValue(program->uniformLocation("material.shininess"), 16);
     vbo->bind();

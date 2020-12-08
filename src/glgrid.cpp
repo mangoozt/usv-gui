@@ -16,6 +16,17 @@ static const char *vertexShaderSource =
         "vert = (translate*m_scale*vertex).xyz;"
         "}\n";
 
+const char *GLGrid::xyGridShaderSource=
+        "#version 330\n"
+        "#extension GL_OES_standard_derivatives : enable\n"
+        "vec4 xygrid(vec2 coord, vec4 color,vec4 gridcolor) {\n"
+        "   vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord);\n"
+        "   vec2 rgrid = abs(fract(coord) - 0.5) / fwidth(coord);\n"
+        "   float rline = min(rgrid.x, rgrid.y);\n"
+        "   float line = min(grid.x, grid.y);"
+        "   return mix(color,gridcolor,1.0 - min(min(rline*1.5,line), 1.0));\n"
+        "}\n";
+
 static const char *fragmentShaderSource =
         "#version 330\n"
         "#extension GL_OES_standard_derivatives : enable\n"
@@ -23,20 +34,17 @@ static const char *fragmentShaderSource =
         "out highp vec4 fragColor;\n"
         "uniform highp vec4 color;\n"
         "uniform highp vec4 bg_color;\n"
+        "vec4 xygrid(vec2 coord, vec4 color,vec4 gridcolor);\n"
         "void main() {\n"
         "   vec2 coord = vert.xy;\n"
-        "   vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord);\n"
-        "   vec2 rgrid = abs(fract(coord) - 0.5) / fwidth(coord);\n"
-        "   float rline = min(rgrid.x, rgrid.y);\n"
-        "   float line = min(grid.x, grid.y);"
-//        "   float k = ;\n"
-        "   fragColor = mix(bg_color,color,1.0 - min(min(rline*1.5,line), 1.0));\n"
+        "   fragColor = xygrid(coord,bg_color,color);\n"
         "}\n";
 
 GLGrid::GLGrid()
 {
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
+    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, xyGridShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->link();
     m_program->bind();

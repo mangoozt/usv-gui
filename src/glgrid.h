@@ -10,6 +10,7 @@ public:
     GLGrid();
     ~GLGrid();
     void render(QMatrix4x4 &view_matrix);
+    static const char *xyGridShaderSource;
 private:
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *vbo;
