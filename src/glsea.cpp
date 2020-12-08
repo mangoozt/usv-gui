@@ -90,7 +90,7 @@ static const char* fragmentShaderSource =
         // ambient
         "   vec3 ambient = light.ambient * material.ambient;\n"
         // diffuse
-        "   vec3 lightDir = normalize(light.position - vertex_out.FragPos);\n"
+        "   vec3 lightDir = normalize(light.position);\n"
         "   float diff = max(dot(norm, lightDir), 0.0);\n"
         "   vec3 diffuse = light.diffuse * (diff * material.diffuse*texture(depthMap, texCoords).r);\n"
         // specular
