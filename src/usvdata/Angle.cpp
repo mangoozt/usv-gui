@@ -28,14 +28,6 @@ namespace USV {
         return degrees * degs_to_rads;
     }
 
-    // this stupid function is used to round some angle_degrees by round_to
-    // ex: round_angle(13.3, 5) = 15
-    // ex: round_angle(-3, 10) = 0
-    double round_angle(const double& angle_degrees, const double& round_to) {
-        double stupid = round(angle_degrees / round_to) * round_to;
-        return radians_to_degrees(wrap_angle(degrees_to_radians(stupid))); // best practices
-    }
-
     bool Angle::between(Angle& min, Angle& max) const {
         auto m = (max.value - min.value) < 0.0f ? max.value - min.value + M_2PI : max.value - min.value;
         auto mid = (this->value - min.value) < 0.0f ? this->value - min.value + M_2PI : this->value - min.value;

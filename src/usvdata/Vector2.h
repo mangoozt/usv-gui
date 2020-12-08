@@ -330,21 +330,6 @@ namespace USV {
         return Vector2::polar(oldVector.r(), phi);
     }
 
-    /**
-	 * \brief      Computes difference between two angles (in radians and <M_PI)
-	 * \param      angle1   First angle.
-	 * \param      angle2   Second angle.
-	 * \return     Difference between tho given angles.
-	 */
-    template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-    inline T angleDiff(T angle1, T angle2) {
-        auto a = angle2 - angle1;
-        if (a > M_PI)
-            return (a - 2 * M_PI);
-        else if (a < -M_PI)
-            return (a + 2 * M_PI);
-        else return a;
-    }
 }
 
 #endif /* USV_VECTOR2_H_ */

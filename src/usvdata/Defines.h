@@ -16,17 +16,6 @@ namespace USV {
     };
 
     /**
-     * \brief Тип зоны расхождения
-     */
-    enum class ZoneType {
-        DangerNone = 0,
-        Capture_7_to_12,
-        Decision_5_to_7,
-        Control_2_to_5,
-        Close_less_2
-    };
-
-    /**
      * \brief Тип опасности судна
      */
     enum class DangerType {
@@ -37,7 +26,6 @@ namespace USV {
 
     struct SafeZone {
         int safety_zone_type;
-
         double radius;
         double start_angle;
         double end_angle;

@@ -6,13 +6,14 @@ set(USVDATA_HEADERS
 set(USVDATA_SOURCES
         Frame.h Frame.cpp
         InputUtils.h InputUtils.cpp
+        InputDataJsonDefines.h
         InputTypes.h CurvedPath.h
         CaseData.h CaseData.cpp
         Path.h Path.cpp
         Angle.cpp
         Defines.h
         Restrictions.h Restrictions.cpp
-        )
+        FeatureCollection.h)
 
 add_library(usvdata STATIC ${USVDATA_HEADERS} ${USVDATA_SOURCES})
 

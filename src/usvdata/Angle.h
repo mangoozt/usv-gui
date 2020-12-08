@@ -15,9 +15,6 @@ namespace USV {
 
     double wrap_angle(double angle);
 
-    double round_angle(const double& angle_degrees, const double& round_to);
-
-
     class Angle {
     public:
         Angle(const double& angle = 0.0);
@@ -48,9 +45,9 @@ namespace USV {
 
         explicit operator const double&() const { return value; }
 
-        double degrees() const;
+        [[nodiscard]] double degrees() const;
 
-        double radians() const;
+        [[nodiscard]] double radians() const;
 
         bool between(Angle& min, Angle& max) const;
 

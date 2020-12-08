@@ -1,6 +1,4 @@
 #include "Restrictions.h"
-
-#include <utility>
 #include "InputTypes.h"
 
 namespace USV::Restrictions {
@@ -19,7 +17,7 @@ namespace USV::Restrictions {
                     c = !c;
             }
             return c;
-        };
+        }
 
         bool pointInPolygon(const Polygon& polygon, const Vector2& point) {
             if (pointInRing(polygon.rings[0], point)) {
@@ -70,7 +68,7 @@ namespace USV::Restrictions {
         return poly;
     }
 
-    USV::Restrictions::Restrictions::Restrictions(const USV::InputTypes::FeatureCollection& feature_collection,
+    USV::Restrictions::Restrictions::Restrictions(const USV::FeatureCollection& feature_collection,
                                                   const USV::Frame& reference_frame) {
         for (auto& feature:feature_collection.features) {
             properties.push_back(feature.properties);

@@ -23,7 +23,6 @@ namespace USV {
         Color color{0, 0, 0};
     };
 
-
     struct CaseData {
         double radius;
         std::vector<Vessel> vessels{0};
@@ -38,8 +37,6 @@ namespace USV {
 
         explicit CaseData(const InputTypes::InputData& input_data);
     };
-
-
 }
 
 #endif // CASEDATA_H

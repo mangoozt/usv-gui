@@ -15,7 +15,7 @@ namespace USV {
         struct Position {
             Vector2 point;
             Angle course;
-            double speed;
+            double speed{0.0};
         };
 
         class Segment {
@@ -30,7 +30,7 @@ namespace USV {
             double _port_dev; //! Дистанция до левой границы сегмента [miles]
             double _starboard_dev; //! Дистанция до правой границы сегмента [miles]
 
-            Vector2 _O_V;
+            Vector2 O_V;
 
             friend class Path;
 
@@ -48,25 +48,25 @@ namespace USV {
             Segment(Position start_position, double curve, Angle angle);
 
 
-            Position position(double t) const;
+            [[nodiscard]] Position position(double t) const;
 
             /**
              * \brief Calculates closest distance from point to segment
              * @param point To calculate distance from
              * @return Distance to point
              */
-            double distance(Vector2 point) const;
+            [[nodiscard]] double distance(Vector2 point) const;
 
             /**
              * \brief Calculates closest distance from point to segment
              * @param point To calculate distance from
              * @return Distance to point
              */
-            double distance_signed(Vector2 point) const;
+            [[nodiscard]] double distance_signed(Vector2 point) const;
 
-            double lengthFromStart(Vector2 point) const;
+            [[nodiscard]] double lengthFromStart(Vector2 point) const;
 
-            const Vector2& getStartPoint() const {
+            [[nodiscard]] const Vector2& getStartPoint() const {
                 return _start_point;
             }
 
@@ -96,7 +96,7 @@ namespace USV {
 
             void cut(double t);
 
-            inline Position end() const { return position(_duration); }
+            [[nodiscard]] inline Position end() const { return position(_duration); }
         };
 
         explicit Path(double startTime) : start_time(startTime) {}
@@ -113,29 +113,29 @@ namespace USV {
     public:
         void appendSegment(Segment segment);
 
-        Position position(double t) const;
+        [[nodiscard]] Position position(double t) const;
 
-        constItr segment(double t) const;
+        [[nodiscard]] constItr segment(double t) const;
 
-        inline constItr end() const { return segments.cend(); }
+        [[nodiscard]] inline constItr end() const { return segments.cend(); }
 
-        inline bool empty() const { return segments.empty(); };
+        [[nodiscard]] inline bool empty() const { return segments.empty(); };
 
-        inline size_t size() const { return segments.size(); };
+        [[nodiscard]] inline size_t size() const { return segments.size(); };
 
-        Position endPosition() const;
+        [[nodiscard]] Position endPosition() const;
 
         void cut(double t);
 
-        inline double endTime() const { return (--segments.end())->first; }
+        [[nodiscard]] inline double endTime() const { return (--segments.end())->first; }
 
-        std::pair<double, constItr> closestSegment(Vector2 point) const;
+        [[nodiscard]] std::pair<double, constItr> closestSegment(Vector2 point) const;
 
-        inline double getStartTime() const {
+        [[nodiscard]] inline double getStartTime() const {
             return start_time;
         }
 
-        std::vector<Vector2> getPointsPath(double angle_increment=2.0/180*M_PI)const;
+        [[nodiscard]] std::vector<Vector2> getPointsPath(double angle_increment=2.0/180*M_PI)const;
 
     };
 

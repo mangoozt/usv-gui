@@ -40,7 +40,6 @@ namespace USV {
             return 1 / GeographicLib::Constants::nauticalmile();
         }
 
-        static inline GeographicLib::Math::real invDegree() { return 1 / GeographicLib::Math::degree(); }
     };
 }
 

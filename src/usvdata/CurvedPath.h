@@ -6,8 +6,6 @@
 #include <ostream>
 #include <string>
 
-#include <spotify/json.hpp>
-
 namespace USV {
 class CurvedPath {
 public:
@@ -36,40 +34,6 @@ public:
     explicit CurvedPath(time_t startTime) : start_time(startTime) {}
 
 };
-}
-
-namespace spotify {
-namespace json {
-using namespace USV;
-// Specialize spotify::json::default_codec_t to specify default behavior when
-// encoding and decoding objects of certain types.
-template <>
-struct default_codec_t<CurvedPath> {
-    static codec::object_t<CurvedPath> codec() {
-        auto codec = codec::object<CurvedPath>();
-        codec.required("items", &CurvedPath::items);
-        codec.required("start_time", &CurvedPath::start_time);
-        return codec;
-    }
-};
-
-template<>
-struct default_codec_t<CurvedPath::Segment> {
-    static codec::object_t<CurvedPath::Segment> codec() {
-        auto codec = codec::object<CurvedPath::Segment>();
-        codec.required("lat", &CurvedPath::Segment::lat);
-        codec.required("lon", &CurvedPath::Segment::lon);
-        codec.required("begin_angle", &CurvedPath::Segment::begin_angle);
-        codec.required("curve", &CurvedPath::Segment::curve);
-        codec.required("length", &CurvedPath::Segment::length);
-        codec.required("duration", &CurvedPath::Segment::duration);
-        codec.optional("port_dev", &CurvedPath::Segment::port_dev);
-        codec.optional("starboard_dev", &CurvedPath::Segment::starboard_dev);
-        return codec;
-    }
-};
-
-}
 }
 
 #endif //USV_CURVEDPATH_H

@@ -1,5 +1,4 @@
 #include "CaseData.h"
-#include "Frame.h"
 
 namespace USV {
     CaseData::CaseData(const InputTypes::InputData& input_data) : radius(
