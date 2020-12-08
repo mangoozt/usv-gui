@@ -49,23 +49,23 @@ namespace USV::Restrictions {
         struct Limitation {
             struct point_approach_prohibition {
                 Vector2 point;
-                std::deque<FeatureProperties>::const_iterator _ptr;
+                FeatureProperties* _ptr{};
             };
             struct line_crossing_prohibition {
                 LineString linestring;
-                std::deque<FeatureProperties>::const_iterator _ptr;
+                FeatureProperties* _ptr;
             };
             struct zone_entering_prohibition {
                 Polygon polygon;
-                std::deque<FeatureProperties>::const_iterator _ptr;
+                FeatureProperties* _ptr{};
             };
             struct zone_leaving_prohibition {
                 Polygon polygon;
-                std::deque<FeatureProperties>::const_iterator _ptr;
+                FeatureProperties* _ptr{};
             };
             struct movement_parameters_limitation {
                 Polygon polygon;
-                std::deque<FeatureProperties>::const_iterator _ptr;
+                FeatureProperties* _ptr{};
             };
         };
     private:
@@ -78,16 +78,15 @@ namespace USV::Restrictions {
     public:
         Limitations() = default;
 
-        void add_point_approach_prohibition(Vector2 point, std::deque<FeatureProperties>::const_iterator);
+        void add_point_approach_prohibition(Vector2 point, FeatureProperties*);
 
-        void add_line_crossing_prohibition(LineString& linestring, std::deque<FeatureProperties>::const_iterator);
+        void add_line_crossing_prohibition(LineString& linestring, FeatureProperties*);
 
-        void add_zone_entering_prohibition(Polygon& polygon, std::deque<FeatureProperties>::const_iterator);
+        void add_zone_entering_prohibition(Polygon& polygon, FeatureProperties*);
 
-        void add_zone_leaving_prohibition(Polygon& polygon, std::deque<FeatureProperties>::const_iterator);
+        void add_zone_leaving_prohibition(Polygon& polygon, FeatureProperties*);
 
-        void add_movement_parameters_limitation(Polygon& polygon,
-                                                std::deque<FeatureProperties>::const_iterator features_ptr);
+        void add_movement_parameters_limitation(Polygon& polygon, FeatureProperties* features_ptr);
 
         [[nodiscard]] const std::vector<Limitation::point_approach_prohibition>& PointApproachProhibitions() const {
             return point_approach_prohibitions;

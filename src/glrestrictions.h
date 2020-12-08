@@ -17,7 +17,15 @@ public:
 
     void load_restrictions(const USV::Restrictions::Restrictions& restrictions);
 
-    void render(QMatrix4x4& view_matrix, QVector3D eyePos);
+    typedef byte GeometryType;
+    struct GeometryTypes{
+        static const GeometryType Contour = 1;
+        static const GeometryType Polygon = 2;
+        static const GeometryType Isle = 4;
+        static const GeometryType All = 7;
+    };
+
+    void render(QMatrix4x4& view_matrix, QVector3D eyePos, GeometryType gtype = GeometryTypes::All);
 
 private:
     using Point = std::array<GLfloat, 2>;
@@ -28,8 +36,9 @@ private:
         QOpenGLBuffer* ibo;
         size_t indices_count;
         QVector3D color;
+        float opacity;
     public:
-        Polygon(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
+        Polygon(const USV::Restrictions::Polygon& polygon, const QVector4D& color, float opacity = 1.0);
 
         Polygon(Polygon&& o) noexcept:
                 vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
@@ -82,7 +91,8 @@ private:
     int m_viewMatrixLoc;
     int m_viewLoc;
     int m_timeLoc;
-    std::vector<Isle> glpolygons;
+    std::vector<Isle> glisles;
+    std::vector<Polygon> glpolygons;
     std::vector<Contour> glcontours;
 };
 

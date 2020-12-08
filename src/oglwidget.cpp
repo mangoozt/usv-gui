@@ -227,9 +227,10 @@ void OGLWidget::paintGL()
     f->glVertexAttrib1f(4,1.0f);
     m_program->release();
     //Draw plane
+    restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::Isle);
     sea->render(m_m,eye,time);
     grid->render(m_m);
-    restrictions->render(m_m, eye);
+    restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::All^GLRestrictions::GeometryTypes::Isle);
 
     m_program->bind();
     f->glEnable(GL_LINE_SMOOTH);
