@@ -5,15 +5,11 @@
 static const char *vertexShaderSource =
         "#version 330\n"
         "layout(location = 0) in vec4 vertex;\n"
-        "layout(location = 1) in vec4 position;\n"
-        "layout(location = 4) in float scale;\n"
         "out vec3 vert;"
         "uniform mat4 m_view;\n"
         "void main() {\n"
-        "   mat4 translate = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, position.x,position.y,position.z,1);\n"
-        "   mat4 m_scale = mat4(scale,0,0,0, 0,scale,0,0, 0,0,scale,0, 0,0,0,1);\n"
-        "   gl_Position = m_view *(translate*m_scale*vertex);\n"
-        "vert = (translate*m_scale*vertex).xyz;"
+        "   gl_Position = m_view *vertex;\n"
+        "   vert = vertex.xyz;"
         "}\n";
 
 const char *GLGrid::xyGridShaderSource=
@@ -36,8 +32,7 @@ static const char *fragmentShaderSource =
         "uniform highp vec4 bg_color;\n"
         "vec4 xygrid(vec2 coord, vec4 color,vec4 gridcolor);\n"
         "void main() {\n"
-        "   vec2 coord = vert.xy;\n"
-        "   fragColor = xygrid(coord,bg_color,color);\n"
+        "   fragColor = xygrid(vert.xy,bg_color,color);\n"
         "}\n";
 
 GLGrid::GLGrid()
@@ -74,9 +69,9 @@ void GLGrid::render(QMatrix4x4 &view_matrix){
     vbo->bind();
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    vbo->release();
-    f->glVertexAttrib3f(3, 0.678f, 0.847f, 0.902f);
     f->glDrawArrays(GL_TRIANGLE_FAN,0,4);
+    f->glDisableVertexAttribArray(0);
+    vbo->release();
     m_program->release();
     f->glDisable(GL_BLEND);
 }
