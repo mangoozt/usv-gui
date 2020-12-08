@@ -18,7 +18,7 @@ public:
     void load_restrictions(const USV::Restrictions::Restrictions& restrictions);
 
     typedef byte GeometryType;
-    struct GeometryTypes{
+    struct GeometryTypes {
         static const GeometryType Contour = 1;
         static const GeometryType Polygon = 2;
         static const GeometryType Isle = 4;
@@ -34,7 +34,7 @@ private:
     class Polygon {
         QOpenGLBuffer* vbo;
         QOpenGLBuffer* ibo;
-        size_t indices_count;
+        GLsizei indices_count;
         QVector3D color;
         float opacity;
     public:
@@ -42,7 +42,7 @@ private:
 
         Polygon(Polygon&& o) noexcept:
                 vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
-                , color(o.color) {}
+                , color(o.color), opacity(o.opacity) {};
 
         ~Polygon();
 
@@ -52,16 +52,14 @@ private:
     class Isle {
         QOpenGLBuffer* vbo;
         QOpenGLBuffer* ibo;
-        size_t indices_count;
+        GLuint indices_count;
         QVector3D color;
     public:
         Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
 
         Isle(Isle&& o) noexcept:
-                vbo(std::exchange(o.vbo, nullptr)),
-                ibo(std::exchange(o.ibo, nullptr)),
-                indices_count(o.indices_count),
-                color(o.color) {}
+                vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
+                , color(o.color) {}
 
         ~Isle();
 
@@ -76,13 +74,9 @@ private:
         Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
 
         Contour(Contour&& o) noexcept:
-                vbo(std::exchange(o.vbo, nullptr)),
-                start_ptrs(std::move(o.start_ptrs)),
-                color(o.color) {}
+                vbo(std::exchange(o.vbo, nullptr)), start_ptrs(std::move(o.start_ptrs)), color(o.color) {}
 
-        ~Contour(){
-            delete vbo;
-        };
+        ~Contour();
 
         void render(QOpenGLShaderProgram* m_program);
     };
@@ -90,7 +84,6 @@ private:
     QOpenGLShaderProgram* m_program;
     int m_viewMatrixLoc;
     int m_viewLoc;
-    int m_timeLoc;
     std::vector<Isle> glisles;
     std::vector<Polygon> glpolygons;
     std::vector<Contour> glcontours;

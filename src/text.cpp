@@ -1,8 +1,6 @@
 #include "text.h"
-#include <QTextStream>
-#include <QOpenGLContext>
 
-static const char *vertexShaderSource =
+static const char* vertexShaderSource =
         "#version 330\n"
         "layout(location = 0) in vec4 vertex;\n"
         "out vec2 TexCoords;\n"
@@ -12,7 +10,7 @@ static const char *vertexShaderSource =
         "   TexCoords = vertex.zw;\n"
         "}\n";
 
-static const char *fragmentShaderSource =
+static const char* fragmentShaderSource =
         "#version 330\n"
         "in vec2 TexCoords;\n"
         "uniform sampler2D text;\n"
@@ -23,7 +21,7 @@ static const char *fragmentShaderSource =
         "   color = vec4(textColor, 1.0) * sampled;\n"
         "}\n";
 
-Text::Glyph::Glyph(QString string){
+Text::Glyph::Glyph(const QString& string) {
     auto split = string.split('\t');
     character = char(split[0].toInt());
     xpos = split[1].toInt();
@@ -36,22 +34,19 @@ Text::Glyph::Glyph(QString string){
     orig_h = split[8].toInt();
 }
 
-Text::Text(QFile & fontfile, QImage& bitmap):texture(bitmap)
-{
+Text::Text(QFile& fontfile, QImage& bitmap) : texture(bitmap) {
     texture.setWrapMode(QOpenGLTexture::WrapMode::ClampToBorder);
-    invH=1.0f/bitmap.height();
-    invW=1.0f/bitmap.width();
-    if (fontfile.open(QIODevice::ReadOnly))
-    {
+    invH = 1.0f / (float) bitmap.height();
+    invW = 1.0f / (float) bitmap.width();
+    if (fontfile.open(QIODevice::ReadOnly)) {
         QTextStream in(&fontfile);
         // skip font description
         in.readLine();
         in.readLine();
-        while (!in.atEnd())
-        {
+        while (!in.atEnd()) {
             auto line = in.readLine();
             auto gl = Glyph(line);
-            this->glyphs.insert(gl.character,gl);
+            this->glyphs.insert(gl.character, gl);
         }
         fontfile.close();
     }
@@ -70,14 +65,14 @@ Text::Text(QFile & fontfile, QImage& bitmap):texture(bitmap)
 }
 
 
-void Text::renderText(std::string text, QPoint position, QRect window, QVector3D color, float angle){
-    auto pos = QVector3D(position.x(), position.y(), 1);
+void Text::renderText(std::string text, QPoint position, QRect window, QVector3D color, float angle) {
+    auto pos = QVector3D(static_cast<float>(position.x()), static_cast<float>(position.y()), 1);
     QMatrix4x4 proj_mat;
-    proj_mat.ortho(0,window.width(),window.height(),0,-1,1);
+    proj_mat.ortho(0, static_cast<float>(window.width()), static_cast<float>(window.height()), 0, -1, 1);
     proj_mat.translate(pos);
-    proj_mat.rotate(angle,0,0,1.0f);
+    proj_mat.rotate(angle, 0, 0, 1.0f);
 
-    auto *f = QOpenGLContext::currentContext()->extraFunctions();
+    auto* f = QOpenGLContext::currentContext()->extraFunctions();
     f->glDepthMask(GL_FALSE);
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -86,36 +81,35 @@ void Text::renderText(std::string text, QPoint position, QRect window, QVector3D
     text_vbo->bind();
 
     f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0,4,GL_FLOAT,GL_FALSE,4*sizeof (GLfloat),0);
-    m_program->setUniformValue(m_projMatrixLoc,proj_mat);
-    m_program->setUniformValue(m_colorLoc,QVector3D(color));
+    f->glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
+    m_program->setUniformValue(m_projMatrixLoc, proj_mat);
+    m_program->setUniformValue(m_colorLoc, QVector3D(color));
 
-    auto x= 0.0f;
+    GLfloat x = 0.0f;
     // Iterate through all characters
     std::string::const_iterator c;
-    for (c = text.begin(); c != text.end(); c++)
-    {
+    for (c = text.begin(); c != text.end(); c++) {
         Glyph ch = glyphs.find(*c).value();
 
         GLfloat cxl = x + ch.xoffset;
         GLfloat cxr = cxl + ch.width;
         GLfloat cyt = ch.yoffset;
-        GLfloat cyb = cyt+ch.height;
+        GLfloat cyb = cyt + ch.height;
 
-        GLfloat txl = ch.xpos*invW;
-        GLfloat txr = (ch.xpos+ch.width)*invW;
-        GLfloat tyt = ch.ypos*invH;
-        GLfloat tyb = (ch.ypos+ch.height)*invH;
+        GLfloat txl = ch.xpos * invW;
+        GLfloat txr = (ch.xpos + ch.width) * invW;
+        GLfloat tyt = ch.ypos * invH;
+        GLfloat tyb = (ch.ypos + ch.height) * invH;
 
         // Update VBO for each character
         GLfloat vertices[6][4] = {
-            { cxl, cyt, txl, tyt },
-            { cxl, cyb, txl, tyb },
-            { cxr, cyb, txr, tyb },
-            { cxr, cyt, txr, tyt }
+                {cxl, cyt, txl, tyt},
+                {cxl, cyb, txl, tyb},
+                {cxr, cyb, txr, tyb},
+                {cxr, cyt, txr, tyt}
         };
-        text_vbo->allocate(vertices,sizeof (vertices));
-        f->glDrawArrays(GL_TRIANGLE_FAN,0,4);
+        text_vbo->allocate(vertices, sizeof(vertices));
+        f->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         x += ch.orig_w;
     }
@@ -125,8 +119,7 @@ void Text::renderText(std::string text, QPoint position, QRect window, QVector3D
 }
 
 
-
-Text::~Text(){
+Text::~Text() {
     delete m_program;
     delete text_vbo;
 }

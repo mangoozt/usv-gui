@@ -13,63 +13,80 @@
 #include "glrestrictions.h"
 
 class QOpenGLTexture;
+
 class QOpenGLShaderProgram;
+
 class QOpenGLBuffer;
+
 class QOpenGLVertexArrayObject;
 
-class OGLWidget : public QOpenGLWidget
-{
+class OGLWidget : public QOpenGLWidget {
 public:
-    OGLWidget(QWidget *parent = 0);
-    ~OGLWidget();
+    explicit OGLWidget(QWidget* parent = nullptr);
 
-    void initializeGL();
-    void resizeGL(int w, int h);
-    void paintGL();
+    ~OGLWidget() override;
+
+    void initializeGL() override;
+
+    void resizeGL(int w, int h) override;
+
+    void paintGL() override;
+
     QVector3D screenToWorld(QPoint pos);
-    void loadData(USV::CaseData &case_data);
+
+    void loadData(USV::CaseData& case_data);
+
     void updatePositions(const std::vector<USV::Vessel>& vessels);
+
     void updateTime(double t);
-    void wheelEvent ( QWheelEvent * event );
-    void mousePressEvent(QMouseEvent* event);
-    void mouseReleaseEvent(QMouseEvent*event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+
+    void wheelEvent(QWheelEvent* event) override;
+
+    void mousePressEvent(QMouseEvent* event) override;
+
+    void mouseReleaseEvent(QMouseEvent* event) override;
+
+    void mouseMoveEvent(QMouseEvent* event) override;
+
+    void keyPressEvent(QKeyEvent* event) override;
+
 signals:
-    void keyCaught(QKeyEvent *e);
+
+    void keyCaught(QKeyEvent* e);
+
 protected:
-    QOpenGLTexture *m_texture;
-    QOpenGLShaderProgram *m_program;
-    QOpenGLBuffer *m_ship_vbo;
-    QOpenGLBuffer *m_circle_vbo;
-    QOpenGLBuffer *m_vessels;
-    QOpenGLBuffer *m_paths;
-    struct pathVBOMeta{
+    QOpenGLTexture* m_texture;
+    QOpenGLShaderProgram* m_program;
+    QOpenGLBuffer* m_ship_vbo;
+    QOpenGLBuffer* m_circle_vbo;
+    QOpenGLBuffer* m_vessels{};
+    QOpenGLBuffer* m_paths{};
+
+    struct pathVBOMeta {
         size_t ptr;
         size_t points_count;
         QVector4D color;
-        pathVBOMeta(size_t ptr, size_t points_count,QVector4D color):ptr(ptr),points_count(points_count),color(color){};
+
+        pathVBOMeta(size_t ptr, size_t points_count, QVector4D color) : ptr(ptr), points_count(points_count), color(
+                color) {};
     };
+
     std::vector<pathVBOMeta> m_paths_meta;
     QPoint mouse_press_point;
 
-    QOpenGLVertexArrayObject *m_vao;
-    int m_projMatrixLoc;
-    int m_camMatrixLoc;
-    int m_worldMatrixLoc;
-    int m_myMatrixLoc;
-    int m_lightPosLoc;
+    QOpenGLVertexArrayObject* m_vao;
+    int m_myMatrixLoc{};
+    int m_lightPosLoc{};
     QMatrix4x4 m_proj;
     QMatrix4x4 m_world;
     QMatrix4x4 m_m;
     QVector3D m_eye;
-    float rotation;
-    QVector3D m_target;
+    double rotation;
     bool m_uniformsDirty;
-    Text *text;
-    GLGrid *grid;
-    GLSea *sea;
-    GLRestrictions* restrictions;
+    Text* text{};
+    GLGrid* grid{};
+    GLSea* sea{};
+    GLRestrictions* restrictions{};
     double time{0.0f};
     std::unique_ptr<USV::CaseData> case_data_;
 public:

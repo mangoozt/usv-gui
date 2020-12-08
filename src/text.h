@@ -12,16 +12,16 @@ class Text : protected QOpenGLExtraFunctions
 public:
     struct Glyph{
         char character;  // UNICODE number of your char (codepage varies and may be specified before export). For example, 32 is a 'space'
-        int xpos;   // x position of glyph on texture
-        int ypos;   // y position of glyph on texture
-        int width;  // width of glyph on texture (glyphs are cropped and Width and Orig Width aren't equal)
-        int height;  // height of glyph on texture
-        int xoffset; // distance on the x-axis, on which glyph must be shifted
-        int yoffset; // distance on the y-axis, on which glyph must be shifted
-        int orig_w; // original width of glyph
-        int orig_h; // original height of glyph
+        GLfloat xpos;   // x position of glyph on texture
+        GLfloat ypos;   // y position of glyph on texture
+        GLfloat width;  // width of glyph on texture (glyphs are cropped and Width and Orig Width aren't equal)
+        GLfloat height;  // height of glyph on texture
+        GLfloat xoffset; // distance on the x-axis, on which glyph must be shifted
+        GLfloat yoffset; // distance on the y-axis, on which glyph must be shifted
+        GLfloat orig_w; // original width of glyph
+        GLfloat orig_h; // original height of glyph
 
-        Glyph(QString string);
+        explicit Glyph(const QString& string);
     };
 
     Text(QFile & fontfile, QImage& texture);

@@ -24,9 +24,9 @@ void MainWindow::on_openButton_clicked()
     if(!filePath.isNull()){
         auto input_data = USV::InputUtils::loadInputData(filePath.toStdString());
         USV::CaseData case_data = USV::CaseData(input_data);
-        OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
+        auto* ogl_widget = findChild<OGLWidget*>("openGLWidget");
         ogl_widget->loadData(case_data);
-        QSlider *time_slider = findChild<QSlider*>("timeSlider");
+        auto* time_slider = findChild<QSlider*>("timeSlider");
         time_slider->setValue(time_slider->minimum());
         time_slider->setEnabled(true);
         update_time(case_data.route.getStartTime(),ogl_widget);
@@ -36,10 +36,10 @@ void MainWindow::on_openButton_clicked()
 
 namespace{
 void push_position(double time, const USV::Path &path, std::vector<USV::Vessel> &vessels, USV::Color& color, double radius){
-    try{
+    try {
         auto position = path.position(time);
         vessels.push_back({position.point, position.course.radians(), radius, color});
-    }catch(std::out_of_range){
+    } catch (std::out_of_range&) {
 
     }
 }
@@ -65,8 +65,8 @@ void MainWindow::update_time(double time, OGLWidget* ogl_widget){
 
 void MainWindow::on_timeSlider_valueChanged(int value)
 {
-    OGLWidget *ogl_widget = findChild<OGLWidget*>("openGLWidget");
-    QSlider *time_slider = findChild<QSlider*>("timeSlider");
+    auto *ogl_widget = findChild<OGLWidget*>("openGLWidget");
+    auto *time_slider = findChild<QSlider*>("timeSlider");
     auto case_data=ogl_widget->case_data();
     if(case_data){
         auto starttime=case_data->route.getStartTime();

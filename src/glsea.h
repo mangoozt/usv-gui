@@ -22,7 +22,7 @@ private:
     int m_viewMatrixLoc;
     int m_viewLoc;
     int m_timeLoc;
-    const size_t gridsize{1000};
+    const GLuint gridsize{1000};
     const float size{100.0f};
 };
 

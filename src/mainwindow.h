@@ -13,8 +13,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
 
 private slots:
     void on_openButton_clicked();
@@ -23,6 +23,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    void update_time(double time, OGLWidget* ogl_widget);
+    static void update_time(double time, OGLWidget* ogl_widget);
 };
 #endif // MAINWINDOW_H
