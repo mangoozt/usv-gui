@@ -110,7 +110,7 @@ namespace USV::Restrictions {
     }
 
     void Limitations::add_line_crossing_prohibition(LineString& linestring, FeatureProperties* features_ptr) {
-        line_crossing_prohibitions.push_back({std::move(linestring), features_ptr});
+        line_crossing_prohibitions.push_back({linestring, features_ptr});
     }
 
     void Limitations::add_zone_entering_prohibition(Polygon& polygon, FeatureProperties* features_ptr) {

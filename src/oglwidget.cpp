@@ -163,6 +163,7 @@ void OGLWidget::initializeGL()
 
     f->glEnable(GL_DEPTH_TEST);
     f->glEnable(GL_CULL_FACE);
+    f->glEnable(GL_FRAMEBUFFER_SRGB);
 //    f->glClearColor(1.0f, 1.0f, 1.0f, 1);
 
     {
