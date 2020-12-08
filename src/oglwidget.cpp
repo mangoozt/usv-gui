@@ -171,7 +171,6 @@ void OGLWidget::resizeGL(int w, int h) {
 }
 
 void OGLWidget::paintGL() {
-    if (case_data_ == nullptr) return;
     auto& case_data = *case_data_;
 
     QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
@@ -220,6 +219,7 @@ void OGLWidget::paintGL() {
     sea->render(m_m, eye, time);
     grid->render(m_m);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
+    if (case_data_ != nullptr) {
 
     m_program->bind();
     f->glEnable(GL_LINE_SMOOTH);
@@ -287,6 +287,7 @@ void OGLWidget::paintGL() {
         auto y = int((1.0f - p.y()) * 0.5f * H);
         QPoint point(x, y);
         text->renderText(case_data.vessel_names[i], point, this->rect());
+    }
     }
     skybox->render(m_m,eye);
 }
