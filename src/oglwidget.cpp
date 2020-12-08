@@ -163,6 +163,7 @@ void OGLWidget::initializeGL() {
     }
 
     restrictions = new GLRestrictions();
+    skybox = new Skybox();
 }
 
 void OGLWidget::resizeGL(int w, int h) {
@@ -287,6 +288,7 @@ void OGLWidget::paintGL() {
         QPoint point(x, y);
         text->renderText(case_data.vessel_names[i], point, this->rect());
     }
+    skybox->render(m_m,eye);
 }
 
 QVector3D OGLWidget::screenToWorld(QPoint pos) {

@@ -11,6 +11,7 @@
 #include "glgrid.h"
 #include "glsea.h"
 #include "glrestrictions.h"
+#include "skybox.h"
 
 class QOpenGLTexture;
 
@@ -87,6 +88,7 @@ protected:
     GLGrid* grid{};
     GLSea* sea{};
     GLRestrictions* restrictions{};
+    Skybox* skybox{};
     double time{0.0f};
     std::unique_ptr<USV::CaseData> case_data_;
 public:
