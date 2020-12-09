@@ -33,8 +33,12 @@ add_executable(USV-gui
                utils.h
                skybox.cpp)
 
-set_target_properties(USV-gui PROPERTIES WIN32_EXECUTABLE TRUE)
+#set_target_properties(USV-gui PROPERTIES WIN32_EXECUTABLE TRUE)
 
-set_property(TARGET USV-gui PROPERTY $<$<CONFIG:Debug>:WIN32_EXECUTABLE true>)
+file(GLOB glsl_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS glsl/*.vert glsl/*.frag)
+foreach (glsl_file ${glsl_files})
+    message(STATUS "Found " ${glsl_file})
+    configure_file(${glsl_file} ${glsl_file} COPYONLY)
+endforeach ()
 
 target_link_libraries(USV-gui usvdata Qt5::Widgets Qt5::OpenGL)

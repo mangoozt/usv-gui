@@ -62,6 +62,8 @@ protected:
     QOpenGLBuffer* m_circle_vbo;
     QOpenGLBuffer* m_vessels{};
     QOpenGLBuffer* m_paths{};
+    GLuint ubo_matrices{};
+    GLuint ubo_light{};
 
     struct pathVBOMeta {
         size_t ptr;

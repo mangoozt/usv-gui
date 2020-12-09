@@ -7,86 +7,22 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
-static const char* vertexShaderSource =
-        "#version 330\n"
-        "layout(location = 0) in vec4 vertex;\n"
-        "layout(location = 1) in vec3 normal;\n"
-        "out highp mat3 TBN;"
-        "uniform mat4 m_view;\n"
-        "out highp VERTEX_OUT{"
-        "   vec3 highp FragPos;"
-        "} vertex_out;"
-        "void main() {\n"
-        "   gl_Position = m_view * vertex;\n"
-        "   vec3 Normal = normalize(normal);\n"
-        "   vec3 Tangent = normalize(vec3(Normal.z,0,-Normal.y));"
-        "   vec3 Tangent2 = normalize(vec3(0,Normal.z,-Normal.x));"
-        "   TBN = mat3(Tangent,Tangent2,Normal);"
-        "   vertex_out.FragPos=vertex.xyz;"
-        "}\n";
-
-static const char* fragmentShaderSource =
-        "#version 330\n"
-        //        "#extension GL_OES_standard_derivatives : enable\n"
-        "struct Material {"
-        "   vec3 ambient;"
-        "   vec3 diffuse;"
-        "   vec3 specular;"
-        "   float shininess;"
-        "};"
-        "struct Light {"
-        "   vec3 position;"
-        "   vec3 ambient;"
-        "   vec3 diffuse;"
-        "   vec3 specular;"
-        "};"
-        "in highp mat3 TBN;\n"
-        "out highp vec4 fragColor;\n"
-        "uniform Light light; "
-        "uniform highp vec3 viewPos;\n"
-        "uniform Material material;\n"
-        "uniform float opacity;\n"
-        "in highp VERTEX_OUT{"
-        "   vec3 highp FragPos;"
-        "} vertex_out;"
-        "vec4 xygrid(vec2 coord, vec4 color,vec4 gridcolor);\n"
-        "void main() {\n"
-        "   vec3 norm = normalize(TBN[2]);"
-        // ambient
-        "   vec3 ambient = light.ambient * material.ambient;\n"
-        // diffuse
-        "   vec3 lightDir = normalize(light.position);\n"
-        "   float diff = max(dot(norm, lightDir), 0.0);\n"
-        "   vec3 diffuse = light.diffuse * (diff * material.diffuse);\n"
-        // specular
-        "   vec3 viewDir = normalize(viewPos - vertex_out.FragPos);\n"
-        "   vec3 reflectDir = reflect(-lightDir, norm);\n"
-        "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);\n"
-        "   vec3 specular = light.specular * (spec * material.specular);\n"
-        "   vec3 result = ambient + diffuse + specular;\n"
-        "   fragColor = xygrid(vertex_out.FragPos.xy, vec4(result, opacity), vec4(135,135,135,255)/255);\n"
-        "}\n";
-
 GLRestrictions::GLRestrictions() {
+    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
     m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
+    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "glsl/general.vert");
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, GLGrid::xyGridShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, "glsl/restrictions.frag");
     m_program->link();
     m_program->bind();
-    m_viewMatrixLoc = m_program->uniformLocation("m_view");
+
+    auto ul_matrices = m_program->uniformLocation("Matrices");
+    f->glUniformBlockBinding(m_program->programId(), ul_matrices, 0);
+
+    auto ul_light = f->glGetUniformBlockIndex(m_program->programId(), "Light");
+    f->glUniformBlockBinding(m_program->programId(), ul_light, 1);
+
     m_viewLoc = m_program->uniformLocation("viewPos");
-    m_program->setUniformValue(m_program->uniformLocation("height_scale"), 0.2f);
-    struct {
-        QVector3D position = QVector3D(-100.0f, 100.0f, 10.0f);
-        QVector3D ambient = QVector3D(0.7f, 0.6f, 0.6f);
-        QVector3D diffuse = QVector3D(0.7f, 0.6f, 0.6f);
-        QVector3D specular = QVector3D(1, 1, 1);
-    } light;
-    m_program->setUniformValue(m_program->uniformLocation("light.position"), light.position);
-    m_program->setUniformValue(m_program->uniformLocation("light.ambient"), light.ambient);
-    m_program->setUniformValue(m_program->uniformLocation("light.diffuse"), light.diffuse);
-    m_program->setUniformValue(m_program->uniformLocation("light.specular"), light.specular);
 
     struct {
         QVector3D ambient = QVector3D(255, 0, 0) / 255;

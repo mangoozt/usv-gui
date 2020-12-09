@@ -3,6 +3,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLExtraFunctions>
+#include <iostream>
 
 #define FOV 90
 #define CAMERA_ANGLE 45
@@ -80,6 +81,30 @@ void OGLWidget::initializeGL() {
         delete m_program;
         m_program = nullptr;
     }
+
+    // Matrices Uniform buffer
+    f->glGenBuffers(1, &ubo_matrices);
+
+    f->glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+    f->glBufferData(GL_UNIFORM_BUFFER, 2 * 16 * sizeof(float), nullptr, GL_STATIC_DRAW);
+    f->glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo_matrices, 0, 2 * 16 * sizeof(float));
+    f->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    struct LightSource{
+        QVector4D position = QVector3D(-100.0f, 100.0f, 10.0f);
+        QVector4D ambient = QVector3D(0.7f, 0.6f, 0.6f);
+        QVector4D diffuse = QVector3D(0.7f, 0.6f, 0.6f);
+        QVector4D specular = QVector3D(1, 1, 1);
+    } light;
+
+    // Light Uniform buffer
+    f->glGenBuffers(1, &ubo_light);
+
+    f->glBindBuffer(GL_UNIFORM_BUFFER, ubo_light);
+    f->glBufferData(GL_UNIFORM_BUFFER, sizeof(LightSource), &light, GL_DYNAMIC_DRAW);
+    f->glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_light);
+    f->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     m_program = new QOpenGLShaderProgram;
     // Prepend the correct version directive to the sources. The rest is the
     // same, thanks to the common GLSL syntax.
@@ -201,7 +226,15 @@ void OGLWidget::paintGL() {
                            z_cos_phi / std::cos(alpha_rad + phi_rad) + 1);
         auto target = QVector3D(m_eye.x(), m_eye.y(), 0) * 2.0f - eye;
         camera.lookAt(eye, target, QVector3D(0, 0, 1));
-        m_m = m_proj * camera * m_world;
+
+        // Update matrices UBO
+        f->glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+        f->glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(float), m_proj.constData());
+        auto m_view = camera * m_world;
+        f->glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(float), 16 * sizeof(float), m_view.constData());
+        f->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        m_m = m_proj * m_view;
         m_program->setUniformValue(m_myMatrixLoc, m_m);
         m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
     }

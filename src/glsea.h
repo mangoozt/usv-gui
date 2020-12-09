@@ -19,7 +19,6 @@ private:
     QOpenGLTexture tex;
     QOpenGLTexture normal_tex;
     QOpenGLTexture spec_tex;
-    int m_viewMatrixLoc;
     int m_viewLoc;
     int m_timeLoc;
     const GLuint gridsize{1000};
