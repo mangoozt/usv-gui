@@ -18,18 +18,22 @@ find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
 
 add_subdirectory(usvdata)
 add_executable(USV-gui
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        oglwidget.h
-        oglwidget.cpp
-        text.cpp
-        glgrid.cpp
-        glsea.cpp
-        resources.qrc
-        earcut.h
-        glrestrictions.cpp glrestrictions.h utils.h skybox.cpp skybox.h)
+               main.cpp
+               mainwindow.cpp
+               mainwindow.h
+               mainwindow.ui
+               oglwidget.h
+               oglwidget.cpp
+               text.cpp
+               glgrid.cpp
+               glsea.cpp
+               resources.qrc
+               earcut.h
+               glrestrictions.cpp
+               utils.h
+               skybox.cpp)
+
+set_target_properties(USV-gui PROPERTIES WIN32_EXECUTABLE TRUE)
 
 set_property(TARGET USV-gui PROPERTY $<$<CONFIG:Debug>:WIN32_EXECUTABLE true>)
 
