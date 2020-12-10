@@ -108,6 +108,6 @@ namespace USV::Restrictions {
 
     LineString lineToLocal(const std::vector<Vector2>& line, const USV::Frame& reference_frame);
 
-};
+}
 
 #endif //USV_GUI_RESTRICTIONS_H

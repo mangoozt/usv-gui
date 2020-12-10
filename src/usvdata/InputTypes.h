@@ -4,6 +4,7 @@
 #include "CurvedPath.h"
 #include "Vector2.h"
 #include "FeatureCollection.h"
+#include <memory>
 #include <string>
 #include <fstream>
 #include <ostream>

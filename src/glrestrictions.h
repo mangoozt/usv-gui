@@ -17,7 +17,7 @@ public:
 
     void load_restrictions(const USV::Restrictions::Restrictions& restrictions);
 
-    typedef byte GeometryType;
+    typedef unsigned int GeometryType;
     struct GeometryTypes {
         static const GeometryType Contour = 1;
         static const GeometryType Polygon = 2;
