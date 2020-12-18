@@ -9,7 +9,10 @@
 #include <utility>
 
 class GLRestrictions {
-
+    struct RestrictionMeta{
+        const USV::FeatureProperties * properties;
+    };
+std::vector<RestrictionMeta> meta_;
 public:
     GLRestrictions();
 
@@ -36,13 +39,14 @@ private:
         QOpenGLBuffer* ibo;
         GLsizei indices_count;
         QVector3D color;
+        size_t id_;
         float opacity;
     public:
-        Polygon(const USV::Restrictions::Polygon& polygon, const QVector4D& color, float opacity = 1.0);
+        Polygon(const USV::Restrictions::Polygon& polygon, const QVector4D& color, size_t id, float opacity = 1.0);
 
         Polygon(Polygon&& o) noexcept:
                 vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
-                , color(o.color), opacity(o.opacity) {};
+                , color(o.color), opacity(o.opacity), id_(o.id_) {};
 
         ~Polygon();
 
@@ -54,12 +58,13 @@ private:
         QOpenGLBuffer* ibo;
         GLuint indices_count;
         QVector3D color;
+        size_t id_;
     public:
-        Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
+        Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color, size_t id);
 
         Isle(Isle&& o) noexcept:
                 vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
-                , color(o.color) {}
+                , color(o.color), id_(o.id_) {}
 
         ~Isle();
 
@@ -70,11 +75,12 @@ private:
         QOpenGLBuffer* vbo;
         std::vector<GLuint> start_ptrs;
         QVector3D color;
+        size_t id_;
     public:
-        Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color);
+        Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color, size_t id);
 
         Contour(Contour&& o) noexcept:
-                vbo(std::exchange(o.vbo, nullptr)), start_ptrs(std::move(o.start_ptrs)), color(o.color) {}
+                vbo(std::exchange(o.vbo, nullptr)), start_ptrs(std::move(o.start_ptrs)), color(o.color), id_(o.id_) {}
 
         ~Contour();
 
