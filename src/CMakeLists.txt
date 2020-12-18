@@ -30,8 +30,7 @@ add_executable(USV-gui
                resources.qrc
                earcut.h
                glrestrictions.cpp
-               utils.h
-               skybox.cpp)
+               utils.h)
 
 #set_target_properties(USV-gui PROPERTIES WIN32_EXECUTABLE TRUE)
 
