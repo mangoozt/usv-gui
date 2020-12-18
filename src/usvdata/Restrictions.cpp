@@ -4,7 +4,8 @@
 namespace USV::Restrictions {
     namespace {
         inline Vector2 geoJSONToLocal(const Vector2& point, const USV::Frame& reference_frame) {
-            return reference_frame.fromWgs(point.y(), point.x());
+            auto tmp =  reference_frame.fromWgs(point.y(), point.x());
+            return {tmp.y(),tmp.x()};
         }
 
         bool pointInRing(const ring_type& ring, const Vector2& point) {
