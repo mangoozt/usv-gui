@@ -53,10 +53,12 @@ void GLRestrictions::render(QMatrix4x4& view_matrix, QVector3D eyePos, GeometryT
         for (auto& poly:glisles) {
             poly.render(m_program);
         }
+    f->glDepthMask(GL_FALSE);
     if (gtype & GeometryTypes::Polygon)
         for (auto& poly:glpolygons) {
             poly.render(m_program);
         }
+    f->glDepthMask(GL_TRUE);
     if (gtype & GeometryTypes::Contour)
         for (auto& poly:glcontours) {
             poly.render(m_program);
@@ -72,24 +74,28 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
     glcontours.clear();
     QVector3D c_hard{1.0f, 0.0f, 0.0f};
     for (auto& limitation:restrictions.hard.ZoneEnteringProhibitions()) {
+        meta_.push_back({limitation._ptr});
         if (limitation._ptr->source_object_code == "LNDARE")
-            glisles.emplace_back(limitation.polygon, c_hard);
+            glisles.emplace_back(limitation.polygon, c_hard, meta_.size() - 1);
         else
-            glcontours.emplace_back(limitation.polygon, c_hard);
+            glpolygons.emplace_back(limitation.polygon, c_hard, meta_.size() - 1, 0.5);
     }
     QVector3D c_soft{1.0f, 0.8f, 0.0f};
     for (auto& limitation:restrictions.soft.ZoneEnteringProhibitions()) {
+        meta_.push_back({limitation._ptr});
         if (limitation._ptr->source_object_code == "LNDARE")
-            glisles.emplace_back(limitation.polygon, c_soft);
+            glisles.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
         else
-            glcontours.emplace_back(limitation.polygon, c_soft);
+            glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
     }
     QVector3D c_movement{0.9f, 0.9f, 0.9f};
     for (auto& limitation:restrictions.soft.MovementParametersLimitations()) {
-        glcontours.emplace_back(limitation.polygon, c_movement);
+        meta_.push_back({limitation._ptr});
+        glcontours.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
     }
     for (auto& limitation:restrictions.hard.MovementParametersLimitations()) {
-        glcontours.emplace_back(limitation.polygon, c_movement);
+        meta_.push_back({limitation._ptr});
+        glcontours.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
     }
 }
 
@@ -101,6 +107,7 @@ void GLRestrictions::Polygon::render(QOpenGLShaderProgram* program) {
     program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
     program->setUniformValue(program->uniformLocation("material.shininess"), 16);
     program->setUniformValue(program->uniformLocation("opacity"), opacity);
+    program->setUniformValue(program->uniformLocation("_id"), (GLint)id_);
     vbo->bind();
     ibo->bind();
     int vertexLocation = program->attributeLocation("vertex");
@@ -135,8 +142,9 @@ namespace mapbox::util {
 
 } // namespace mapbox
 
-GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, const QVector4D& color, float opacity)
-        : color(color), opacity(opacity) {
+GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, const QVector4D& color, size_t id,
+                                 float opacity)
+        : color(color), opacity(opacity), id_(id) {
     // Run tessellation
     // Returns array of indices that refer to the vertices of the input polygon.
     // Three subsequent indices form a triangle. Output triangles are clockwise.
@@ -171,6 +179,7 @@ void GLRestrictions::Isle::render(QOpenGLShaderProgram* program) {
     program->setUniformValue(program->uniformLocation("material.diffuse"), color);
     program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
     program->setUniformValue(program->uniformLocation("material.shininess"), 16);
+    program->setUniformValue(program->uniformLocation("_id"), (GLint)id_);
     vbo->bind();
     ibo->bind();
     int vertexLocation = program->attributeLocation("vertex");
@@ -188,15 +197,16 @@ void GLRestrictions::Isle::render(QOpenGLShaderProgram* program) {
     program->release();
 }
 
-GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color) : color(color) {
+GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color, size_t id) : color(color)
+        , id_(id) {
     using Point6 = std::array<GLfloat, 6>;
-    const auto z = 0.2f;
+    const auto z = 0.1f;
     // Run tessellation
     // Returns array of indices that refer to the vertices of the input polygon.
     // Three subsequent indices form a triangle. Output triangles are clockwise.
-    std::vector <Index> indices = mapbox::earcut<Index>(polygon.rings);
+    std::vector<Index> indices = mapbox::earcut<Index>(polygon.rings);
 
-    std::vector <Point6> vertices;
+    std::vector<Point6> vertices;
     for (auto& ring:polygon.rings)
         for (auto& point:ring)
             vertices.push_back({(GLfloat) point.x(), (GLfloat) point.y(), z, 0, 0, 1});
@@ -270,7 +280,8 @@ GLRestrictions::Isle::~Isle() {
 }
 
 
-GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color) : color(color) {
+GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color, size_t id) : color(
+        color), id_(id) {
     std::vector<Point> vertices;
     for (auto& ring:polygon.rings) {
         start_ptrs.push_back(static_cast<GLuint>(vertices.size()));

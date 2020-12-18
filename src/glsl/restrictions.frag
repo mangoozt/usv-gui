@@ -21,7 +21,9 @@ layout (std140) uniform Light
 };
 
 in highp mat3 TBN;
-out highp vec4 fragColor;
+layout(location = 0) out highp vec4 fragColor;
+layout (location = 1) out vec4 idB;
+uniform int _id;
 uniform highp vec3 viewPos;
 uniform Material material;
 uniform float opacity;
@@ -32,6 +34,7 @@ in highp VERTEX_OUT{
 vec4 xygrid(vec2 coord, vec4 color, vec4 gridcolor);
 
 void main() {
+    idB = vec4(5,0,0,0);
     vec3 norm = normalize(TBN[2]);
     // ambient
     vec3 ambient = light_ambient * material.ambient;
