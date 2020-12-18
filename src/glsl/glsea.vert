@@ -8,13 +8,6 @@ layout (std140) uniform Matrices
     mat4 view;
 };
 
-//struct LightSource {
-//    vec4 position;
-//    vec3 ambient;
-//    vec3 diffuse;
-//    vec3 specular;
-//};
-
 layout (std140) uniform Light
 {
     vec4 light_position;
@@ -40,7 +33,7 @@ void main() {
     mat4 m_scale = mat4(scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, 1);
     vec4 v = (translate*m_scale*vertex);
     v.z += cos((vertex.x+time)*0.5)+cos((vertex.x+time)*0.05)+sin((vertex.y+time)*0.7)+sin((vertex.y+time)*0.02);
-    v.z=v.z*0.05;
+    v.z=v.z*0.05-0.1;
     gl_Position = projection * view * v;
     vec3 Normal = vec3(0.05*vec2(0.5*sin((vertex.x+time)*0.5)+0.05*sin((vertex.x+time)*0.05), -0.7*cos((vertex.y+time)*0.7)-0.02*cos((vertex.y+time)*0.02)), 1);
 

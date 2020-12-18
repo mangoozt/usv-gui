@@ -4,7 +4,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
-GLSea::GLSea(QImage& texture, QImage& normal, QImage& specular) : tex(texture), normal_tex(normal), spec_tex(specular) {
+GLSea::GLSea() {
     QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "glsl/glsea.vert");
@@ -12,7 +12,7 @@ GLSea::GLSea(QImage& texture, QImage& normal, QImage& specular) : tex(texture), 
     m_program->link();
     m_program->bind();
 
-    auto ul_matrices = f->glGetUniformBlockIndex(m_program->programId(),"Matrices");
+    auto ul_matrices = f->glGetUniformBlockIndex(m_program->programId(), "Matrices");
     f->glUniformBlockBinding(m_program->programId(), ul_matrices, 0);
 
     auto ul_light = f->glGetUniformBlockIndex(m_program->programId(), "Light");
@@ -55,9 +55,6 @@ void GLSea::render(QMatrix4x4& view_matrix, QVector3D eyePos, double time) {
     f->glEnable(GL_BLEND);
     f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
-    normal_tex.bind(0);
-    tex.bind(2);
-    spec_tex.bind(4);
     m_program->setUniformValue(m_timeLoc, (float) std::fmod(time, 10) * 10.0f);
     m_program->setUniformValue(m_viewLoc, eyePos);
     vbo->bind();

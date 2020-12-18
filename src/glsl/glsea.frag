@@ -10,12 +10,6 @@ in highp mat3 TBN;
 in highp vec3 Pos;
 out highp vec4 fragColor;
 
-//struct LightSource {
-//    vec4 position;
-//    vec3 ambient;
-//    vec3 diffuse;
-//    vec3 specular;
-//};
 layout (std140) uniform Light
 {
     vec4 light_position;
@@ -39,31 +33,92 @@ in VERTEX_OUT{
     vec3 TangentFragPos;
 } vertex_out;
 
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir);
+// 	<www.shadertoy.com/view/XsX3zB>
+//	by Nikita Miropolskiy
+
+/* discontinuous pseudorandom uniformly distributed in [-0.5, +0.5]^3 */
+vec3 random3(vec3 c) {
+    float j = 4096.0*sin(dot(c,vec3(17.0, 59.4, 15.0)));
+    vec3 r;
+    r.z = fract(512.0*j);
+    j *= .125;
+    r.x = fract(512.0*j);
+    j *= .125;
+    r.y = fract(512.0*j);
+    return r-0.5;
+}
+
+const float F3 =  0.3333333;
+const float G3 =  0.1666667;
+float simplexNoise(vec3 p) {
+
+    vec3 s = floor(p + dot(p, vec3(F3)));
+    vec3 x = p - s + dot(s, vec3(G3));
+
+    vec3 e = step(vec3(0.0), x - x.yzx);
+    vec3 i1 = e*(1.0 - e.zxy);
+    vec3 i2 = 1.0 - e.zxy*(1.0 - e);
+
+    vec3 x1 = x - i1 + G3;
+    vec3 x2 = x - i2 + 2.0*G3;
+    vec3 x3 = x - 1.0 + 3.0*G3;
+
+    vec4 w, d;
+
+    w.x = dot(x, x);
+    w.y = dot(x1, x1);
+    w.z = dot(x2, x2);
+    w.w = dot(x3, x3);
+
+    w = max(0.6 - w, 0.0);
+
+    d.x = dot(random3(s), x);
+    d.y = dot(random3(s + i1), x1);
+    d.z = dot(random3(s + i2), x2);
+    d.w = dot(random3(s + 1.0), x3);
+
+    w *= w;
+    w *= w;
+    d *= w;
+
+    return dot(d, vec4(52.0));
+}
+
+float snoiseFractal(vec3 m) {
+    return   0.5333333* simplexNoise(m)
+    +0.2666667* simplexNoise(2.0*m)
+    +0.1333333* simplexNoise(4.0*m)
+    +0.0666667* simplexNoise(8.0*m);
+}
+
+vec3 normalNoise(vec2 _st, float _zoom, float _speed){
+    vec2 v1 = _st;
+    vec2 v2 = _st;
+    vec2 v3 = _st;
+    float expon = pow(10.0, _zoom*2.0);
+    v1 /= 1.0*expon;
+    v2 /= 0.62*expon;
+    v3 /= 0.83*expon;
+    float n = _speed;
+    float nr = (simplexNoise(vec3(v1, n)) + simplexNoise(vec3(v2, n)) + simplexNoise(vec3(v3, n))) / 6.0 + 0.5;
+    n = _speed + 1000.0;
+    float ng = (simplexNoise(vec3(v1, n)) + simplexNoise(vec3(v2, n)) + simplexNoise(vec3(v3, n))) / 6.0 + 0.5;
+    return vec3(nr,ng,0.5);
+}
 
 void main() {
-    vec3 viewDir   = normalize(vertex_out.TangentViewPos - vertex_out.TangentFragPos);
-    vec2 texCoords = ParallaxMapping(vertex_out.TextCoords, viewDir);
-    vec3 texnorm = texture(tex_normal, texCoords).xyz*2.0-1.0;
-    vec3 norm = normalize(TBN*texnorm);
+    vec3 norm = normalize(TBN*normalNoise(vertex_out.FragPos.xy,1,1));
     // ambient
     vec3 ambient = light_ambient * material.ambient;
     // diffuse
     vec3 lightDir = normalize(light_position.xyz);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light_diffuse * (diff * material.diffuse*texture(depthMap, texCoords).r);
+    vec3 diffuse = light_diffuse * (diff * material.diffuse);
     // specular
-    viewDir = normalize(viewPos - vertex_out.FragPos);
+    vec3 viewDir = normalize(viewPos - vertex_out.FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = light_specular * (spec * material.specular*texture(specularMap, texCoords).r);
+    vec3 specular = light_specular * (spec * material.specular);
     vec3 result = ambient + diffuse + specular;
     fragColor = vec4(result, 0.8+diff);
-}
-
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
-{
-    float height =  texture(depthMap, texCoords).r;
-    vec2 p = viewDir.xy / viewDir.z * (height * height_scale);
-    return texCoords - p;
 }

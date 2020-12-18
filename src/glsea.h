@@ -3,12 +3,11 @@
 #include <QMatrix4x4>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
-#include <QOpenGLTexture>
 
 class GLSea
 {
 public:
-    GLSea(QImage& texture, QImage& normal, QImage &specular);
+    GLSea();
     ~GLSea();
     void render(QMatrix4x4 &view_matrix, QVector3D eyePos, double time=0);
 private:
@@ -16,9 +15,6 @@ private:
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *vbo;
     QOpenGLBuffer *ibo;
-    QOpenGLTexture tex;
-    QOpenGLTexture normal_tex;
-    QOpenGLTexture spec_tex;
     int m_viewLoc;
     int m_timeLoc;
     const GLuint gridsize{1000};

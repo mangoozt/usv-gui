@@ -179,13 +179,7 @@ void OGLWidget::initializeGL() {
         text = new Text(fontfile, fontimage);
     }
     grid = new GLGrid();
-    {
-        QImage tex(":/resource/Water_001_DISP.png");
-        QImage tex_norm(":resource/Water_001_NORM.jpg");
-        QImage spec(":resource/Water_001_SPEC.jpg");
-//        tex_norm=tex_norm.mirrored();
-        sea = new GLSea(tex, tex_norm, spec);
-    }
+    sea = new GLSea();
 
     restrictions = new GLRestrictions();
 }
