@@ -230,7 +230,7 @@ void OGLWidget::paintGL() {
         // Update matrices UBO
         f->glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
         f->glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(float), m_proj.constData());
-        auto m_view = camera * m_world;
+        auto m_view = camera;
         f->glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(float), 16 * sizeof(float), m_view.constData());
         f->glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -322,7 +322,7 @@ void OGLWidget::paintGL() {
         text->renderText(case_data.vessel_names[i], point, this->rect());
     }
     }
-    skybox->render(m_m,eye);
+    skybox->render();
 }
 
 QVector3D OGLWidget::screenToWorld(QPoint pos) {
