@@ -1,22 +1,21 @@
 #ifndef GLGRID_H
 #define GLGRID_H
 
-#include <QMatrix4x4>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLBuffer>
+#include <glm/glm.hpp>
+#include "Program.h"
+#include "Buffer.h"
+#include <memory>
 
 class GLGrid {
 public:
     GLGrid();
 
-    ~GLGrid();
-
-    void render(QMatrix4x4& view_matrix);
+    void render(const glm::mat4& view_matrix);
 
     static const char* xyGridShaderSource;
 private:
-    QOpenGLShaderProgram* m_program;
-    QOpenGLBuffer* vbo;
+    std::unique_ptr<Program> m_program;
+    std::unique_ptr<Buffer> vbo;
     int m_viewMatrixLoc;
     int m_colorLoc;
 };

@@ -1,7 +1,5 @@
 #include "skybox.h"
 #include "utils.h"
-#include <QOpenGLContext>
-#include <QOpenGLExtraFunctions>
 
 static const char* vertexShaderSource =
         "#version 330\n"
@@ -40,18 +38,17 @@ static const char* fragmentShaderSource =
         "}\n";
 
 Skybox::Skybox() {
-    m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program = std::make_unique<Program>();
+    m_program->addVertexShader(vertexShaderSource);
+    m_program->addFragmentShader(fragmentShaderSource);
     m_program->link();
     m_program->bind();
 
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
     auto ul_matrices = m_program->uniformLocation("Matrices");
-    f->glUniformBlockBinding(m_program->programId(), ul_matrices, 0);
-
-    auto ul_light = f->glGetUniformBlockIndex(m_program->programId(), "Light");
-    f->glUniformBlockBinding(m_program->programId(), ul_light, 1);
+    glUniformBlockBinding(m_program->programId(), ul_matrices, 0);
+    vertexLocation = glGetAttribLocation(m_program->programId(),"vertex");
+    auto ul_light = glGetUniformBlockIndex(m_program->programId(), "Light");
+    glUniformBlockBinding(m_program->programId(), ul_light, 1);
     m_program->release();
 
     float skyboxVertices[] = {
@@ -99,32 +96,31 @@ Skybox::Skybox() {
             1.0f, -1.0f, 1.0f
     };
 
-    vbo = new QOpenGLBuffer();
+    vbo = std::make_unique<Buffer>();
     vbo->create();
     vbo->bind();
     vbo->allocate(skyboxVertices, sizeof(skyboxVertices));
     vbo->release();
 }
 
-Skybox::~Skybox() {
-    delete m_program;
-    delete vbo;
-}
+Skybox::~Skybox() = default;
 
 void Skybox::render() {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    f->glDepthMask(GL_FALSE);
-    f->glDepthFunc(GL_LEQUAL);
-    f->glEnable(GL_BLEND);
-    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//    glDepthMask(GL_FALSE);
+//    GLint depthfunc;
+//    glGetIntegerv(GL_DEPTH_FUNC, &depthfunc);
+//    glDepthFunc(GL_LEQUAL);
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
     vbo->bind();
-    int vertexLocation = m_program->attributeLocation("vertex");
-    m_program->enableAttributeArray(vertexLocation);
-    m_program->setAttributeBuffer(vertexLocation, GL_FLOAT, GL_FALSE, 3, 0);
-    f->glDrawArrays(GL_TRIANGLES, 0, 36);
+    glEnableVertexAttribArray(vertexLocation);
+    glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    vbo->release();
+    glDisableVertexAttribArray(vertexLocation);
     m_program->release();
-    f->glDisable(GL_BLEND);
-    f->glDepthMask(GL_TRUE);
-    f->glDepthFunc(GL_LESS);
+//    glDisable(GL_BLEND);
+//    glDepthMask(GL_TRUE);
+//    glDepthFunc(depthfunc);
 }

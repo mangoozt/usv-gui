@@ -4,30 +4,33 @@
 #include "glgrid.h"
 #include <cmath>
 #include <array>
-#include <QOpenGLContext>
-#include <QOpenGLExtraFunctions>
+#include <cmrc/cmrc.hpp>
+#include "Defines.h"
+#include <iostream>
+
+CMRC_DECLARE(glsl_resources);
 
 GLRestrictions::GLRestrictions() {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "glsl/general.vert");
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, GLGrid::xyGridShaderSource);
-    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, "glsl/restrictions.frag");
+    m_program = std::make_unique<Program>();
+    auto fs = cmrc::glsl_resources::get_filesystem();
+    m_program->addVertexShader(fs.open("glsl/general.vert").cbegin());
+    m_program->addFragmentShader(GLGrid::xyGridShaderSource);
+    m_program->addFragmentShader(fs.open("glsl/restrictions.frag").cbegin());
     m_program->link();
     m_program->bind();
 
-    auto ul_matrices = m_program->uniformLocation("Matrices");
-    f->glUniformBlockBinding(m_program->programId(), ul_matrices, 0);
+    auto ul_matrices = glGetUniformBlockIndex(m_program->programId(), "Matrices");
+    glUniformBlockBinding(m_program->programId(), ul_matrices, USV_GUI_MATRICES_BINDING);
 
-    auto ul_light = f->glGetUniformBlockIndex(m_program->programId(), "Light");
-    f->glUniformBlockBinding(m_program->programId(), ul_light, 1);
+    auto ul_light = glGetUniformBlockIndex(m_program->programId(), "Light");
+    glUniformBlockBinding(m_program->programId(), ul_light, USV_GUI_LIGHTS_BINDING);
 
     m_viewLoc = m_program->uniformLocation("viewPos");
 
-    struct {
-        QVector3D ambient = QVector3D(255, 0, 0) / 255;
-        QVector3D diffuse = QVector3D(255, 200, 0) / 255;
-        QVector3D specular = QVector3D(255, 204, 51) / 400;
+    const struct {
+        glm::vec3 ambient = glm::vec3(255, 0, 0) / 255.0f;
+        glm::vec3 diffuse = glm::vec3(255, 200, 0) / 255.0f;
+        glm::vec3 specular = glm::vec3(255, 204, 51) / 400.0f;
         float shininess{256};
     } material;
     m_program->setUniformValue(m_program->uniformLocation("material.ambient"), material.ambient);
@@ -38,49 +41,43 @@ GLRestrictions::GLRestrictions() {
     m_program->release();
 }
 
-GLRestrictions::~GLRestrictions() {
-    delete m_program;
-}
-
-void GLRestrictions::render(QMatrix4x4& view_matrix, QVector3D eyePos, GeometryType gtype) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    f->glEnable(GL_BLEND);
-    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+void GLRestrictions::render(glm::mat4& view_matrix, glm::vec3 eyePos, GeometryType gtype) {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
-    m_program->setUniformValue(m_viewMatrixLoc, view_matrix);
     m_program->setUniformValue(m_viewLoc, eyePos);
+    glDepthMask(GL_TRUE);
     if (gtype & GeometryTypes::Isle)
         for (auto& poly:glisles) {
-            poly.render(m_program);
+            poly.render(*m_program);
         }
-    f->glDepthMask(GL_FALSE);
+    glDepthMask(GL_FALSE);
     if (gtype & GeometryTypes::Polygon)
         for (auto& poly:glpolygons) {
-            poly.render(m_program);
+            poly.render(*m_program);
         }
-    f->glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);
     if (gtype & GeometryTypes::Contour)
         for (auto& poly:glcontours) {
-            poly.render(m_program);
+            poly.render(*m_program);
         }
-
     m_program->release();
-    f->glDisable(GL_BLEND);
-    f->glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 }
 
 void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& restrictions) {
     glpolygons.clear();
     glcontours.clear();
-    QVector3D c_hard{1.0f, 0.0f, 0.0f};
+    glm::vec3 c_hard{1.0f, 0.0f, 0.0f};
     for (auto& limitation:restrictions.hard.ZoneEnteringProhibitions()) {
         meta_.push_back({limitation._ptr});
         if (limitation._ptr->source_object_code == "LNDARE")
             glisles.emplace_back(limitation.polygon, c_hard, meta_.size() - 1);
         else
-            glpolygons.emplace_back(limitation.polygon, c_hard, meta_.size() - 1, 0.5);
+            glpolygons.emplace_back(limitation.polygon, c_hard, meta_.size() - 1, 0.5f);
     }
-    QVector3D c_soft{1.0f, 0.8f, 0.0f};
+    glm::vec3 c_soft{1.0f, 0.8f, 0.0f};
     for (auto& limitation:restrictions.soft.ZoneEnteringProhibitions()) {
         meta_.push_back({limitation._ptr});
         if (limitation._ptr->source_object_code == "LNDARE")
@@ -88,7 +85,7 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
         else
             glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
     }
-    QVector3D c_movement{0.9f, 0.9f, 0.9f};
+    glm::vec3 c_movement{0.9f, 0.9f, 0.9f};
     for (auto& limitation:restrictions.soft.MovementParametersLimitations()) {
         meta_.push_back({limitation._ptr});
         glcontours.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
@@ -99,29 +96,28 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
     }
 }
 
-void GLRestrictions::Polygon::render(QOpenGLShaderProgram* program) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    program->bind();
-    program->setUniformValue(program->uniformLocation("material.ambient"), color);
-    program->setUniformValue(program->uniformLocation("material.diffuse"), color * 0.8f);
-    program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
-    program->setUniformValue(program->uniformLocation("material.shininess"), 16);
-    program->setUniformValue(program->uniformLocation("opacity"), opacity);
-    program->setUniformValue(program->uniformLocation("_id"), (GLint)id_);
+void GLRestrictions::Polygon::render(const Program& program) {
+    program.bind();
+    program.setUniformValue(program.uniformLocation("material.ambient"), color);
+    program.setUniformValue(program.uniformLocation("material.diffuse"), color * 0.8f);
+    program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(255, 255, 255) / 400.0f);
+    program.setUniformValue(program.uniformLocation("material.shininess"), 16.0f);
+    program.setUniformValue(program.uniformLocation("opacity"), opacity);
+    glUniform1i(program.uniformLocation("_id"), (GLint) id_);
     vbo->bind();
-    ibo->bind();
-    int vertexLocation = program->attributeLocation("vertex");
-    program->enableAttributeArray(vertexLocation);
-    int normalLocation = program->attributeLocation("normal");
-    program->disableAttributeArray(normalLocation);
-    program->setAttributeValue(normalLocation, QVector3D(0.0, 0.0, 1.0));
-    f->glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    f->glDrawElements(GL_TRIANGLES, indices_count, GL_UNSIGNED_INT, nullptr);
-    ibo->release();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->bufferId());
+    int vertexLocation = glGetAttribLocation(program.programId(), "vertex");
+    glEnableVertexAttribArray(vertexLocation);
+    int normalLocation = glGetAttribLocation(program.programId(), "normal");
+    glDisableVertexAttribArray(normalLocation);
+    glVertexAttrib3f(normalLocation, 0.0, 0.0, 1.0);
+    glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDrawElements(GL_TRIANGLES, indices_count, GL_UNSIGNED_INT, nullptr);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     vbo->release();
-    program->disableAttributeArray(vertexLocation);
-    program->setUniformValue(program->uniformLocation("opacity"), 1.0f);
-    program->release();
+    glDisableVertexAttribArray(vertexLocation);
+    program.setUniformValue(program.uniformLocation("opacity"), 1.0f);
+    glUseProgram(0);
 }
 
 namespace mapbox::util {
@@ -142,7 +138,7 @@ namespace mapbox::util {
 
 } // namespace mapbox
 
-GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, const QVector4D& color, size_t id,
+GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, const glm::vec3& color, size_t id,
                                  float opacity)
         : color(color), opacity(opacity), id_(id) {
     // Run tessellation
@@ -155,8 +151,8 @@ GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, cons
         for (auto& point:ring)
             vertices.push_back({(GLfloat) point.x(), (GLfloat) point.y()});
 
-    vbo = new QOpenGLBuffer();
-    ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+    vbo = std::make_unique<Buffer>();
+    ibo = std::make_unique<Buffer>();
     vbo->create();
     ibo->create();
     vbo->bind();
@@ -167,37 +163,32 @@ GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, cons
     ibo->release();
 }
 
-GLRestrictions::Polygon::~Polygon() {
-    delete vbo;
-    delete ibo;
-}
-
-void GLRestrictions::Isle::render(QOpenGLShaderProgram* program) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    program->bind();
-    program->setUniformValue(program->uniformLocation("material.ambient"), color * 0.5);
-    program->setUniformValue(program->uniformLocation("material.diffuse"), color);
-    program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
-    program->setUniformValue(program->uniformLocation("material.shininess"), 16);
-    program->setUniformValue(program->uniformLocation("_id"), (GLint)id_);
+void GLRestrictions::Isle::render(const Program& program) {
+    program.bind();
+    program.setUniformValue(program.uniformLocation("material.ambient"), color * 0.5f);
+    program.setUniformValue(program.uniformLocation("material.diffuse"), color);
+    program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(255, 255, 255) / 400.0f);
+    program.setUniformValue(program.uniformLocation("material.shininess"), 16);
+    glUniform1i(program.uniformLocation("_id"), (GLint) id_);
     vbo->bind();
-    ibo->bind();
-    int vertexLocation = program->attributeLocation("vertex");
-    int normLocation = program->attributeLocation("normal");
-    f->glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*) nullptr);
-    program->enableAttributeArray(vertexLocation);
-    f->glVertexAttribPointer(normLocation, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*) (3 * sizeof(GLfloat)));
-    program->enableAttributeArray(normLocation);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->bufferId());
+    int vertexLocation = glGetAttribLocation(program.programId(), "vertex");
+    int normLocation = glGetAttribLocation(program.programId(), "normal");
+    glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*) nullptr);
 
-    f->glDrawElements(GL_TRIANGLES, indices_count, GL_UNSIGNED_INT, nullptr);
-    program->disableAttributeArray(vertexLocation);
-    program->disableAttributeArray(normLocation);
-    ibo->release();
+    glEnableVertexAttribArray(vertexLocation);
+    glVertexAttribPointer(normLocation, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*) (3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(normLocation);
+
+    glDrawElements(GL_TRIANGLES, indices_count, GL_UNSIGNED_INT, nullptr);
+    glDisableVertexAttribArray(vertexLocation);
+    glDisableVertexAttribArray(normLocation);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     vbo->release();
-    program->release();
+    glUseProgram(0);
 }
 
-GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const QVector3D& color, size_t id) : color(color)
+GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const glm::vec3& color, size_t id) : color(color)
         , id_(id) {
     using Point6 = std::array<GLfloat, 6>;
     const auto z = 0.1f;
@@ -261,8 +252,8 @@ GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const QVec
 
 
     indices_count = static_cast<GLuint>(indices.size());
-    vbo = new QOpenGLBuffer();
-    ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+    vbo = std::make_unique<Buffer>();
+    ibo = std::make_unique<Buffer>();
     vbo->create();
     ibo->create();
     vbo->bind();
@@ -274,13 +265,8 @@ GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const QVec
 
 }
 
-GLRestrictions::Isle::~Isle() {
-    delete vbo;
-    delete ibo;
-}
 
-
-GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const QVector3D& color, size_t id) : color(
+GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const glm::vec3& color, size_t id) : color(
         color), id_(id) {
     std::vector<Point> vertices;
     for (auto& ring:polygon.rings) {
@@ -290,36 +276,30 @@ GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, cons
     }
     start_ptrs.push_back(static_cast<GLuint>(vertices.size()));
 
-    vbo = new QOpenGLBuffer();
+    vbo = std::make_unique<Buffer>();
     vbo->create();
     vbo->bind();
     vbo->allocate(vertices.data(), static_cast<int>(data_sizeof(vertices)));
     vbo->release();
 }
 
-void GLRestrictions::Contour::render(QOpenGLShaderProgram* program) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    program->bind();
-    program->setUniformValue(program->uniformLocation("material.ambient"), color);
-    program->setUniformValue(program->uniformLocation("material.diffuse"), color * 0.8f);
-    program->setUniformValue(program->uniformLocation("material.specular"), QVector3D(255, 255, 255) / 400);
-    program->setUniformValue(program->uniformLocation("material.shininess"), 16);
+void GLRestrictions::Contour::render(const Program& program) {
+    program.bind();
+    program.setUniformValue(program.uniformLocation("material.ambient"), color);
+    program.setUniformValue(program.uniformLocation("material.diffuse"), color * 0.8f);
+    program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(255, 255, 255) / 400.0f);
+    program.setUniformValue(program.uniformLocation("material.shininess"), 16);
     vbo->bind();
-    int vertexLocation = program->attributeLocation("vertex");
-    program->enableAttributeArray(vertexLocation);
-    int normalLocation = program->attributeLocation("normal");
-    program->setAttributeValue(normalLocation, QVector3D(0.0, 0.0, 1.0));
-    f->glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    int vertexLocation = glGetAttribLocation(program.programId(), "vertex");
+    glEnableVertexAttribArray(vertexLocation);
+    int normalLocation = glGetAttribLocation(program.programId(), "normal");
+    glVertexAttrib3f(normalLocation, 0.0, 0.0, 1.0);
+    glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     vbo->release();
-    f->glLineWidth(3.0f);
     for (size_t i = 0, j = 1; j < start_ptrs.size(); i = j++)
-        f->glDrawArrays(GL_LINE_LOOP, start_ptrs[i], start_ptrs[j] - start_ptrs[i]);
+        glDrawArrays(GL_LINE_LOOP, start_ptrs[i], start_ptrs[j] - start_ptrs[i]);
 
-    program->disableAttributeArray(vertexLocation);
-    program->release();
-}
-
-GLRestrictions::Contour::~Contour() {
-    delete vbo;
+    glDisableVertexAttribArray(vertexLocation);
+    glUseProgram(0);
 }

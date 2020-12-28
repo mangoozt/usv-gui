@@ -1,6 +1,5 @@
 #include "glgrid.h"
-#include <QOpenGLContext>
-#include <QOpenGLExtraFunctions>
+#include <iostream>
 
 static const char* vertexShaderSource =
         "#version 330\n"
@@ -36,18 +35,18 @@ static const char* fragmentShaderSource =
         "}\n";
 
 GLGrid::GLGrid() {
-    m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, xyGridShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program = std::make_unique<Program>();
+    m_program->addVertexShader(vertexShaderSource);
+    m_program->addFragmentShader(xyGridShaderSource);
+    m_program->addFragmentShader(fragmentShaderSource);
     m_program->link();
     m_program->bind();
     m_viewMatrixLoc = m_program->uniformLocation("m_view");
     m_colorLoc = m_program->uniformLocation("color");
-    m_program->setUniformValue(m_colorLoc, QVector4D(135, 206, 250, 120) / 255);
-    m_program->setUniformValue(m_program->uniformLocation("bg_color"), QVector4D(1.0, 1.0, 1.0, 0.0));
+    m_program->setUniformValue(m_colorLoc, glm::vec4(135, 206, 250, 120) / 255.0f);
+    m_program->setUniformValue(m_program->uniformLocation("bg_color"), glm::vec4(1.0, 1.0, 1.0, 0.0));
     m_program->release();
-    vbo = new QOpenGLBuffer;
+    vbo = std::make_unique<Buffer>();
     GLfloat plane[] = {
             -40.0f, 40.0f, -0.01f,
             -40.0f, -40.0f, -0.01f,
@@ -57,25 +56,20 @@ GLGrid::GLGrid() {
     vbo->create();
     vbo->bind();
     vbo->allocate(plane, sizeof(plane));
+    vbo->release();
 }
 
-void GLGrid::render(QMatrix4x4& view_matrix) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    f->glEnable(GL_BLEND);
-    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+void GLGrid::render(const glm::mat4& view_matrix) {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
     m_program->setUniformValue(m_viewMatrixLoc, view_matrix);
     vbo->bind();
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    f->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    f->glDisableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDisableVertexAttribArray(0);
     vbo->release();
     m_program->release();
-    f->glDisable(GL_BLEND);
-}
-
-GLGrid::~GLGrid() {
-    delete m_program;
-    delete vbo;
+    glDisable(GL_BLEND);
 }

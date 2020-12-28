@@ -1,75 +1,72 @@
 #include <cmath>
 #include "glsea.h"
 #include "utils.h"
-#include <QOpenGLContext>
-#include <QOpenGLExtraFunctions>
+#include <cmrc/cmrc.hpp>
+#include "Defines.h"
 
-GLSea::GLSea(QImage& texture, QImage& normal, QImage& specular) : tex(texture), normal_tex(normal), spec_tex(specular) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "glsl/glsea.vert");
-    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, "glsl/glsea.frag");
+CMRC_DECLARE(glsl_resources);
+
+GLSea::GLSea() {
+    m_program = std::make_unique<Program>();
+    auto fs = cmrc::glsl_resources::get_filesystem();
+    m_program->addVertexShader(fs.open("glsl/glsea.vert").begin());
+    m_program->addFragmentShader(fs.open("glsl/glsea.frag").begin());
     m_program->link();
     m_program->bind();
 
-    auto ul_matrices = f->glGetUniformBlockIndex(m_program->programId(),"Matrices");
-    f->glUniformBlockBinding(m_program->programId(), ul_matrices, 0);
+    auto ul_matrices = glGetUniformBlockIndex(m_program->programId(), "Matrices");
+    glUniformBlockBinding(m_program->programId(), ul_matrices, USV_GUI_MATRICES_BINDING);
 
-    auto ul_light = f->glGetUniformBlockIndex(m_program->programId(), "Light");
-    f->glUniformBlockBinding(m_program->programId(), ul_light, 1);
+    auto ul_light = glGetUniformBlockIndex(m_program->programId(), "Light");
+    glUniformBlockBinding(m_program->programId(), ul_light, USV_GUI_LIGHTS_BINDING);
 
     m_viewLoc = m_program->uniformLocation("viewPos");
     m_timeLoc = m_program->uniformLocation("time");
     m_program->setUniformValue(m_program->uniformLocation("height_scale"), 0.2f);
 
     struct {
-        QVector3D ambient = QVector3D(127, 205, 255) / 255;
-        QVector3D diffuse = QVector3D(127, 205, 255) / 255;
-        QVector3D specular = QVector3D(255, 204, 51) / 400;
+        glm::vec3 ambient = glm::vec3(127, 205, 255) / 255.0f;
+        glm::vec3 diffuse = glm::vec3(127, 205, 255) / 255.0f;
+        glm::vec3 specular = glm::vec3(255, 204, 51) / 400.0f;
         float shininess{256};
     } material;
     m_program->setUniformValue(m_program->uniformLocation("material.ambient"), material.ambient);
     m_program->setUniformValue(m_program->uniformLocation("material.diffuse"), material.diffuse);
     m_program->setUniformValue(m_program->uniformLocation("material.specular"), material.specular);
     m_program->setUniformValue(m_program->uniformLocation("material.shininess"), material.shininess);
-    f->glUniform1i(m_program->uniformLocation("tex_normal"), 0);
-    f->glUniform1i(m_program->uniformLocation("depthMap"), 2);
-    f->glUniform1i(m_program->uniformLocation("specularMap"), 4);
+    glUniform1i(m_program->uniformLocation("tex_normal"), 0);
+    glUniform1i(m_program->uniformLocation("depthMap"), 2);
+    glUniform1i(m_program->uniformLocation("specularMap"), 4);
+    vertexLocation = glad_glGetAttribLocation(m_program->programId(), "vertex");
     m_program->release();
-    vbo = new QOpenGLBuffer();
-    ibo = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+    vbo = std::make_unique<Buffer>();
+    ibo = std::make_unique<Buffer>();
     vbo->create();
     ibo->create();
     prepare_grid();
 }
 
-GLSea::~GLSea() {
-    delete m_program;
-    delete vbo;
-    delete ibo;
-}
-
-void GLSea::render(QMatrix4x4& view_matrix, QVector3D eyePos, double time) {
-    QOpenGLExtraFunctions* f = QOpenGLContext::currentContext()->extraFunctions();
-    f->glDepthMask(GL_FALSE);
-    f->glEnable(GL_BLEND);
-    f->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+void GLSea::render(glm::vec3& eyePos, double time) {
+    glDepthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
-    normal_tex.bind(0);
-    tex.bind(2);
-    spec_tex.bind(4);
+//    normal_tex.bind(0);
+//    tex.bind(2);
+//    spec_tex.bind(4);
     m_program->setUniformValue(m_timeLoc, (float) std::fmod(time, 10) * 10.0f);
     m_program->setUniformValue(m_viewLoc, eyePos);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->bufferId());
     vbo->bind();
-    ibo->bind();
-    int vertexLocation = m_program->attributeLocation("vertex");
-    m_program->enableAttributeArray(vertexLocation);
-    m_program->setAttributeBuffer(vertexLocation, GL_FLOAT, GL_FALSE, 2, 0);
-    f->glDrawElements(GL_TRIANGLES, (gridsize - 1) * (gridsize - 1) * 6, GL_UNSIGNED_INT, nullptr);
-    ibo->release();
+    glEnableVertexAttribArray(vertexLocation);
+    glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, (void*) nullptr);
+    glDrawElements(GL_TRIANGLES, (gridsize - 1) * (gridsize - 1) * 6, GL_UNSIGNED_INT, nullptr);
+    glDisableVertexAttribArray(vertexLocation);
+    vbo->release();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     m_program->release();
-    f->glDisable(GL_BLEND);
-    f->glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 }
 
 void GLSea::prepare_grid() {

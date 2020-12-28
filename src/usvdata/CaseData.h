@@ -10,10 +10,10 @@
 namespace USV {
 
     struct Color {
-        double r;
-        double g;
-        double b;
-        double a{1};
+        float r;
+        float g;
+        float b;
+        float a{1};
     };
 
     struct Vessel {

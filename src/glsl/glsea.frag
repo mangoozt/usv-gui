@@ -1,4 +1,8 @@
 #version 330
+#define highp
+#define mediump
+#define lowp
+
 struct Material {
     vec3 ambient;
     vec3 diffuse;

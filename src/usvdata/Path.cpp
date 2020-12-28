@@ -281,7 +281,7 @@ namespace USV {
                 double r = std::abs(1 / s._curve);
                 auto dangle = std::abs(s._length * s._curve);
                 double sign = s._curve > 0 ? 1 : -1;
-                size_t n = static_cast<size_t>(dangle / angle_increment);
+                auto n = static_cast<size_t>(dangle / angle_increment);
                 for (size_t i = 0; i < n; ++i) {
                     auto x_ = std::sin(angle_increment * i);
                     auto y_ = sign * (1 - std::cos(angle_increment * i));

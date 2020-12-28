@@ -1,7 +1,9 @@
 #version 330
+#define highp
+#define mediump
+#define lowp
+
 layout(location = 0) in vec4 vertex;
-layout(location = 1) in vec4 position;
-layout(location = 4) in float scale;
 layout (std140) uniform Matrices
 {
     mat4 projection;
@@ -36,11 +38,9 @@ out highp VERTEX_OUT{
 } vertex_out;
 
 void main() {
-    mat4 translate = mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, position.x, position.y, position.z, 1);
-    mat4 m_scale = mat4(scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, 1);
-    vec4 v = (translate*m_scale*vertex);
+    vec4 v = vertex;
     v.z += cos((vertex.x+time)*0.5)+cos((vertex.x+time)*0.05)+sin((vertex.y+time)*0.7)+sin((vertex.y+time)*0.02);
-    v.z=v.z*0.05;
+    v.z=v.z*0.05-0.1;
     gl_Position = projection * view * v;
     vec3 Normal = vec3(0.05*vec2(0.5*sin((vertex.x+time)*0.5)+0.05*sin((vertex.x+time)*0.05), -0.7*cos((vertex.y+time)*0.7)-0.02*cos((vertex.y+time)*0.02)), 1);
 

@@ -1,24 +1,24 @@
 #ifndef GLSEA_H
 #define GLSEA_H
-#include <QMatrix4x4>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLBuffer>
-#include <QOpenGLTexture>
+#include <glm/glm.hpp>
+#include "Program.h"
+#include "Buffer.h"
+#include <memory>
 
 class GLSea
 {
 public:
-    GLSea(QImage& texture, QImage& normal, QImage &specular);
-    ~GLSea();
-    void render(QMatrix4x4 &view_matrix, QVector3D eyePos, double time=0);
+    GLSea();
+    void render(glm::vec3& eyePos, double time=0);
 private:
+    GLint vertexLocation{};
     void prepare_grid();
-    QOpenGLShaderProgram *m_program;
-    QOpenGLBuffer *vbo;
-    QOpenGLBuffer *ibo;
-    QOpenGLTexture tex;
-    QOpenGLTexture normal_tex;
-    QOpenGLTexture spec_tex;
+    std::unique_ptr<Program> m_program;
+    std::unique_ptr<Buffer> vbo;
+    std::unique_ptr<Buffer> ibo;
+//    GLuint tex{};
+//    GLuint normal_tex{};
+//    GLuint spec_tex{};
     int m_viewLoc;
     int m_timeLoc;
     const GLuint gridsize{1000};

@@ -1,44 +1,38 @@
-cmake_minimum_required(VERSION 3.5)
-
-project(USV-gui LANGUAGES CXX)
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(Qt5_USE_STATIC_LIBS ON)
-set(Qt5_USE_STATIC_RUNTIME ON)
-
-find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED)
-
 add_subdirectory(usvdata)
+option(NANOGUI_BACKEND OpenGL)
+option(NANOGUI_BUILD_SHARED OFF)
+option(NANOGUI_BUILD_PYTHON OFF)
+
+add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/nanogui" "vendor/nanogui" EXCLUDE_FROM_ALL)
+add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/glm" "vendor/glm" EXCLUDE_FROM_ALL)
+
 add_executable(USV-gui
                main.cpp
-               mainwindow.cpp
-               mainwindow.h
-               mainwindow.ui
                oglwidget.h
                oglwidget.cpp
-               text.cpp
+#               text.cpp
                glgrid.cpp
                glsea.cpp
-               resources.qrc
-               earcut.h
+#               earcut.h
                glrestrictions.cpp
-               utils.h
-               skybox.cpp)
+#               utils.h
+#               skybox.cpp
+               Program.cpp
+               Program.h
+               Buffer.cpp Buffer.h
+#              Unfortunately need to do this
+               ${PROJECT_SOURCE_DIR}/vendor/nanogui/ext/glad/src/glad.c)
 
-#set_target_properties(USV-gui PROPERTIES WIN32_EXECUTABLE TRUE)
+set_property(TARGET USV-gui PROPERTY CXX_STANDARD 17)
+set_property(TARGET USV-gui PROPERTY CXX_STANDARD_REQUIRED ON)
 
-file(GLOB glsl_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS glsl/*.vert glsl/*.frag)
-foreach (glsl_file ${glsl_files})
-    message(STATUS "Found " ${glsl_file})
-    configure_file(${glsl_file} ${glsl_file} COPYONLY)
-endforeach ()
+include(${PROJECT_SOURCE_DIR}/modules/CMakeRC.cmake)
+cmrc_add_resource_library(glsl_resources glsl/general.vert glsl/glsea.frag glsl/glsea.vert glsl/restrictions.frag)
+cmrc_add_resource_library(tex_resources resource/Water_001_COLOR.jpg resource/Water_001_DISP.png resource/Water_001_NORM.jpg resource/Water_001_OCC.jpg resource/Water_001_SPEC.jpg)
 
-target_link_libraries(USV-gui usvdata Qt5::Widgets Qt5::OpenGL)
+set(OpenGL_GL_PREFERENCE LEGACY)
+find_package(OpenGL REQUIRED)
+
+target_include_directories(USV-gui PRIVATE ${PROJECT_SOURCE_DIR}/vendor/nanogui/include)
+target_include_directories(USV-gui PRIVATE ${PROJECT_SOURCE_DIR}/vendor/nanogui/ext/glad/include)
+target_link_libraries(USV-gui usvdata nanogui glm ${NANOGUI_LIBS} OpenGL::GL glsl_resources tex_resources)
