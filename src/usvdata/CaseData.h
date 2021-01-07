@@ -24,7 +24,7 @@ namespace USV {
     };
 
     struct CaseData {
-        double radius;
+        double radius{};
         std::vector<Vessel> vessels{0};
         std::vector<std::string> vessel_names{};
         Path route{0};
