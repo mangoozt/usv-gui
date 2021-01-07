@@ -35,6 +35,8 @@ public:
 
     void mousePressEvent(double x, double y, int button, int action, int mods);
 
+    void mouseMoveEvent(double x, double y, bool lbutton, bool mbutton);
+
 protected:
     GLuint vao{};
     std::unique_ptr<Program> m_program{nullptr};
@@ -78,6 +80,8 @@ public:
     [[nodiscard]] const USV::CaseData* case_data() const {
         return case_data_.get();
     }
+
+    inline bool uniforms_dirty() const { return m_uniformsDirty; }
 };
 
 #endif // OGLWIDGET_H
