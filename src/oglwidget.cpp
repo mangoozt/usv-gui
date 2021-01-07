@@ -198,7 +198,7 @@ void OGLWidget::paintGL() {
         auto aspect = W / H;
         if (aspect > 0.0001f)
             m_proj = glm::perspective(phi_rad, aspect,
-                                      static_cast<float>(a),
+                                      static_cast<float>(a)-0.2f,
                                       static_cast<float>(b));
 
         auto target = glm::vec3(m_eye.x, m_eye.y, 0) * 2.0f - eye;
@@ -328,14 +328,16 @@ void OGLWidget::paintGL() {
 }
 
 glm::vec3 OGLWidget::screenToWorld(glm::ivec2 pos) {
-    auto minv = glm::inverse(m_m);
-    float depth_z = 1.0f;
-    glReadPixels(pos.x, height - pos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_z);
-    glm::vec4 point_normalized = glm::vec4((float) pos.x / (float) width * 2 - 1,
+    glm::mat3 minv(m_m[0].x,m_m[0].y,m_m[0].w, m_m[1].x,m_m[1].y,m_m[1].w, m_m[3].x,m_m[3].y,m_m[3].w);
+    minv = glm::inverse(minv);
+    glm::vec3 point_normalized = glm::vec3((float) pos.x / (float) width * 2 - 1,
                                            1 - (float) pos.y / (float) height * 2,
-                                           depth_z * 2.0f - 1.0f, 1.0f);
+                                           1.0f);
+
     auto position = minv * point_normalized;
-    return glm::vec3(position / position.w);
+    position/=position.z;
+    position.z = 0;
+    return position;
 }
 
 void OGLWidget::loadData(USV::CaseData& caseData) {
