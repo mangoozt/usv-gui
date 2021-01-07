@@ -230,20 +230,20 @@ int main(int /* argc */, char** /* argv */) {
 #endif
 
     // Create nanogui gui
-    auto* gui = new FormHelper(screen);
-    ref<Window> nanogui_window = gui->add_window(Vector2i(0, 0), "");
-    nanogui_window->set_layout(new GroupLayout());
-    gui->add_button("Open", []()
-    {
-        auto file = file_dialog({{"json", "JSON file"}}, false);
-        if (!file.empty()) {
-            size_t found;
-            found = file.find_last_of("/\\");
-            USV::CaseData case_data = USV::CaseData(USV::InputUtils::loadInputData(file.substr(0, found)));
-            screen->map().loadData(case_data);
-            update_time(case_data.route.getStartTime(), screen->map());
-        }
-    });
+    ref<Button> open_button = new Button(screen, "Open");
+    open_button->set_callback([]()
+                              {
+                                  auto file = file_dialog({{"json", "JSON file"}}, false);
+                                  if (!file.empty()) {
+                                      size_t found;
+                                      found = file.find_last_of("/\\");
+                                      USV::CaseData case_data = USV::CaseData(
+                                              USV::InputUtils::loadInputData(file.substr(0, found)));
+                                      screen->map().loadData(case_data);
+                                      update_time(case_data.route.getStartTime(), screen->map());
+                                  }
+                              });
+    open_button->set_position({10, 10});
 
     ref<Widget> panel = new Widget(screen);
     panel->set_layout(new BoxLayout(nanogui::Orientation::Vertical, nanogui::Alignment::Fill));
