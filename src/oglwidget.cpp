@@ -225,9 +225,11 @@ void OGLWidget::paintGL() {
     glVertexAttrib1f(4, 1.0f);
     m_program->release();
     //Draw plane
+    glDisable(GL_DEPTH_TEST);
+    grid->render(m_m);
+    glEnable(GL_DEPTH_TEST);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::Isle);
     sea->render(eye, time);
-    grid->render(m_m);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
