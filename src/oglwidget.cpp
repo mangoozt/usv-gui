@@ -192,8 +192,8 @@ void OGLWidget::paintGL() {
 
         auto a = std::tan(alpha_rad - phi_rad_2);
         a = z_cos_phi * std::sqrt(1.0 + a * a);
-        auto b = std::tan(std::clamp(alpha_rad + phi_rad_2, -M_PI * 0.5, M_PI * 0.5));
-        b = std::clamp(z_cos_phi * std::sqrt(1.0 + b * b), a, std::max(eye.z * 10.0, 60.0));
+        auto b = std::tan(glm::clamp(alpha_rad + phi_rad_2, -M_PI * 0.5, M_PI * 0.5));
+        b = glm::clamp(z_cos_phi * std::sqrt(1.0 + b * b), a, std::max(eye.z * 10.0, 60.0));
 
         auto aspect = W / H;
         if (aspect > 0.0001f)
@@ -435,7 +435,7 @@ void OGLWidget::mouseMoveEvent(QMouseEvent* event) {
 */
 void OGLWidget::scroll(double /*dx*/, double dy) {
     auto delta = static_cast<GLfloat>(dy);
-    m_eye.z = std::clamp(m_eye.z - delta, 2.0f, 200.0f);
+    m_eye.z = glm::clamp(m_eye.z - delta, 2.0f, 200.0f);
     m_uniformsDirty = true;
 }
 
@@ -445,20 +445,20 @@ void OGLWidget::keyPress(int key) {
     static constexpr float k_tr = 1.0f / 100;
     switch (key) {
         case GLFW_KEY_W:
-            m_eye.y = std::clamp(m_eye.y + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.x = std::clamp(m_eye.x + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_S:
-            m_eye.y = std::clamp(m_eye.y - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.x = std::clamp(m_eye.x - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_D:
-            m_eye.x = std::clamp(m_eye.x + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.y = std::clamp(m_eye.y - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_A:
-            m_eye.x = std::clamp(m_eye.x - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.y = std::clamp(m_eye.y + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_E:
             rotation += rotation_step;

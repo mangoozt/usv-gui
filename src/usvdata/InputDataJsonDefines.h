@@ -278,8 +278,6 @@ namespace spotify::json {
 
 namespace USV::InputUtils {
 
-    InputTypes::InputData loadInputData(const std::string& data_directory);
-
     template<typename T>
     void load_from_json_file(std::unique_ptr<T>& data, const std::string& filename) {
         using namespace spotify::json;
