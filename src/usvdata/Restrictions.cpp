@@ -1,5 +1,5 @@
 #include "Restrictions.h"
-#include "InputTypes.h"
+#include <algorithm>
 
 namespace USV::Restrictions {
     namespace {

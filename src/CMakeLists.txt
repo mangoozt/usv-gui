@@ -28,11 +28,10 @@ set_property(TARGET USV-gui PROPERTY CXX_STANDARD_REQUIRED ON)
 
 include(${PROJECT_SOURCE_DIR}/modules/CMakeRC.cmake)
 cmrc_add_resource_library(glsl_resources glsl/general.vert glsl/glsea.frag glsl/glsea.vert glsl/restrictions.frag)
-cmrc_add_resource_library(tex_resources resource/Water_001_COLOR.jpg resource/Water_001_DISP.png resource/Water_001_NORM.jpg resource/Water_001_OCC.jpg resource/Water_001_SPEC.jpg)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
 
 target_include_directories(USV-gui PRIVATE ${PROJECT_SOURCE_DIR}/vendor/nanogui/include)
 target_include_directories(USV-gui PRIVATE ${PROJECT_SOURCE_DIR}/vendor/nanogui/ext/glad/include)
-target_link_libraries(USV-gui usvdata nanogui glm ${NANOGUI_LIBS} OpenGL::GL glsl_resources tex_resources)
+target_link_libraries(USV-gui usvdata nanogui glm ${NANOGUI_LIBS} OpenGL::GL glsl_resources)
