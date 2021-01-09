@@ -1,15 +1,17 @@
 #include "Frame.h"
+#include <GeographicLib/Geodesic.hpp>
 
 namespace USV {
     using namespace GeographicLib;
 
     Vector2 Frame::fromWgs(double lat, double lon) const {
+        static const auto invNauticalMile = 1 / Constants::nauticalmile();
         auto wgs84 = Geodesic::WGS84();
         Math::real azi1, azi2, s12, angle, dist;
         wgs84.Inverse(_refLat, _refLon, lat, lon, s12, azi1, azi2);
 
         angle = azi1 * Math::degree();
-        dist = s12 * invNauticalMile();
+        dist = s12 * invNauticalMile;
         return {dist * cos(angle), dist * sin(angle)};
     }
 

@@ -31,27 +31,29 @@ using namespace nanogui;
 #define MAIN_WINDOW_HEIGHT 600
 
 class MyScreen : public Screen {
+    bool lbutton_down{false};
+    bool mbutton_down{false};
+    OGLWidget* map_ = nullptr;
 public:
-    OGLWidget* map = nullptr;
 
-    MyScreen() : Screen() {
+    MyScreen() : Screen(), map_(new OGLWidget) {
 
     }
 
     void draw_contents() override {
         clear();
-        map->paintGL();
+        map_->paintGL();
     }
 
     ~MyScreen() override {
-        delete map;
+        delete map_;
     }
 
     void scroll_callback(double x, double y) {
         Screen::scroll_callback_event(x, y);
         // pointer not on GUI
         if (!m_redraw) {
-            map->scroll(x, y);
+            map_->scroll(x, y);
             m_redraw = true;
         }
     }
@@ -60,21 +62,43 @@ public:
         Screen::key_callback_event(key, scancode, action, mods);
         // pointer not on GUI
         if (!m_redraw) {
-            map->keyPress(key);
+            map_->keyPress(key);
             m_redraw = true;
         }
     }
 
     void mouse_button_callback(GLFWwindow* w, int button, int action, int modifiers) {
         Screen::mouse_button_callback_event(button, action, modifiers);
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            if(GLFW_PRESS == action)
+                lbutton_down = true;
+            else if(GLFW_RELEASE == action)
+                lbutton_down = false;
+        }
+        if(button == GLFW_MOUSE_BUTTON_MIDDLE){
+            if(GLFW_PRESS == action)
+                mbutton_down = true;
+            else if(GLFW_RELEASE == action)
+                mbutton_down = false;
+        }
         // pointer not on GUI
         if (!m_redraw) {
             double xpos, ypos;
             glfwGetCursorPos(w, &xpos, &ypos);
-            map->mousePressEvent(xpos, ypos, button, action, modifiers);
+            map_->mousePressEvent(xpos, ypos, button, action, modifiers);
             m_redraw = true;
         }
     }
+
+    void cursor_pos_callback(double x, double y){
+        Screen::cursor_pos_callback_event(x, y);
+        if (!m_redraw) {
+            map_->mouseMoveEvent(x, y, lbutton_down, mbutton_down);
+            m_redraw = map_->uniforms_dirty();
+        }
+    }
+
+    OGLWidget& map(){return *map_;}
 };
 
 class IgnorantTextBox : public TextBox {
@@ -120,9 +144,9 @@ push_position(double time, const USV::Path& path, std::vector<USV::Vessel>& vess
     }
 }
 
-void update_time(double time, OGLWidget* ogl_widget) {
+void update_time(double time, OGLWidget& ogl_widget) {
     std::vector<USV::Vessel> vessels;
-    auto case_data = ogl_widget->case_data();
+    auto case_data = ogl_widget.case_data();
     USV::Color color{0, 1, 0};
     push_position(time, case_data->route, vessels, color, case_data->radius);
 
@@ -134,8 +158,8 @@ void update_time(double time, OGLWidget* ogl_widget) {
     for (const auto& maneuver: case_data->maneuvers)
         push_position(time, maneuver, vessels, color, case_data->radius);
 
-    ogl_widget->updatePositions(vessels);
-    ogl_widget->updateTime(time / 3600);
+    ogl_widget.updatePositions(vessels);
+    ogl_widget.updateTime(time / 3600);
 }
 
 int main(int /* argc */, char** /* argv */) {
@@ -194,9 +218,8 @@ int main(int /* argc */, char** /* argv */) {
     // Create a nanogui screen and pass the glfw pointer to initialize
     screen = new MyScreen();
     screen->initialize(window, true);
-    screen->map = new OGLWidget;
-    screen->map->resizeGL(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
-    screen->map->initializeGL();
+    screen->map().resizeGL(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
+    screen->map().initializeGL();
 
 #if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
     int width, height;
@@ -207,20 +230,20 @@ int main(int /* argc */, char** /* argv */) {
 #endif
 
     // Create nanogui gui
-    auto* gui = new FormHelper(screen);
-    ref<Window> nanogui_window = gui->add_window(Vector2i(0, 0), "");
-    nanogui_window->set_layout(new GroupLayout());
-    gui->add_button("Open", []()
-    {
-        auto file = file_dialog({{"json", "JSON file"}}, false);
-        if (!file.empty()) {
-            size_t found;
-            found = file.find_last_of("/\\");
-            USV::CaseData case_data = USV::CaseData(USV::InputUtils::loadInputData(file.substr(0, found)));
-            screen->map->loadData(case_data);
-            update_time(case_data.route.getStartTime(), screen->map);
-        }
-    });
+    ref<Button> open_button = new Button(screen, "Open");
+    open_button->set_callback([]()
+                              {
+                                  auto file = file_dialog({{"json", "JSON file"}}, false);
+                                  if (!file.empty()) {
+                                      size_t found;
+                                      found = file.find_last_of("/\\");
+                                      USV::CaseData case_data = USV::CaseData(
+                                              USV::InputUtils::loadInputData(file.substr(0, found)));
+                                      screen->map().loadData(case_data);
+                                      update_time(case_data.route.getStartTime(), screen->map());
+                                  }
+                              });
+    open_button->set_position({10, 10});
 
     ref<Widget> panel = new Widget(screen);
     panel->set_layout(new BoxLayout(nanogui::Orientation::Vertical, nanogui::Alignment::Fill));
@@ -233,7 +256,7 @@ int main(int /* argc */, char** /* argv */) {
     slider = new ScrollableSlider(panel);
     slider->set_callback([time_label](float value)
                          {
-                             auto case_data = screen->map->case_data();
+                             auto case_data = screen->map().case_data();
                              if (case_data) {
                                  auto starttime = case_data->route.getStartTime();
                                  auto endtime = case_data->route.endTime();
@@ -241,7 +264,7 @@ int main(int /* argc */, char** /* argv */) {
                                  time_label->set_value(std::to_string((int) (time)));
                                  time_label->focus_event(true);
                                  time_label->focus_event(false);
-                                 update_time(time, screen->map);
+                                 update_time(time, screen->map());
                              }
                          });
     slider->set_value(0.0f);
@@ -263,7 +286,7 @@ int main(int /* argc */, char** /* argv */) {
     glfwSetCursorPosCallback(window,
                              [](GLFWwindow*, double x, double y)
                              {
-                                 screen->cursor_pos_callback_event(x, y);
+                                 screen->cursor_pos_callback(x, y);
                              }
     );
 
@@ -303,6 +326,7 @@ int main(int /* argc */, char** /* argv */) {
     );
 
 
+
     glfwSetFramebufferSizeCallback(window,
                                    [](GLFWwindow*, int width, int height)
                                    {
@@ -310,7 +334,7 @@ int main(int /* argc */, char** /* argv */) {
                                        slider->parent()->set_position({0, height - slider->parent()->height()});
                                        slider->set_width(width);
                                        screen->resize_callback_event(width, height);
-                                       screen->map->resizeGL(width, height);
+                                       screen->map().resizeGL(width, height);
                                    }
     );
 

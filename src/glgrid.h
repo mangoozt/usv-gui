@@ -16,7 +16,6 @@ public:
 private:
     std::unique_ptr<Program> m_program;
     std::unique_ptr<Buffer> vbo;
-    int m_viewMatrixLoc;
     int m_colorLoc;
 };
 

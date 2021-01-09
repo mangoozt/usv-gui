@@ -4,6 +4,7 @@
 #include "CurvedPath.h"
 #include "InputTypes.h"
 #include <spotify/json.hpp>
+#include <sstream>
 
 namespace spotify::json {
     using namespace USV;
@@ -177,13 +178,13 @@ namespace spotify::json {
             codec::object_t<FeatureGeometry> codec_polygon;
             codec_polygon.required("type", codec::eq(std::string("Polygon")));
             codec_polygon.required("type", &FeatureGeometry::type,
-                                   spotify::json::codec::ignore(GeometryType::GeometryPoint));
+                                   spotify::json::codec::ignore(GeometryType::GeometryPolygon));
             codec_polygon.required("coordinates", &FeatureGeometry::coordinatesPolygon);
 
             codec::object_t<FeatureGeometry> codec_linestring;
             codec_linestring.required("type", codec::eq(std::string("LineString")));
             codec_linestring.required("type", &FeatureGeometry::type,
-                                      spotify::json::codec::ignore(GeometryType::GeometryPoint));
+                                      spotify::json::codec::ignore(GeometryType::GeometryLine));
             codec_linestring.required("coordinates", &FeatureGeometry::coordinatesLine);
 
             return codec::one_of(codec_point, codec_linestring, codec_polygon);
@@ -277,8 +278,6 @@ namespace spotify::json {
 }
 
 namespace USV::InputUtils {
-
-    InputTypes::InputData loadInputData(const std::string& data_directory);
 
     template<typename T>
     void load_from_json_file(std::unique_ptr<T>& data, const std::string& filename) {

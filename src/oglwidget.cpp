@@ -192,13 +192,13 @@ void OGLWidget::paintGL() {
 
         auto a = std::tan(alpha_rad - phi_rad_2);
         a = z_cos_phi * std::sqrt(1.0 + a * a);
-        auto b = std::tan(std::clamp(alpha_rad + phi_rad_2, -M_PI * 0.5, M_PI * 0.5));
-        b = std::clamp(z_cos_phi * std::sqrt(1.0 + b * b), a, std::max(eye.z * 10.0, 60.0));
+        auto b = std::tan(glm::clamp(alpha_rad + phi_rad_2, -M_PI * 0.5, M_PI * 0.5));
+        b = glm::clamp(z_cos_phi * std::sqrt(1.0 + b * b), a, std::max(eye.z * 10.0, 60.0));
 
         auto aspect = W / H;
         if (aspect > 0.0001f)
             m_proj = glm::perspective(phi_rad, aspect,
-                                      static_cast<float>(a),
+                                      static_cast<float>(a)-0.2f,
                                       static_cast<float>(b));
 
         auto target = glm::vec3(m_eye.x, m_eye.y, 0) * 2.0f - eye;
@@ -225,9 +225,11 @@ void OGLWidget::paintGL() {
     glVertexAttrib1f(4, 1.0f);
     m_program->release();
     //Draw plane
+    glDisable(GL_DEPTH_TEST);
+    grid->render(m_m);
+    glEnable(GL_DEPTH_TEST);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::Isle);
     sea->render(eye, time);
-    grid->render(m_m);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
@@ -326,14 +328,16 @@ void OGLWidget::paintGL() {
 }
 
 glm::vec3 OGLWidget::screenToWorld(glm::ivec2 pos) {
-    auto minv = glm::inverse(m_m);
-    float depth_z = 1.0f;
-    glReadPixels(pos.x, height - pos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_z);
-    glm::vec4 point_normalized = glm::vec4((float) pos.x / (float) width * 2 - 1,
+    glm::mat3 minv(m_m[0].x,m_m[0].y,m_m[0].w, m_m[1].x,m_m[1].y,m_m[1].w, m_m[3].x,m_m[3].y,m_m[3].w);
+    minv = glm::inverse(minv);
+    glm::vec3 point_normalized = glm::vec3((float) pos.x / (float) width * 2 - 1,
                                            1 - (float) pos.y / (float) height * 2,
-                                           depth_z * 2.0f - 1.0f, 1.0f);
+                                           1.0f);
+
     auto position = minv * point_normalized;
-    return glm::vec3(position / position.w);
+    position/=position.z;
+    position.z = 0;
+    return position;
 }
 
 void OGLWidget::loadData(USV::CaseData& caseData) {
@@ -407,35 +411,33 @@ void OGLWidget::updateTime(double t) {
 void OGLWidget::mousePressEvent(double x, double y, int /*button*/, int /*action*/, int /*mods*/) {
     auto world_position = screenToWorld({x, y});
     std::cout << world_position.x << " " << world_position.y << std::endl;
+    mouse_press_point = {x, y};
 }
 
-/*
-void OGLWidget::mouseMoveEvent(QMouseEvent* event) {
-    if (event->buttons() & (Qt::LeftButton | Qt::MiddleButton)) {
+void OGLWidget::mouseMoveEvent(double x, double y, bool lbutton, bool mbutton) {
+    if (lbutton | mbutton) {
         auto p = screenToWorld(mouse_press_point);
-        mouse_press_point = event->pos();
+        mouse_press_point = {x, y};
         auto p1 = screenToWorld(mouse_press_point);
 
         auto dp = p - p1;
 
-        if (event->buttons() & (Qt::LeftButton)) {
-            m_eye.setZ(std::clamp(m_eye.z(), 2.0f, 200.0f));
-            m_eye.setX(std::clamp(m_eye.x() + dp.x(), -200.0f, 200.0f));
-            m_eye.setY(std::clamp(m_eye.y() + dp.y(), -200.0f, 200.0f));
+        if (lbutton) {
+            m_eye.z = glm::clamp(m_eye.z, 2.0f, 200.0f);
+            m_eye.x = glm::clamp(m_eye.x + dp.x, -200.0f, 200.0f);
+            m_eye.y = glm::clamp(m_eye.y + dp.y, -200.0f, 200.0f);
         } else {
-            p = p - glm::vec3(m_eye.x(), m_eye.y(), 0);
-            dp.setZ(0);
-            rotation += glm::vec3::crossProduct(p, dp).z() / p.lengthSquared();
+            p = p - glm::vec3(m_eye.x, m_eye.y, 0);
+            dp.z = 0;
+            rotation += glm::cross(p, dp).z / (p.x*p.x+p.y*p.y);
         }
         m_uniformsDirty = true;
-        update();
     }
 }
 
-*/
 void OGLWidget::scroll(double /*dx*/, double dy) {
     auto delta = static_cast<GLfloat>(dy);
-    m_eye.z = std::clamp(m_eye.z - delta, 2.0f, 200.0f);
+    m_eye.z = glm::clamp(m_eye.z - delta, 2.0f, 200.0f);
     m_uniformsDirty = true;
 }
 
@@ -445,20 +447,20 @@ void OGLWidget::keyPress(int key) {
     static constexpr float k_tr = 1.0f / 100;
     switch (key) {
         case GLFW_KEY_W:
-            m_eye.y = std::clamp(m_eye.y + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.x = std::clamp(m_eye.x + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_S:
-            m_eye.y = std::clamp(m_eye.y - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.x = std::clamp(m_eye.x - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_D:
-            m_eye.x = std::clamp(m_eye.x + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.y = std::clamp(m_eye.y - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x + m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y - m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_A:
-            m_eye.x = std::clamp(m_eye.x - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
-            m_eye.y = std::clamp(m_eye.y + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
+            m_eye.x = glm::clamp(m_eye.x - m_eye.z * k_tr * std::sin(rotation), -60.0f, 60.0f);
+            m_eye.y = glm::clamp(m_eye.y + m_eye.z * k_tr * std::cos(rotation), -60.0f, 60.0f);
             break;
         case GLFW_KEY_E:
             rotation += rotation_step;

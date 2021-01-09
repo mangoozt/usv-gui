@@ -1,7 +1,6 @@
 #ifndef USV_FRAME_H_
 #define USV_FRAME_H_
 
-#include <GeographicLib/Geodesic.hpp>
 #include "Vector2.h"
 
 namespace USV {
@@ -22,7 +21,7 @@ namespace USV {
          * \param		lat		latitude
          * \param		lon		longitude
          */
-        Vector2 fromWgs(double lat, double lon) const;
+        [[nodiscard]] Vector2 fromWgs(double lat, double lon) const;
 
         /**
          * \brief		Convertes coordinates in reference frame to WGS84 coordinates.
@@ -35,10 +34,6 @@ namespace USV {
     private:
         double _refLat;
         double _refLon;
-
-        static inline GeographicLib::Math::real invNauticalMile() {
-            return 1 / GeographicLib::Constants::nauticalmile();
-        }
 
     };
 }

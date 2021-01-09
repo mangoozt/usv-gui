@@ -5,7 +5,6 @@
 #include "Vector2.h"
 #include "CurvedPath.h"
 #include "Frame.h"
-#include <map>
 
 namespace USV {
     class Path {

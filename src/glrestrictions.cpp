@@ -69,6 +69,7 @@ void GLRestrictions::render(glm::mat4& view_matrix, glm::vec3 eyePos, GeometryTy
 void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& restrictions) {
     glpolygons.clear();
     glcontours.clear();
+    glisles.clear();
     glm::vec3 c_hard{1.0f, 0.0f, 0.0f};
     for (auto& limitation:restrictions.hard.ZoneEnteringProhibitions()) {
         meta_.push_back({limitation._ptr});
