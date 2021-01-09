@@ -27,7 +27,7 @@ set_property(TARGET USV-gui PROPERTY CXX_STANDARD 17)
 set_property(TARGET USV-gui PROPERTY CXX_STANDARD_REQUIRED ON)
 
 include(${PROJECT_SOURCE_DIR}/modules/CMakeRC.cmake)
-cmrc_add_resource_library(glsl_resources glsl/general.vert glsl/glsea.frag glsl/glsea.vert glsl/restrictions.frag)
+cmrc_add_resource_library(glsl_resources glsl/general.vert glsl/glsea.frag glsl/glsea.vert glsl/restrictions.frag glsl/ocean.glsl glsl/atmosphere.glsl)
 cmrc_add_resource_library(tex_resources resource/Water_001_COLOR.jpg resource/Water_001_DISP.png resource/Water_001_NORM.jpg resource/Water_001_OCC.jpg resource/Water_001_SPEC.jpg)
 
 set(OpenGL_GL_PREFERENCE LEGACY)

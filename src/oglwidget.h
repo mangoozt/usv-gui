@@ -64,6 +64,8 @@ protected:
     int m_lightPosLoc{};
     glm::mat4 m_proj{};
     glm::mat4 m_m{};
+    glm::mat4 m_view{};
+    glm::vec3 sun{};
     glm::vec3 m_eye;
     float rotation{static_cast<float>(M_PI * 0.5)};
     bool m_uniformsDirty;

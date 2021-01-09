@@ -59,11 +59,12 @@ void OGLWidget::initializeGL() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     struct LightSource {
-        glm::vec4 position = glm::vec4(-100.0f, 100.0f, 10.0f, 0);
+        glm::vec4 position = glm::vec4(0.0f, 100.0f, 20.0f, 0);
         glm::vec4 ambient = glm::vec4(0.7f, 0.6f, 0.6f, 0);
         glm::vec4 diffuse = glm::vec4(0.7f, 0.6f, 0.6f, 0);
         glm::vec4 specular = glm::vec4(1, 1, 1, 0);
     } light;
+    sun = light.position;
 
     // Light Uniform buffer
     glGenBuffers(1, &ubo_light);
@@ -133,7 +134,7 @@ void OGLWidget::initializeGL() {
 //        QImage tex(":/resource/Water_001_DISP.png");
 //        QImage tex_norm(":resource/Water_001_NORM.jpg");
 //        QImage spec(":resource/Water_001_SPEC.jpg");
-    sea = new GLSea();
+    sea = new GLSea(static_cast<float>(width), static_cast<float>(height), CAMERA_ANGLE * M_PI / 180);
 //    }
 
     restrictions = new GLRestrictions();
@@ -143,6 +144,11 @@ void OGLWidget::initializeGL() {
 void OGLWidget::resizeGL(int w, int h) {
     width = w;
     height = h;
+    if(sea) {
+        sea->setHeight(static_cast<float>(h));
+        sea->setWidth(static_cast<float>(w));
+        sea->generateMesh();
+    }
     m_uniformsDirty = true;
 }
 
@@ -207,7 +213,7 @@ void OGLWidget::paintGL() {
         // Update matrices UBO
         glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(float), &m_proj);
-        auto m_view = camera;
+        m_view = camera;
         glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(float), 16 * sizeof(float), &m_view);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -226,10 +232,11 @@ void OGLWidget::paintGL() {
     m_program->release();
     //Draw plane
     glDisable(GL_DEPTH_TEST);
-    grid->render(m_m);
+//    grid->render(m_m);
     glEnable(GL_DEPTH_TEST);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::Isle);
-    sea->render(eye, time);
+    sea->render(eye, m_proj, m_view, sun, time);
+    assert(glGetError() == 0);
     restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
