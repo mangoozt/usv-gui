@@ -33,6 +33,7 @@ using namespace nanogui;
 class MyScreen : public Screen {
     bool lbutton_down{false};
     bool mbutton_down{false};
+    bool wait_callback{false};
     OGLWidget* map_ = nullptr;
 public:
 
@@ -68,7 +69,9 @@ public:
     }
 
     void mouse_button_callback(GLFWwindow* w, int button, int action, int modifiers) {
+        wait_callback = true;
         Screen::mouse_button_callback_event(button, action, modifiers);
+        wait_callback = false;
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if(GLFW_PRESS == action)
                 lbutton_down = true;
@@ -92,7 +95,7 @@ public:
 
     void cursor_pos_callback(double x, double y){
         Screen::cursor_pos_callback_event(x, y);
-        if (!m_redraw) {
+        if (!m_redraw && ! m_drag_active && ! wait_callback) {
             map_->mouseMoveEvent(x, y, lbutton_down, mbutton_down);
             m_redraw = map_->uniforms_dirty();
         }
