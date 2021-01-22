@@ -12,6 +12,7 @@ set(USVDATA_SOURCES
     Angle.cpp
     Defines.h
     Restrictions.h Restrictions.cpp
+        RTree.h RTree.cpp
     FeatureCollection.h)
 
 add_library(usvdata STATIC ${USVDATA_HEADERS} ${USVDATA_SOURCES})
