@@ -71,7 +71,7 @@ namespace USV::Restrictions {
 
     USV::Restrictions::Restrictions::Restrictions(const USV::FeatureCollection& feature_collection,
                                                   const USV::Frame& reference_frame) {
-        for (auto& feature:feature_collection.features) {
+        for (const auto& feature:feature_collection.features) {
             properties.push_back(feature.properties);
             auto& proper = feature.properties.hardness == RestrictionType::Soft ? soft : hard;
             switch (feature.properties.limitation_type) {

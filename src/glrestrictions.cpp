@@ -89,11 +89,11 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
     glm::vec3 c_movement{0.9f, 0.9f, 0.9f};
     for (auto& limitation:restrictions.soft.MovementParametersLimitations()) {
         meta_.push_back({limitation._ptr});
-        glcontours.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
+        glpolygons.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
     }
     for (auto& limitation:restrictions.hard.MovementParametersLimitations()) {
         meta_.push_back({limitation._ptr});
-        glcontours.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
+        glpolygons.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
     }
 }
 
