@@ -7,21 +7,22 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/nanogui" "vendor/nanogui" EXCLUDE
 add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/glm" "vendor/glm" EXCLUDE_FROM_ALL)
 
 add_executable(USV-gui
-               main.cpp
-               oglwidget.h
-               oglwidget.cpp
-#               text.cpp
-               glgrid.cpp
-               glsea.cpp
-#               earcut.h
-               glrestrictions.cpp
-#               utils.h
-#               skybox.cpp
-               Program.cpp
-               Program.h
-               Buffer.cpp Buffer.h
-#              Unfortunately need to do this
-               ${PROJECT_SOURCE_DIR}/vendor/nanogui/ext/glad/src/glad.c)
+        main.cpp
+        oglwidget.h
+        oglwidget.cpp
+        #               text.cpp
+        glgrid.cpp
+        glsea.cpp
+        earcut.h
+        glrestrictions.cpp
+        #               utils.h
+        #               skybox.cpp
+        Program.cpp
+        Program.h
+        Buffer.cpp Buffer.h
+        # Unfortunately need to do this
+        ${PROJECT_SOURCE_DIR}/vendor/nanogui/ext/glad/src/glad.c
+        main.rc)
 
 set_property(TARGET USV-gui PROPERTY CXX_STANDARD 17)
 set_property(TARGET USV-gui PROPERTY CXX_STANDARD_REQUIRED ON)

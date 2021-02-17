@@ -78,3 +78,6 @@ Thumbs.db
 #Qt build folders
 /build*
 cmake-build-*
+
+!/src/main.rc
+!/src/Icon.ico
