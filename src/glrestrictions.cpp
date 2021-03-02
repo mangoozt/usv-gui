@@ -71,29 +71,32 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
     glcontours.clear();
     glisles.clear();
     glm::vec3 c_hard{1.0f, 0.0f, 0.0f};
+    glm::vec3 c_soft{1.0f, 0.8f, 0.0f};
     for (auto& limitation:restrictions.hard.ZoneEnteringProhibitions()) {
         meta_.push_back({limitation._ptr});
-        if (limitation._ptr->source_object_code == "LNDARE")
+        if (limitation._ptr->source_object_code == "LNDARE") {
             glisles.emplace_back(limitation.polygon, c_hard, meta_.size() - 1);
-        else
-            glpolygons.emplace_back(limitation.polygon, c_hard, meta_.size() - 1, 0.5f);
+        }
+        else { glpolygons.emplace_back(limitation.polygon, c_hard, meta_.size() - 1, 0.5f);
+        glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);}
     }
-    glm::vec3 c_soft{1.0f, 0.8f, 0.0f};
+
     for (auto& limitation:restrictions.soft.ZoneEnteringProhibitions()) {
         meta_.push_back({limitation._ptr});
         if (limitation._ptr->source_object_code == "LNDARE")
             glisles.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
-        else
-            glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
+        else { glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1); glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1); }
     }
     glm::vec3 c_movement{0.9f, 0.9f, 0.9f};
     for (auto& limitation:restrictions.soft.MovementParametersLimitations()) {
         meta_.push_back({limitation._ptr});
         glpolygons.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
+        glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
     }
     for (auto& limitation:restrictions.hard.MovementParametersLimitations()) {
         meta_.push_back({limitation._ptr});
         glpolygons.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
+        glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
     }
 }
 

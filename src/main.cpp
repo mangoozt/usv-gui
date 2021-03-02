@@ -220,6 +220,7 @@ int main(int /* argc */, char** /* argv */) {
 
     // Create a nanogui screen and pass the glfw pointer to initialize
     screen = new MyScreen();
+    screen->set_background({1.0f, 1.0f, 1.0f, 1.0f});
     screen->initialize(window, true);
     screen->map().resizeGL(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
     screen->map().initializeGL();
@@ -240,10 +241,14 @@ int main(int /* argc */, char** /* argv */) {
                                   if (!file.empty()) {
                                       size_t found;
                                       found = file.find_last_of("/\\");
-                                      USV::CaseData case_data = USV::CaseData(
-                                              USV::InputUtils::loadInputData(file.substr(0, found)));
-                                      screen->map().loadData(case_data);
-                                      update_time(case_data.route.getStartTime(), screen->map());
+                                      try {
+                                          USV::CaseData case_data = USV::CaseData(
+                                                  USV::InputUtils::loadInputData(file.substr(0, found)));
+                                          screen->map().loadData(case_data);
+                                          update_time(case_data.route.getStartTime(), screen->map());
+                                      } catch (std::runtime_error& e) {
+                                          std::cout << "Couldn't open: " << e.what() << std::endl;
+                                      }
                                   }
                               });
     open_button->set_position({10, 10});
@@ -263,6 +268,10 @@ int main(int /* argc */, char** /* argv */) {
                              if (case_data) {
                                  auto starttime = case_data->route.getStartTime();
                                  auto endtime = case_data->route.endTime();
+                                 for (auto& maneuver: case_data->maneuvers) {
+                                     endtime = std::min(endtime, maneuver.endTime());
+                                     starttime = std::min(starttime, maneuver.getStartTime());
+                                 }
                                  auto time = starttime + (endtime - starttime) * value;
                                  time_label->set_value(std::to_string((int) (time)));
                                  time_label->focus_event(true);

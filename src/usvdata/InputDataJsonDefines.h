@@ -278,14 +278,19 @@ namespace spotify::json {
 }
 
 namespace USV::InputUtils {
-
-    template<typename T>
+    template<bool R = false, typename T>
     void load_from_json_file(std::unique_ptr<T>& data, const std::string& filename) {
         using namespace spotify::json;
 
-        if (filename.empty()) return;
+        if (filename.empty()) {
+            if constexpr (R) { throw std::runtime_error("Empty filename "); }
+            else { return; }
+        }
         std::ifstream ifs(filename);
-        if (!ifs.good()) return;
+        if (!ifs.good()) {
+            if constexpr (R) { throw std::runtime_error("Failed to open " + filename); }
+            else { return; }
+        };
         std::stringstream buffer;
         buffer << ifs.rdbuf();
         data = std::make_unique<T>();

@@ -60,8 +60,8 @@ void OGLWidget::initializeGL() {
 
     struct LightSource {
         glm::vec4 position = glm::vec4(-100.0f, 100.0f, 10.0f, 0);
-        glm::vec4 ambient = glm::vec4(0.7f, 0.6f, 0.6f, 0);
-        glm::vec4 diffuse = glm::vec4(0.7f, 0.6f, 0.6f, 0);
+        glm::vec4 ambient = glm::vec4(0.7f, 0.7f, 0.7f, 0);
+        glm::vec4 diffuse = glm::vec4(0.7f, 0.7f, 0.7f, 0);
         glm::vec4 specular = glm::vec4(1, 1, 1, 0);
     } light;
 
