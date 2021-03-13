@@ -5,6 +5,7 @@
 #include "InputTypes.h"
 #include <spotify/json.hpp>
 #include <sstream>
+#include <filesystem>
 
 namespace spotify::json {
     using namespace USV;
@@ -279,7 +280,7 @@ namespace spotify::json {
 
 namespace USV::InputUtils {
     template<bool R = false, typename T>
-    void load_from_json_file(std::unique_ptr<T>& data, const std::string& filename) {
+    void load_from_json_file(std::unique_ptr<T>& data, const std::filesystem::path& filename) {
         using namespace spotify::json;
 
         if (filename.empty()) {
@@ -288,14 +289,14 @@ namespace USV::InputUtils {
         }
         std::ifstream ifs(filename);
         if (!ifs.good()) {
-            if constexpr (R) { throw std::runtime_error("Failed to open " + filename); }
+            if constexpr (R) { throw std::runtime_error("Failed to open " + filename.string()); }
             else { return; }
-        };
+        }
         std::stringstream buffer;
         buffer << ifs.rdbuf();
         data = std::make_unique<T>();
         if (!try_decode<T>(*data, buffer.str()))
-            throw std::runtime_error("Failed to parse " + filename);
+            throw std::runtime_error("Failed to parse " + filename.string());
     }
 
 }
