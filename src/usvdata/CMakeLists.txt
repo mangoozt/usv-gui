@@ -47,6 +47,6 @@ target_link_libraries(usvdata PRIVATE spotify-json)
 if (MSVC)
     target_compile_options(usvdata PRIVATE /W4 /arch:SSE /arch:SSE2)
 else ()
-    target_compile_options(usvdata PRIVATE -Wall -Wextra -pedantic -Werror -msse -msse2 -mssse3 -msse4 -msse4.1 -msse4.2 -ffast-math)
+    target_compile_options(usvdata PRIVATE -Wall -Wextra -pedantic -Werror -msse -msse2 -mssse3 -msse4 -msse4.1 -msse4.2)
 endif ()
 

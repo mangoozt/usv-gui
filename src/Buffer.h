@@ -1,6 +1,12 @@
 #ifndef USV_GUI_BUFFER_H
 #define USV_GUI_BUFFER_H
+#if defined(NANOGUI_GLAD)
 #include <glad/glad.h>
+#else
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GL/glext.h>
+#endif
 
 class Buffer {
     GLuint buffer;

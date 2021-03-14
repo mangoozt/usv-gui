@@ -1,7 +1,12 @@
 #ifndef USV_GUI_PROGRAM_H
 #define USV_GUI_PROGRAM_H
-
-#include <glad/glad.h>
+#if defined(NANOGUI_GLAD)
+    #include <glad/glad.h>
+#else
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GL/glext.h>
+#endif
 #include <glm/glm.hpp>
 #include <vector>
 

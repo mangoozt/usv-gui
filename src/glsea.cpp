@@ -37,7 +37,7 @@ GLSea::GLSea() {
     glUniform1i(m_program->uniformLocation("tex_normal"), 0);
     glUniform1i(m_program->uniformLocation("depthMap"), 2);
     glUniform1i(m_program->uniformLocation("specularMap"), 4);
-    vertexLocation = glad_glGetAttribLocation(m_program->programId(), "vertex");
+    vertexLocation = glGetAttribLocation(m_program->programId(), "vertex");
     m_program->release();
     vbo = std::make_unique<Buffer>();
     ibo = std::make_unique<Buffer>();
