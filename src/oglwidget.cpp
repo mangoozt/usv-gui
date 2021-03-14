@@ -5,7 +5,7 @@
 #include "Defines.h"
 
 #define FOV 90.0f
-#define CAMERA_ANGLE 45
+#define CAMERA_ANGLE 1
 #define CIRCLE_POINTS_N 360
 
 static const char* vertexShaderSource =
@@ -194,6 +194,8 @@ void OGLWidget::paintGL() {
         a = z_cos_phi * std::sqrt(1.0 + a * a);
         auto b = std::tan(glm::clamp(alpha_rad + phi_rad_2, -M_PI * 0.5, M_PI * 0.5));
         b = glm::clamp(z_cos_phi * std::sqrt(1.0 + b * b), a, std::max(eye.z * 10.0, 60.0));
+        b= eye.z+2;
+        a-=0.2;
 
         auto aspect = W / H;
         if (aspect > 0.0001f)
