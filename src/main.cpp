@@ -238,17 +238,19 @@ int main(int /* argc */, char** /* argv */) {
 
     // Create nanogui gui
     ref<Button> open_button = new Button(screen, "Open");
-    open_button->set_callback([]()
+    open_button->set_callback([window]()
                               {
-                                  auto file = file_dialog({{"json", "JSON file"}}, false);
-                                  if (!file.empty()) {
+                                  auto data_path = file_dialog({{"json", "JSON file"}}, false);
+                                  if (!data_path.empty()) {
                                       size_t found;
-                                      found = file.find_last_of("/\\");
+                                      found = data_path.find_last_of("/\\");
+                                      data_path = data_path.substr(0, found);
                                       try {
                                           USV::CaseData case_data = USV::CaseData(
-                                                  USV::InputUtils::loadInputData(file.substr(0, found)));
+                                                  USV::InputUtils::loadInputData(data_path));
                                           screen->map().loadData(case_data);
                                           update_time(case_data.route.getStartTime(), screen->map());
+                                          glfwSetWindowTitle(window, data_path.c_str());
                                       } catch (std::runtime_error& e) {
                                           std::cout << "Couldn't open: " << e.what() << std::endl;
                                       }
