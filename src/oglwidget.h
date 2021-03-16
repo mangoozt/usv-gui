@@ -2,8 +2,8 @@
 #define OGLWIDGET_H
 
 #include <glm/glm.hpp>
+#include <nanovg.h>
 #include "usvdata/CaseData.h"
-//#include "text.h"
 #include "glgrid.h"
 #include "glsea.h"
 #include "glrestrictions.h"
@@ -19,7 +19,7 @@ public:
 
     void resizeGL(int w, int h) ;
 
-    void paintGL() ;
+    void paintGL(NVGcontext *ctx) ;
 
     glm::vec3 screenToWorld(glm::ivec2 pos);
 
@@ -67,7 +67,6 @@ protected:
     glm::vec3 m_eye;
     float rotation{static_cast<float>(M_PI * 0.5)};
     bool m_uniformsDirty;
-//    Text* text{};
     GLGrid* grid{};
     GLSea* sea{};
     GLRestrictions* restrictions{};
@@ -81,7 +80,7 @@ public:
         return case_data_.get();
     }
 
-    inline bool uniforms_dirty() const { return m_uniformsDirty; }
+    [[nodiscard]] inline bool uniforms_dirty() const { return m_uniformsDirty; }
 };
 
 #endif // OGLWIDGET_H

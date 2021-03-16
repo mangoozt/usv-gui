@@ -3,6 +3,7 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include "Defines.h"
+#include <nanovg.h>
 
 #define FOV 90.0f
 #define CAMERA_ANGLE 1
@@ -146,7 +147,7 @@ void OGLWidget::resizeGL(int w, int h) {
     m_uniformsDirty = true;
 }
 
-void OGLWidget::paintGL() {
+void OGLWidget::paintGL(NVGcontext *ctx) {
     int m_viewport_backup[4], m_scissor_backup[4];
     bool m_depth_test_backup;
     bool m_depth_write_backup;
@@ -289,16 +290,23 @@ void OGLWidget::paintGL() {
            glVertexAttribDivisor(4, 0);
            m_vessels->release();
            m_program->release();
-   //        for (size_t i = 0; i < case_data.vessel_names.size(); ++i) {
-   //            auto& vessel = case_data.vessels[i];
-   //            auto v = glm::vec4(static_cast<float>(vessel.position.x()), static_cast<float>(vessel.position.y()), 0, 1);
-   //            auto p = m_m * v;
-        //            p /= p.w;
-        //            auto x = int((p.x + 1.0f) * 0.5f * W);
-        //            auto y = int((1.0f - p.y) * 0.5f * H);
-        //            glm::ivec2 point(x, y);
-        //            text->renderText(case_data.vessel_names[i], point, this->rect());
-        //        }
+
+//      Draw ship captions
+        float font_size{16};
+        nvgFontSize(ctx, font_size);
+        nvgFontFace(ctx, "sans");
+        nvgTextAlign(ctx, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgFillColor(ctx, {1, 1.0, 1, 1});
+        for (size_t i = 0; i < case_data.vessel_names.size(); ++i) {
+            auto& vessel = case_data.vessels[i];
+            auto v = glm::vec4(static_cast<float>(vessel.position.x()), static_cast<float>(vessel.position.y()), 0, 1);
+            auto p = m_m * v;
+            p /= p.w;
+            auto x = int((p.x + 1.0f) * 0.5f * W);
+            auto y = int((1.0f - p.y) * 0.5f * H);
+            glm::ivec2 point(x, y);
+            nvgText(ctx, point.x, point.y, case_data.vessel_names[i].c_str(), nullptr);
+        }
     }
 //    skybox->render();
 

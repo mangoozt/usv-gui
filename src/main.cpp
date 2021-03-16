@@ -24,6 +24,7 @@
 #include <GLFW/glfw3.h>
 #include <nanogui/nanogui.h>
 #include <iostream>
+#include <nanovg.h>
 
 using namespace nanogui;
 
@@ -43,7 +44,9 @@ public:
 
     void draw_contents() override {
         clear();
-        map_->paintGL();
+        nvgBeginFrame(m_nvg_context, static_cast<float>(m_size[0]), static_cast<float>(m_size[1]), m_pixel_ratio);
+        map_->paintGL(m_nvg_context);
+        nvgEndFrame(m_nvg_context);
     }
 
     ~MyScreen() override {

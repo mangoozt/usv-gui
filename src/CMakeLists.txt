@@ -10,7 +10,6 @@ add_executable(USV-gui
         main.cpp
         oglwidget.h
         oglwidget.cpp
-        #               text.cpp
         glgrid.cpp
         glsea.cpp
         earcut.h
