@@ -32,8 +32,7 @@ namespace USV {
         std::vector<Path> targets_real_maneuvers;
         std::vector<Path> maneuvers;
         Restrictions::Restrictions restrictions;
-
-        CaseData() = default;
+        Frame frame;
 
         explicit CaseData(const InputTypes::InputData& input_data);
     };

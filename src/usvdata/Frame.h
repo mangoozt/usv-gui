@@ -31,10 +31,17 @@ namespace USV {
          */
         void toWgs(const Vector2& vector, double& lat, double& lon) const;
 
+        inline double getRefLat() const {
+            return _refLat;
+        }
+
+        inline double getRefLon() const {
+            return _refLon;
+        }
+
     private:
         double _refLat;
         double _refLon;
-
     };
 }
 

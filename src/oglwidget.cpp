@@ -483,3 +483,47 @@ void OGLWidget::keyPress(int key) {
     }
     m_uniformsDirty = true;
 }
+
+void OGLWidget::updateSunAngle(long timestamp, double lat, double /*lon*/) {
+    tm tm_{};
+    time_t timet = timestamp;
+
+    tm* ptm = gmtime(&timet);
+
+    tm_ = *ptm;
+
+    int year_day = tm_.tm_yday;
+    auto delta = 23.45 * sin(360 / 365.0 * (year_day + 284)); //degrees
+    auto local_time = tm_.tm_hour + tm_.tm_min / 60.0; // hours
+    auto h = (local_time - 12) * 15; // degrees
+
+    delta = delta / 180 * M_PI; //radians
+    h = h / 180 * M_PI; //radians
+    lat = lat / 180 * M_PI; // radians
+
+    auto sin_alpha = sin(lat) * sin(delta) + cos(lat) * cos(delta) * cos(h);
+    auto cos_alpha = sqrt(1 - sin_alpha * sin_alpha);
+    auto sin_z = cos(delta) * sin(h) / cos_alpha;
+    auto cos_z = sqrt(1 - sin_z * sin_z);
+
+    struct LightSource {
+        glm::vec4 position;
+        glm::vec4 ambient;
+        glm::vec4 diffuse;
+        glm::vec4 specular;
+    };
+    LightSource light{
+            glm::vec4(cos_z, -sin_z, sin_alpha, 0),
+            glm::vec4(0.7f, 0.7f, 0.7f, 0),
+            glm::vec4(0.7f, 0.7f, 0.7f, 0),
+            glm::vec4(1, 1, 1, 0)
+    };
+
+    // Light Uniform buffer
+    glGenBuffers(1, &ubo_light);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_light);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(LightSource), &light, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, USV_GUI_LIGHTS_BINDING, ubo_light);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}

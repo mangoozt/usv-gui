@@ -37,6 +37,8 @@ public:
 
     void mouseMoveEvent(double x, double y, bool lbutton, bool mbutton);
 
+    void updateSunAngle(long timestamp, double lat, double lon);
+
 protected:
     GLuint vao{};
     std::unique_ptr<Program> m_program{nullptr};

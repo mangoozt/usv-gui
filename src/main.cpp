@@ -166,6 +166,7 @@ void update_time(double time, OGLWidget& ogl_widget) {
 
     ogl_widget.updatePositions(vessels);
     ogl_widget.updateTime(time / 3600);
+    ogl_widget.updateSunAngle(static_cast<long>(time), case_data->frame.getRefLat(), case_data->frame.getRefLon());
 }
 
 int main(int /* argc */, char** /* argv */) {
