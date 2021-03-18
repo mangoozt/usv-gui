@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <ostream>
+#include <filesystem>
 
 namespace USV::InputTypes {
 
@@ -167,6 +168,7 @@ namespace USV::InputTypes {
         std::unique_ptr<CurvedPathCollection> targets_paths;
         std::unique_ptr<CurvedPathCollection> targets_real_paths;
         std::unique_ptr<FeatureCollection> constraints;
+        std::filesystem::path directory;
     };
 
 }

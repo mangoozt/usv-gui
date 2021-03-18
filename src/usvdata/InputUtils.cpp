@@ -43,22 +43,22 @@ namespace USV::InputUtils {
     }
 
     InputTypes::InputData loadInputData(const std::string& data_directory) {
-        InputTypes::InputData inputData;
+        InputTypes::InputData data;
 
-        std::filesystem::path directory{data_directory};
+        data.directory={data_directory};
 
-        auto& filenames = (file_exists(directory / data_filenames_native.navigationParameters))
+        auto& filenames = (file_exists(data.directory / data_filenames_native.navigationParameters))
                           ? data_filenames_native : data_filenames_kt;
 
-        load_from_json_file<true>(inputData.navigationParameters, directory / filenames.navigationParameters);
-        load_from_json_file<true>(inputData.navigationProblem, directory / filenames.navigationProblem);
-        load_from_json_file<true>(inputData.route, directory / filenames.route);
-        load_from_json_file(inputData.maneuvers, directory / filenames.maneuvers);
-        load_from_json_file(inputData.targets_paths, directory / filenames.targets_paths);
-        load_from_json_file(inputData.targets_real_paths, directory / filenames.targets_real_paths);
-        load_from_json_file<true>(inputData.settings, directory / filenames.settings);
-        load_from_json_file(inputData.constraints, directory / filenames.constraints);
-        return inputData;
+        load_from_json_file<true>(data.navigationParameters, data.directory / filenames.navigationParameters);
+        load_from_json_file<true>(data.navigationProblem, data.directory / filenames.navigationProblem);
+        load_from_json_file<true>(data.route, data.directory / filenames.route);
+        load_from_json_file(data.maneuvers, data.directory / filenames.maneuvers);
+        load_from_json_file(data.targets_paths, data.directory / filenames.targets_paths);
+        load_from_json_file(data.targets_real_paths, data.directory / filenames.targets_real_paths);
+        load_from_json_file<true>(data.settings, data.directory / filenames.settings);
+        load_from_json_file(data.constraints, data.directory / filenames.constraints);
+        return data;
     }
 
 }

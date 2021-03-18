@@ -33,6 +33,7 @@ namespace USV {
         std::vector<Path> maneuvers;
         Restrictions::Restrictions restrictions;
         Frame frame;
+        std::filesystem::path directory;
 
         explicit CaseData(const InputTypes::InputData& input_data);
     };

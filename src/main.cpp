@@ -169,6 +169,18 @@ void update_time(double time, OGLWidget& ogl_widget) {
     ogl_widget.updateSunAngle(static_cast<long>(time), case_data->frame.getRefLat(), case_data->frame.getRefLon());
 }
 
+void load_directory(const std::string& data_directory) {
+    try {
+        USV::CaseData case_data = USV::CaseData(
+                USV::InputUtils::loadInputData(data_directory));
+        screen->map().loadData(case_data);
+        update_time(case_data.route.getStartTime(), screen->map());
+        slider->set_value(0);
+    } catch (std::runtime_error& e) {
+        std::cout << "Couldn't open: " << e.what() << std::endl;
+    }
+}
+
 int main(int /* argc */, char** /* argv */) {
 //HIDE OWN CONSOLE WINDOW BUT still output to CLI (DIRTY)
 #ifdef WIN32
@@ -238,6 +250,19 @@ int main(int /* argc */, char** /* argv */) {
 #endif
 
     // Create nanogui gui
+    // Reload button
+    ref<Button> reload_button = new Button(screen, "");
+    reload_button->set_callback([]()
+                                {
+                                    auto case_data = screen->map().case_data();
+                                    if (case_data && !case_data->directory.empty()) {
+                                        load_directory(case_data->directory.string());
+                                    }
+                                });
+    reload_button->set_position({90, 10});
+    reload_button->set_icon(FA_SYNC_ALT);
+
+    // Open button
     ref<Button> open_button = new Button(screen, "Open");
     open_button->set_callback([window]()
                               {
@@ -246,18 +271,12 @@ int main(int /* argc */, char** /* argv */) {
                                       size_t found;
                                       found = data_path.find_last_of("/\\");
                                       data_path = data_path.substr(0, found);
-                                      try {
-                                          USV::CaseData case_data = USV::CaseData(
-                                                  USV::InputUtils::loadInputData(data_path));
-                                          screen->map().loadData(case_data);
-                                          update_time(case_data.route.getStartTime(), screen->map());
-                                          glfwSetWindowTitle(window, data_path.c_str());
-                                      } catch (std::runtime_error& e) {
-                                          std::cout << "Couldn't open: " << e.what() << std::endl;
-                                      }
+                                      load_directory(data_path);
+                                      glfwSetWindowTitle(window, data_path.c_str());
                                   }
                               });
     open_button->set_position({10, 10});
+    open_button->set_icon(FA_FOLDER_OPEN);
 
     ref<Widget> panel = new Widget(screen);
     panel->set_layout(new BoxLayout(nanogui::Orientation::Vertical, nanogui::Alignment::Fill));
