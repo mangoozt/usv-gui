@@ -302,10 +302,9 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             auto v = glm::vec4(static_cast<float>(vessel.position.x()), static_cast<float>(vessel.position.y()), 0, 1);
             auto p = m_m * v;
             p /= p.w;
-            auto x = int((p.x + 1.0f) * 0.5f * W);
-            auto y = int((1.0f - p.y) * 0.5f * H);
-            glm::ivec2 point(x, y);
-            nvgText(ctx, point.x, point.y, case_data.vessel_names[i].c_str(), nullptr);
+            auto x = (p.x + 1.0f) * 0.5f * W;
+            auto y = (1.0f - p.y) * 0.5f * H;
+            nvgText(ctx, x, y, case_data.vessel_names[i].c_str(), nullptr);
         }
     }
 //    skybox->render();
