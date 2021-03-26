@@ -24,118 +24,14 @@
 #include <GLFW/glfw3.h>
 #include <nanogui/nanogui.h>
 #include <iostream>
-#include <nanovg.h>
+#include "MyScreen.h"
+#include "ui/IgnorantTextBox.h"
+#include "ui/ScrollableSlider.h"
 
 using namespace nanogui;
 
 #define MAIN_WINDOW_WIDTH 800
 #define MAIN_WINDOW_HEIGHT 600
-
-class MyScreen : public Screen {
-    bool lbutton_down{false};
-    bool mbutton_down{false};
-    bool wait_callback{false};
-    OGLWidget* map_ = nullptr;
-public:
-
-    MyScreen() : Screen(), map_(new OGLWidget) {
-
-    }
-
-    void draw_contents() override {
-        clear();
-        nvgBeginFrame(m_nvg_context, static_cast<float>(m_size[0]), static_cast<float>(m_size[1]), m_pixel_ratio);
-        map_->paintGL(m_nvg_context);
-        nvgEndFrame(m_nvg_context);
-    }
-
-    ~MyScreen() override {
-        delete map_;
-    }
-
-    void scroll_callback(double x, double y) {
-        Screen::scroll_callback_event(x, y);
-        // pointer not on GUI
-        if (!m_redraw) {
-            map_->scroll(x, y);
-            m_redraw = true;
-        }
-    }
-
-    void key_callback(int key, int scancode, int action, int mods) {
-        Screen::key_callback_event(key, scancode, action, mods);
-        // pointer not on GUI
-        if (!m_redraw) {
-            map_->keyPress(key);
-            m_redraw = true;
-        }
-    }
-
-    void mouse_button_callback(GLFWwindow* w, int button, int action, int modifiers) {
-        wait_callback = true;
-        Screen::mouse_button_callback_event(button, action, modifiers);
-        wait_callback = false;
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            if(GLFW_PRESS == action)
-                lbutton_down = true;
-            else if(GLFW_RELEASE == action)
-                lbutton_down = false;
-        }
-        if(button == GLFW_MOUSE_BUTTON_MIDDLE){
-            if(GLFW_PRESS == action)
-                mbutton_down = true;
-            else if(GLFW_RELEASE == action)
-                mbutton_down = false;
-        }
-        // pointer not on GUI
-        if (!m_redraw) {
-            double xpos, ypos;
-            glfwGetCursorPos(w, &xpos, &ypos);
-            map_->mousePressEvent(xpos, ypos, button, action, modifiers);
-            m_redraw = true;
-        }
-    }
-
-    void cursor_pos_callback(double x, double y){
-        Screen::cursor_pos_callback_event(x, y);
-        if (!m_redraw && ! m_drag_active && ! wait_callback) {
-            map_->mouseMoveEvent(x, y, lbutton_down, mbutton_down);
-            m_redraw = map_->uniforms_dirty();
-        }
-    }
-
-    OGLWidget& map(){return *map_;}
-};
-
-class IgnorantTextBox : public TextBox {
-public:
-    explicit IgnorantTextBox(Widget* parent) : TextBox(parent) {};
-
-    bool keyboard_character_event(unsigned int codepoint) override {
-        return false;
-    }
-
-};
-
-class ScrollableSlider : public Slider {
-public:
-    explicit ScrollableSlider(Widget* parent) : Slider(parent) {};
-
-    bool scroll_event(const Vector2i& p, const Vector2f& rel) override {
-        if (!m_enabled)
-            return false;
-
-        if (!focused()) {
-            float value_delta = (rel.y() > 0) ? 1.0f : -1.0f;
-            auto value = m_value + value_delta / (float) width(), old_value = m_value;
-            m_value = std::min(std::max(value, m_range.first), m_range.second);
-            if (m_callback && m_value != old_value)
-                m_callback(m_value);
-            return true;
-        }
-        return false;
-    };
-};
 
 MyScreen* screen = nullptr;
 Slider* slider = nullptr;
