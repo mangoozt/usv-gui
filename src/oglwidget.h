@@ -23,6 +23,8 @@ public:
 
     glm::vec3 screenToWorld(glm::ivec2 pos);
 
+    glm::vec2 WorldToscreen(glm::vec2 pos);
+
     void loadData(USV::CaseData& case_data);
 
     void updatePositions(const std::vector<USV::Vessel>& vessels);
@@ -74,6 +76,7 @@ protected:
     GLRestrictions* restrictions{};
 //    Skybox* skybox{};
     double time{0.0f};
+    double distance_cap{12.0};
     std::unique_ptr<USV::CaseData> case_data_;
     unsigned int width{};
     unsigned int height{};

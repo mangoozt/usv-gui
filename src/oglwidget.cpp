@@ -299,12 +299,47 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         nvgFillColor(ctx, {1, 1.0, 1, 1});
         for (size_t i = 0; i < case_data.vessel_names.size(); ++i) {
             auto& vessel = case_data.vessels[i];
-            auto v = glm::vec4(static_cast<float>(vessel.position.x()), static_cast<float>(vessel.position.y()), 0, 1);
-            auto p = m_m * v;
-            p /= p.w;
-            auto x = (p.x + 1.0f) * 0.5f * W;
-            auto y = (1.0f - p.y) * 0.5f * H;
-            nvgText(ctx, x, y, case_data.vessel_names[i].c_str(), nullptr);
+            auto coord = WorldToscreen({vessel.position.x(), vessel.position.y()});
+            nvgText(ctx, coord.x, coord.y, case_data.vessel_names[i].c_str(), nullptr);
+        }
+
+        // Draw distances
+        {
+            nvgTextAlign(ctx, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+            nvgFontSize(ctx, 14);
+            nvgStrokeWidth(ctx, 1.0f);
+            nvgStrokeColor(ctx, {1.0, 1.0, 1.0, 1.0});
+            const auto distance_capSq = distance_cap * distance_cap;
+            for (size_t i = 0; i < case_data.vessels.size(); ++i) {
+                const auto& a = case_data.vessels[i].position;
+                for (size_t j = i + 1; j < case_data.vessels.size(); ++j) {
+                    const auto& b = case_data.vessels[j].position;
+                    const auto ba = a - b;
+                    if (absSq(ba) > distance_capSq)
+                        continue;
+
+                    const auto m = (a + b) * 0.5;
+
+                    const auto angle = fmod(atan2(ba.x(), ba.y()) - M_PI_2, M_PI);
+                    auto c = WorldToscreen({a.x(), a.y()});
+
+                    nvgBeginPath(ctx);
+                    nvgMoveTo(ctx, c.x, c.y);
+                    c = WorldToscreen({b.x(), b.y()});
+                    nvgLineTo(ctx, c.x, c.y);
+                    c = WorldToscreen({m.x(), m.y()});
+                    nvgStroke(ctx);
+
+                    nvgTranslate(ctx, c.x, c.y);
+                    nvgRotate(ctx, angle);
+
+                    std::stringstream tmp;
+                    tmp << std::setw(5) << abs(ba);
+
+                    nvgText(ctx, 0.0, 0.0, tmp.str().c_str(), nullptr);
+                    nvgResetTransform(ctx);
+                }
+            }
         }
     }
 //    skybox->render();
@@ -336,15 +371,28 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         glDisable(GL_BLEND);
 }
 
+glm::vec2 OGLWidget::WorldToscreen(glm::vec2 pos) {
+    auto W = static_cast<float>(width);
+    auto H = static_cast<float>(height);
+
+    auto v = glm::vec4(pos.x, pos.y, 0, 1);
+    auto p = m_m * v;
+    p /= p.w;
+    auto x = (p.x + 1.0f) * 0.5f * W;
+    auto y = (1.0f - p.y) * 0.5f * H;
+
+    return {x, y};
+}
+
 glm::vec3 OGLWidget::screenToWorld(glm::ivec2 pos) {
-    glm::mat3 minv(m_m[0].x,m_m[0].y,m_m[0].w, m_m[1].x,m_m[1].y,m_m[1].w, m_m[3].x,m_m[3].y,m_m[3].w);
+    glm::mat3 minv(m_m[0].x, m_m[0].y, m_m[0].w, m_m[1].x, m_m[1].y, m_m[1].w, m_m[3].x, m_m[3].y, m_m[3].w);
     minv = glm::inverse(minv);
     glm::vec3 point_normalized = glm::vec3((float) pos.x / (float) width * 2 - 1,
                                            1 - (float) pos.y / (float) height * 2,
                                            1.0f);
 
     auto position = minv * point_normalized;
-    position/=position.z;
+    position /= position.z;
     position.z = 0;
     return position;
 }
