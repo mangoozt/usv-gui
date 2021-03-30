@@ -11,15 +11,19 @@
 #include "Program.h"
 #include "Buffer.h"
 
-class OGLWidget{
+class Compass;
+
+class OGLWidget {
 public:
     OGLWidget();
 
-    void initializeGL() ;
+    virtual ~OGLWidget();
 
-    void resizeGL(int w, int h) ;
+    void initializeGL();
 
-    void paintGL(NVGcontext *ctx) ;
+    void resizeGL(int w, int h);
+
+    void paintGL(NVGcontext* ctx);
 
     glm::vec3 screenToWorld(glm::ivec2 pos);
 
@@ -63,18 +67,19 @@ protected:
     std::vector<pathVBOMeta> m_paths_meta;
     glm::ivec2 mouse_press_point{};
 
-//    QOpenGLVertexArrayObject* m_vao{};
     int m_myMatrixLoc{};
     int m_lightPosLoc{};
     glm::mat4 m_proj{};
     glm::mat4 m_m{};
     glm::vec3 m_eye;
-    float rotation{static_cast<float>(M_PI * 0.5)};
+    static constexpr const float init_rotation{static_cast<float>(M_PI * 0.5)};
+    float rotation{init_rotation};
     bool m_uniformsDirty;
-    GLGrid* grid{};
-    GLSea* sea{};
-    GLRestrictions* restrictions{};
-//    Skybox* skybox{};
+    std::unique_ptr<GLGrid> grid{};
+    std::unique_ptr<GLSea> sea{};
+    std::unique_ptr<GLRestrictions> restrictions{};
+    std::unique_ptr<Compass> compass;
+
     double time{0.0f};
     double distance_cap{12.0};
     std::unique_ptr<USV::CaseData> case_data_;
@@ -82,6 +87,7 @@ protected:
     unsigned int height{};
 
     void updateUniforms();
+
 public:
     [[nodiscard]] const USV::CaseData* case_data() const {
         return case_data_.get();

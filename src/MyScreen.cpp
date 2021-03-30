@@ -1,4 +1,5 @@
 #include "MyScreen.h"
+#include <GLFW/glfw3.h>
 
 void MyScreen::draw_contents() {
     clear();

@@ -23,7 +23,8 @@ add_executable(USV-gui
                MyScreen.cpp MyScreen.h
                ui/IgnorantTextBox.h
                ui/ScrollableSlider.cpp ui/ScrollableSlider.h
-               App.cpp App.h)
+               App.cpp App.h
+               Compass.cpp Compass.h)
 
 set_property(TARGET USV-gui PROPERTY CXX_STANDARD 17)
 set_property(TARGET USV-gui PROPERTY CXX_STANDARD_REQUIRED ON)

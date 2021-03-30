@@ -2,7 +2,6 @@
 #define USV_GUI_MYSCREEN_H
 
 #include <nanogui/nanogui.h>
-#include <GLFW/glfw3.h>
 #include "oglwidget.h"
 
 using namespace nanogui;

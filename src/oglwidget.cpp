@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include "Defines.h"
 #include <nanovg.h>
+#include "Compass.h"
 
 #define FOV 90.0f
 #define CIRCLE_POINTS_N 360
@@ -37,7 +38,7 @@ static const char* fragmentShaderSource =
         "}\n";
 
 
-OGLWidget::OGLWidget() : m_eye(0, 0, 20), m_uniformsDirty(true) {}
+OGLWidget::OGLWidget() : m_eye(0, 0, 20), m_uniformsDirty(true), compass(new Compass()) {}
 
 void OGLWidget::initializeGL() {
 
@@ -129,21 +130,23 @@ void OGLWidget::initializeGL() {
 //        QImage fontimage(":/resource/font.png");
 //        text = new Text(fontfile, fontimage);
 //    }
-    grid = new GLGrid();
+    grid = std::make_unique<GLGrid>();
 //    {
 //        QImage tex(":/resource/Water_001_DISP.png");
 //        QImage tex_norm(":resource/Water_001_NORM.jpg");
 //        QImage spec(":resource/Water_001_SPEC.jpg");
-    sea = new GLSea();
+    sea = std::make_unique<GLSea>();
 //    }
 
-    restrictions = new GLRestrictions();
+    restrictions = std::make_unique<GLRestrictions>();
 //    skybox = new Skybox();
 }
 
 void OGLWidget::resizeGL(int w, int h) {
     width = w;
     height = h;
+    constexpr static const float compass_margins{10};
+    compass->set_position(static_cast<float>(width) - Compass::getSize() - compass_margins, compass_margins);
     m_uniformsDirty = true;
 }
 
@@ -300,6 +303,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             }
         }
     }
+    compass->draw(ctx, rotation);
 //    skybox->render();
 
 
@@ -427,6 +431,10 @@ void OGLWidget::mousePressEvent(double x, double y, int /*button*/, int /*action
     auto world_position = screenToWorld({x, y});
     std::cout << world_position.x << " " << world_position.y << std::endl;
     mouse_press_point = {x, y};
+    if (compass->isHover()) {
+        rotation = init_rotation;
+        m_uniformsDirty = true;
+    }
 }
 
 void OGLWidget::mouseMoveEvent(double x, double y, bool lbutton, bool mbutton) {
@@ -448,6 +456,7 @@ void OGLWidget::mouseMoveEvent(double x, double y, bool lbutton, bool mbutton) {
         }
         m_uniformsDirty = true;
     }
+    m_uniformsDirty |= compass->setHover(compass->isMouseOver(x, y));
 }
 
 void OGLWidget::scroll(double /*dx*/, double dy) {
@@ -490,7 +499,7 @@ void OGLWidget::keyPress(int key) {
 }
 
 void OGLWidget::updateSunAngle(long timestamp, double lat, double /*lon*/) {
-    tm tm_{};
+    tm tm_;
     time_t timet = timestamp;
 
     tm* ptm = gmtime(&timet);
@@ -567,3 +576,5 @@ void OGLWidget::updateUniforms() {
 
     m_uniformsDirty = false;
 }
+
+OGLWidget::~OGLWidget() {}

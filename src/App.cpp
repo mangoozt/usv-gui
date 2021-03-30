@@ -1,6 +1,7 @@
 #include "App.h"
 #include "ui/ScrollableSlider.h"
 #include "ui/IgnorantTextBox.h"
+#include "usvdata/CaseData.h"
 
 App::App(GLFWwindow* glfw_window) : screen(new MyScreen()), window(glfw_window) {
     // Create a nanogui screen and pass the glfw pointer to initialize
