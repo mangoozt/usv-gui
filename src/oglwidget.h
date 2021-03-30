@@ -7,11 +7,10 @@
 #include "glgrid.h"
 #include "glsea.h"
 #include "glrestrictions.h"
-#include "skybox.h"
-#include "Program.h"
-#include "Buffer.h"
 
 class Compass;
+class Program;
+class Buffer;
 
 class OGLWidget {
 public:
@@ -46,14 +45,14 @@ public:
     void updateSunAngle(long timestamp, double lat, double lon);
 
 protected:
-    GLuint vao{};
+    unsigned int vao{};
     std::unique_ptr<Program> m_program{nullptr};
     std::unique_ptr<Buffer> m_ship_vbo{};
     std::unique_ptr<Buffer> m_circle_vbo{};
     std::unique_ptr<Buffer> m_vessels{};
     std::unique_ptr<Buffer> m_paths{};
-    GLuint ubo_matrices{};
-    GLuint ubo_light{};
+    unsigned int ubo_matrices{};
+    unsigned int ubo_light{};
 
     struct pathVBOMeta {
         size_t ptr;
