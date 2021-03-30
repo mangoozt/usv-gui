@@ -38,7 +38,7 @@ static const char* fragmentShaderSource =
         "}\n";
 
 
-OGLWidget::OGLWidget() : m_eye(0, 0, 20), m_uniformsDirty(true), compass(new Compass()) {}
+OGLWidget::OGLWidget() : m_uniformsDirty(true), compass(new Compass()) {}
 
 void OGLWidget::initializeGL() {
 
@@ -427,12 +427,15 @@ void OGLWidget::updateTime(double t) {
 }
 
 
-void OGLWidget::mousePressEvent(double x, double y, int /*button*/, int /*action*/, int /*mods*/) {
+void OGLWidget::mousePressEvent(double x, double y, int /*button*/, int /*mods*/) {
     auto world_position = screenToWorld({x, y});
     std::cout << world_position.x << " " << world_position.y << std::endl;
     mouse_press_point = {x, y};
     if (compass->isHover()) {
-        rotation = init_rotation;
+        if (rotation != init_rotation)
+            rotation = init_rotation;
+        else
+            m_eye = init_m_eye;
         m_uniformsDirty = true;
     }
 }

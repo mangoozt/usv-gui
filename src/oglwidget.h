@@ -39,7 +39,7 @@ public:
 
     void keyPress(int key);
 
-    void mousePressEvent(double x, double y, int button, int action, int mods);
+    void mousePressEvent(double x, double y, int button, int mods);
 
     void mouseMoveEvent(double x, double y, bool lbutton, bool mbutton);
 
@@ -71,7 +71,8 @@ protected:
     int m_lightPosLoc{};
     glm::mat4 m_proj{};
     glm::mat4 m_m{};
-    glm::vec3 m_eye;
+    constexpr static const glm::vec3 init_m_eye{0, 0, 20};
+    glm::vec3 m_eye{init_m_eye};
     static constexpr const float init_rotation{static_cast<float>(M_PI * 0.5)};
     float rotation{init_rotation};
     bool m_uniformsDirty;

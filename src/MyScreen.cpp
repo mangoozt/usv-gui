@@ -46,8 +46,10 @@ void MyScreen::mouse_button_callback(GLFWwindow* w, int button, int action, int 
     if (!m_redraw) {
         double xpos, ypos;
         glfwGetCursorPos(w, &xpos, &ypos);
-        map_->mousePressEvent(xpos, ypos, button, action, modifiers);
-        m_redraw = true;
+        if (action == GLFW_PRESS) {
+            map_->mousePressEvent(xpos, ypos, button, modifiers);
+        }
+        m_redraw = map_->uniforms_dirty();
     }
 }
 
