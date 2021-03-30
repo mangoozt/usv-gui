@@ -1,4 +1,5 @@
 #include "oglwidget.h"
+#include <cmath>
 #include <glm/ext.hpp>
 #include <iostream>
 #include <GLFW/glfw3.h>
@@ -6,7 +7,6 @@
 #include <nanovg.h>
 
 #define FOV 90.0f
-#define CAMERA_ANGLE 1
 #define CIRCLE_POINTS_N 360
 
 static const char* vertexShaderSource =
@@ -173,50 +173,8 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
     glEnable(GL_CULL_FACE);
     m_program->bind();
 
-    auto r = std::tan(CAMERA_ANGLE / 180.0 * M_PI) * m_eye.z;
-    auto eye = glm::vec3(m_eye.x - static_cast<float>(r * std::cos(rotation)),
-                         m_eye.y - static_cast<float>(r * std::sin(rotation)),
-                         m_eye.z);
-
-    auto W = static_cast<float>(width);
-    auto H = static_cast<float>(height);
-
     if (m_uniformsDirty) {
-        m_uniformsDirty = false;
-        m_proj = glm::identity<glm::mat4>();
-        glm::mat4 camera;
-
-        const constexpr auto phi_rad = static_cast<float>(FOV / 180.0 * M_PI);
-        const constexpr auto phi_rad_2 = phi_rad * 0.5;
-        const constexpr auto alpha_rad = CAMERA_ANGLE / 180.0 * M_PI;
-        const auto z_cos_phi = m_eye.z * std::cos(phi_rad_2);
-
-        auto a = std::tan(alpha_rad - phi_rad_2);
-        a = z_cos_phi * std::sqrt(1.0 + a * a);
-        auto b = std::tan(glm::clamp(alpha_rad + phi_rad_2, -M_PI * 0.5, M_PI * 0.5));
-        b = glm::clamp(z_cos_phi * std::sqrt(1.0 + b * b), a, std::max(eye.z * 10.0, 60.0));
-        b= eye.z+2;
-        a-=0.2;
-
-        auto aspect = W / H;
-        if (aspect > 0.0001f)
-            m_proj = glm::perspective(phi_rad, aspect,
-                                      static_cast<float>(a)-0.2f,
-                                      static_cast<float>(b));
-
-        auto target = glm::vec3(m_eye.x, m_eye.y, 0) * 2.0f - eye;
-        camera = glm::lookAt(eye, target, glm::vec3(0, 0, 1));
-
-        // Update matrices UBO
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(float), &m_proj);
-        auto m_view = camera;
-        glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(float), 16 * sizeof(float), &m_view);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        m_m = m_proj * m_view;
-        m_program->setUniformValue(m_myMatrixLoc, m_m);
-        m_program->setUniformValue(m_lightPosLoc, glm::vec3(0, 0, 70));
+        updateUniforms();
     }
 
     glDisableVertexAttribArray(1);
@@ -231,9 +189,9 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
     glDisable(GL_DEPTH_TEST);
     grid->render(m_m);
     glEnable(GL_DEPTH_TEST);
-    restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::Isle);
-    sea->render(eye, time);
-    restrictions->render(m_m, eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
+    restrictions->render(m_m, m_eye, GLRestrictions::GeometryTypes::Isle);
+    sea->render(m_eye, time);
+    restrictions->render(m_m, m_eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
         glEnable(GL_LINE_SMOOTH);
@@ -500,7 +458,7 @@ void OGLWidget::scroll(double /*dx*/, double dy) {
 
 
 void OGLWidget::keyPress(int key) {
-    static constexpr float rotation_step = 1.0f / 36.0f * (float) M_PI;
+    static constexpr float rotation_step = 10.0f / 360.0f * (float) M_PI;
     static constexpr float k_tr = 1.0f / 100;
     switch (key) {
         case GLFW_KEY_W:
@@ -573,4 +531,39 @@ void OGLWidget::updateSunAngle(long timestamp, double lat, double /*lon*/) {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(LightSource), &light, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, USV_GUI_LIGHTS_BINDING, ubo_light);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void OGLWidget::updateUniforms() {
+    const auto W = static_cast<float>(width);
+    const auto H = static_cast<float>(height);
+
+    m_proj = glm::identity<glm::mat4>();
+    glm::mat4 camera;
+
+    const constexpr auto phi_rad = static_cast<float>(FOV / 180.0 * M_PI);
+
+    const auto b = m_eye.z + 2;
+    const auto a = std::max(b - 4, 0.01f);
+
+    const auto aspect = W / H;
+    if (aspect > 0.0001f)
+        m_proj = glm::perspective(phi_rad, aspect,
+                                  static_cast<float>(a),
+                                  static_cast<float>(b));
+
+    auto target = glm::vec3(m_eye.x, m_eye.y, 0);
+    camera = glm::lookAt(m_eye, target, glm::vec3(std::cos(rotation), std::sin(rotation), 0));
+
+    // Update matrices UBO
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(float), &m_proj);
+    const auto m_view = camera;
+    glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(float), 16 * sizeof(float), &m_view);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    m_m = m_proj * m_view;
+    m_program->setUniformValue(m_myMatrixLoc, m_m);
+    m_program->setUniformValue(m_lightPosLoc, glm::vec3(0, 0, 70));
+
+    m_uniformsDirty = false;
 }

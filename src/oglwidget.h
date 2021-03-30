@@ -80,6 +80,8 @@ protected:
     std::unique_ptr<USV::CaseData> case_data_;
     unsigned int width{};
     unsigned int height{};
+
+    void updateUniforms();
 public:
     [[nodiscard]] const USV::CaseData* case_data() const {
         return case_data_.get();
