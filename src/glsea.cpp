@@ -3,6 +3,8 @@
 #include "utils.h"
 #include <cmrc/cmrc.hpp>
 #include "Defines.h"
+#include "Program.h"
+#include "Buffer.h"
 
 CMRC_DECLARE(glsl_resources);
 

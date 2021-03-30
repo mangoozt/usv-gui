@@ -1,11 +1,14 @@
 #include "oglwidget.h"
 #include <cmath>
+#include "Program.h"
 #include <glm/ext.hpp>
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include "Defines.h"
 #include <nanovg.h>
 #include "Compass.h"
+#include "Buffer.h"
+#include "skybox.h"
 
 #define FOV 90.0f
 #define CIRCLE_POINTS_N 360

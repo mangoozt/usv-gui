@@ -6,6 +6,8 @@
 #include <array>
 #include <cmrc/cmrc.hpp>
 #include "Defines.h"
+#include "Program.h"
+#include "Buffer.h"
 #include <iostream>
 
 CMRC_DECLARE(glsl_resources);
@@ -167,6 +169,14 @@ GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, cons
     ibo->release();
 }
 
+GLRestrictions::Polygon::~Polygon() {
+
+}
+
+GLRestrictions::Polygon::Polygon(GLRestrictions::Polygon&& o) noexcept:
+        vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
+        , color(o.color), opacity(o.opacity), id_(o.id_) {}
+
 void GLRestrictions::Isle::render(const Program& program) {
     program.bind();
     program.setUniformValue(program.uniformLocation("material.ambient"), color * 0.5f);
@@ -269,6 +279,14 @@ GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const glm:
 
 }
 
+GLRestrictions::Isle::~Isle() {
+
+}
+
+GLRestrictions::Isle::Isle(GLRestrictions::Isle&& o) noexcept:
+        vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
+        , color(o.color), id_(o.id_) {}
+
 
 GLRestrictions::Contour::Contour(const USV::Restrictions::Polygon& polygon, const glm::vec3& color, size_t id) : color(
         color), id_(id) {
@@ -306,4 +324,11 @@ void GLRestrictions::Contour::render(const Program& program) {
 
     glDisableVertexAttribArray(vertexLocation);
     glUseProgram(0);
+}
+
+GLRestrictions::Contour::Contour(GLRestrictions::Contour&& o) noexcept:
+        vbo(std::exchange(o.vbo, nullptr)), start_ptrs(std::move(o.start_ptrs)), color(o.color), id_(o.id_) {}
+
+GLRestrictions::Contour::~Contour() {
+
 }

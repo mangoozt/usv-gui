@@ -2,9 +2,10 @@
 #define GLGRID_H
 
 #include <glm/glm.hpp>
-#include "Program.h"
-#include "Buffer.h"
 #include <memory>
+
+class Program;
+class Buffer;
 
 class GLGrid {
 public:
