@@ -53,9 +53,6 @@ void GLSea::render(glm::vec3& eyePos, double time) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
-//    normal_tex.bind(0);
-//    tex.bind(2);
-//    spec_tex.bind(4);
     m_program->setUniformValue(m_timeLoc, (float) std::fmod(time, 10) * 10.0f);
     m_program->setUniformValue(m_viewLoc, eyePos);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->bufferId());
@@ -74,7 +71,7 @@ void GLSea::render(glm::vec3& eyePos, double time) {
 void GLSea::prepare_grid() {
     std::vector<GLfloat> vertices;
     vertices.reserve(gridsize * gridsize * 2);
-    auto step = size / gridsize;
+    auto step = size / static_cast<float>(gridsize);
     auto zero = -size * 0.5f;
     for (size_t i = 0; i < gridsize; ++i)
         for (size_t j = 0; j < gridsize; ++j) {

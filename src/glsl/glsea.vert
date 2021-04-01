@@ -10,13 +10,6 @@ layout (std140) uniform Matrices
     mat4 view;
 };
 
-//struct LightSource {
-//    vec4 position;
-//    vec3 ambient;
-//    vec3 diffuse;
-//    vec3 specular;
-//};
-
 layout (std140) uniform Light
 {
     vec4 light_position;
@@ -38,11 +31,19 @@ out highp VERTEX_OUT{
 } vertex_out;
 
 void main() {
-    vec4 v = vertex;
-    v.z += cos((vertex.x+time)*0.5)+cos((vertex.x+time)*0.05)+sin((vertex.y+time)*0.7)+sin((vertex.y+time)*0.02);
+    vec4 v = vec4(0, 0, 0, 1);
+    mat4 screen_mat = projection * view;
+    v = screen_mat * v;
+    v/=v.w;
+    v.xy = vertex.xy*1.1;
+    v = inverse(screen_mat) * v;
+    v /= v.w;
+    // waves
+    v.z += cos((v.x+time)*0.5)+cos((v.x+time)*0.05)+sin((v.y+time)*0.7)+sin((v.y+time)*0.02);
     v.z=v.z*0.05-0.1;
-    gl_Position = projection * view * v;
-    vec3 Normal = vec3(0.05*vec2(0.5*sin((vertex.x+time)*0.5)+0.05*sin((vertex.x+time)*0.05), -0.7*cos((vertex.y+time)*0.7)-0.02*cos((vertex.y+time)*0.02)), 1);
+    gl_Position = screen_mat * v;
+    gl_Position /= gl_Position.w;
+    vec3 Normal = vec3(0.05*vec2(0.5*sin((v.x+time)*0.5)+0.05*sin((v.x+time)*0.05), -0.7*cos((v.y+time)*0.7)-0.02*cos((v.y+time)*0.02)), 1);
 
     Normal = normalize(Normal);
     vec3 Tangent = normalize(vec3(Normal.z, 0, -Normal.y));

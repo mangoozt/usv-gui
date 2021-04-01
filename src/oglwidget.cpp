@@ -452,7 +452,6 @@ void OGLWidget::mouseMoveEvent(double x, double y, bool lbutton, bool mbutton) {
         auto dp = p - p1;
 
         if (lbutton) {
-            m_eye.z = glm::clamp(m_eye.z, 2.0f, 200.0f);
             m_eye.x = glm::clamp(m_eye.x + dp.x, -200.0f, 200.0f);
             m_eye.y = glm::clamp(m_eye.y + dp.y, -200.0f, 200.0f);
         } else {
@@ -467,7 +466,7 @@ void OGLWidget::mouseMoveEvent(double x, double y, bool lbutton, bool mbutton) {
 
 void OGLWidget::scroll(double /*dx*/, double dy) {
     auto delta = static_cast<GLfloat>(dy);
-    m_eye.z = glm::clamp(m_eye.z - delta, 2.0f, 200.0f);
+    m_eye.z = glm::clamp(m_eye.z - delta, 2.0f, 40.0f / std::tan(FOV/2));
     m_uniformsDirty = true;
 }
 

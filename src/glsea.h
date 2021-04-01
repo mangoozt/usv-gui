@@ -18,13 +18,10 @@ private:
     std::unique_ptr<Program> m_program;
     std::unique_ptr<Buffer> vbo;
     std::unique_ptr<Buffer> ibo;
-//    GLuint tex{};
-//    GLuint normal_tex{};
-//    GLuint spec_tex{};
     int m_viewLoc;
     int m_timeLoc;
     const unsigned int gridsize{1000};
-    const float size{100.0f};
+    const float size{2.0f};
 };
 
 #endif // GLSEA_H
