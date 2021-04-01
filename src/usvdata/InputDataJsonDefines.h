@@ -6,6 +6,7 @@
 #include <spotify/json.hpp>
 #include <sstream>
 #include <filesystem>
+#include <iostream>
 
 namespace spotify::json {
     using namespace USV;
@@ -275,7 +276,6 @@ namespace spotify::json {
             return codec;
         }
     };
-
 }
 
 namespace USV::InputUtils {
@@ -287,16 +287,20 @@ namespace USV::InputUtils {
             if constexpr (R) { throw std::runtime_error("Empty filename "); }
             else { return; }
         }
+        std::cout << "Loading `" << filename << "` ... ";
         std::ifstream ifs(filename);
         if (!ifs.good()) {
+            std::cout << "failed to open" << std::endl;
             if constexpr (R) { throw std::runtime_error("Failed to open " + filename.string()); }
             else { return; }
         }
         std::stringstream buffer;
         buffer << ifs.rdbuf();
         data = std::make_unique<T>();
-        if (!try_decode<T>(*data, buffer.str()))
+        if (!try_decode<T>(*data, buffer.str())) {
+            std::cout << "failed to parse" << std::endl;
             throw std::runtime_error("Failed to parse " + filename.string());
+        }
     }
 
 }
