@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include "Compass.h"
 
@@ -26,7 +27,7 @@ void Compass::draw(NVGcontext* ctx, const float rotation) {
     constexpr const float font_size{cs * 0.175};
 
     nvgTranslate(ctx, m_x + .5f * cs, m_y + 0.5f * cs);
-    nvgRotate(ctx, rotation - static_cast<float>(M_PI_2));
+    nvgRotate(ctx, rotation - static_cast<float>(M_PI*0.5f));
 
     nvgBeginPath(ctx);
     nvgStrokeWidth(ctx, 3);

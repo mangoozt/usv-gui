@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "Defines.h"
 #include <nanovg.h>
+#include <sstream>
 #include "Compass.h"
 #include "Buffer.h"
 #include "skybox.h"
@@ -284,7 +285,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
 
                     const auto m = (a + b) * 0.5;
 
-                    const auto angle = fmod(atan2(ba.x(), ba.y()) - M_PI_2, M_PI);
+                    const auto angle = fmod(atan2(ba.x(), ba.y()) - M_PI*0.5f, M_PI);
                     auto c = WorldToscreen({a.x(), a.y()});
 
                     nvgBeginPath(ctx);
