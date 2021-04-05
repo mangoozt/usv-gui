@@ -2,7 +2,7 @@
 
 ScrollableSlider::ScrollableSlider(Widget* parent) : Slider(parent) {}
 
-bool ScrollableSlider::scroll_event(const Vector2i& p, const Vector2f& rel) {
+bool ScrollableSlider::scroll_event(const Vector2i& /*p*/, const Vector2f& rel) {
     if (!m_enabled)
         return false;
 

@@ -23,8 +23,6 @@
 #include <iostream>
 #include "App.h"
 
-using namespace nanogui;
-
 #define MAIN_WINDOW_WIDTH 800
 #define MAIN_WINDOW_HEIGHT 600
 

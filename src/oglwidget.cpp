@@ -2,14 +2,16 @@
 #include <cmath>
 #include "Program.h"
 #include <glm/ext.hpp>
-#include <iostream>
+#include <nanovg.h>
 #include <GLFW/glfw3.h>
 #include "Defines.h"
-#include <nanovg.h>
-#include <sstream>
 #include "Compass.h"
 #include "Buffer.h"
-#include "skybox.h"
+#include "glsea.h"
+#include "glgrid.h"
+#include "glrestrictions.h"
+#include <sstream>
+#include <iostream>
 
 #define FOV 90.0f
 #define CIRCLE_POINTS_N 360
@@ -194,11 +196,11 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
     m_program->release();
     //Draw plane
     glDisable(GL_DEPTH_TEST);
-    grid->render(m_m);
+    grid->render();
     glEnable(GL_DEPTH_TEST);
-    restrictions->render(m_m, m_eye, GLRestrictions::GeometryTypes::Isle);
+    restrictions->render(m_eye, GLRestrictions::GeometryTypes::Isle);
     sea->render(m_eye, time);
-    restrictions->render(m_m, m_eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
+    restrictions->render(m_eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
         glEnable(GL_LINE_SMOOTH);
@@ -285,7 +287,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
 
                     const auto m = (a + b) * 0.5;
 
-                    const auto angle = fmod(atan2(ba.x(), ba.y()) - M_PI*0.5f, M_PI);
+                    const auto angle = static_cast<float>(fmod(atan2(ba.x(), ba.y()) - M_PI * 0.5f, M_PI));
                     auto c = WorldToscreen({a.x(), a.y()});
 
                     nvgBeginPath(ctx);
@@ -505,7 +507,7 @@ void OGLWidget::keyPress(int key) {
 }
 
 void OGLWidget::updateSunAngle(long timestamp, double lat, double /*lon*/) {
-    tm tm_;
+    tm tm_{};
     time_t timet = timestamp;
 
     tm* ptm = gmtime(&timet);
@@ -583,4 +585,4 @@ void OGLWidget::updateUniforms() {
     m_uniformsDirty = false;
 }
 
-OGLWidget::~OGLWidget() {}
+OGLWidget::~OGLWidget() = default;

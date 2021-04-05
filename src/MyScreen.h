@@ -2,9 +2,10 @@
 #define USV_GUI_MYSCREEN_H
 
 #include <nanogui/nanogui.h>
-#include "oglwidget.h"
 
 using namespace nanogui;
+
+class OGLWidget;
 
 class MyScreen : public Screen {
     bool lbutton_down{false};
@@ -13,13 +14,11 @@ class MyScreen : public Screen {
     OGLWidget* map_ = nullptr;
 public:
 
-    MyScreen() : Screen(), map_(new OGLWidget) {}
+    MyScreen();
 
     void draw_contents() override;
 
-    ~MyScreen() override {
-        delete map_;
-    }
+    ~MyScreen() override;
 
     void scroll_callback(double x, double y);
 

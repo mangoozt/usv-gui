@@ -12,7 +12,7 @@ namespace {
     }
 }
 
-void Compass::draw(NVGcontext* ctx, const float rotation) {
+void Compass::draw(NVGcontext* ctx, const double rotation) const {
     constexpr const auto& cs = size;
     constexpr const auto radius = radius_ratio * size;
 
@@ -24,10 +24,10 @@ void Compass::draw(NVGcontext* ctx, const float rotation) {
     constexpr const NVGcolor circle_hover_fill_color{0.6, 0.6, 0.6, 0.2};
     constexpr const NVGcolor pole_text_color{1, 1, 1, 1};
     constexpr const NVGcolor ew_arrows_color{1, 1, 1, 1};
-    constexpr const float font_size{cs * 0.175};
+    constexpr const double font_size{cs * 0.175};
 
-    nvgTranslate(ctx, m_x + .5f * cs, m_y + 0.5f * cs);
-    nvgRotate(ctx, rotation - static_cast<float>(M_PI*0.5f));
+    nvgTranslate(ctx, static_cast<float>(m_x + .5 * cs), static_cast<float>(m_y + 0.5 * cs));
+    nvgRotate(ctx, static_cast<float>(rotation - M_PI*0.5f));
 
     nvgBeginPath(ctx);
     nvgStrokeWidth(ctx, 3);
@@ -102,7 +102,7 @@ void Compass::draw(NVGcontext* ctx, const float rotation) {
     nvgResetTransform(ctx);
 }
 
-void Compass::set_position(float x, float y) {
+void Compass::set_position(double x, double y) {
     m_x = x;
     m_y = y;
 }
@@ -117,7 +117,7 @@ bool Compass::setHover(bool hover) {
     return changed;
 }
 
-bool Compass::isMouseOver(float x, float y) const {
+bool Compass::isMouseOver(double x, double y) const {
     x -= m_x + size * 0.5;
     y -= m_y + size * 0.5;
     return (x * x + y * y) < radius_ratio * radius_ratio * size * size;

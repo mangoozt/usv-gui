@@ -4,13 +4,13 @@
 #include <glm/glm.hpp>
 #include <nanovg.h>
 #include "usvdata/CaseData.h"
-#include "glgrid.h"
-#include "glsea.h"
-#include "glrestrictions.h"
 
 class Compass;
 class Program;
 class Buffer;
+class GLSea;
+class GLGrid;
+class GLRestrictions;
 
 class OGLWidget {
 public:

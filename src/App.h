@@ -2,17 +2,19 @@
 #define USV_GUI_APP_H
 
 #include <GLFW/glfw3.h>
-#include <iostream>
-#include "MyScreen.h"
-#include "usvdata/InputUtils.h"
+#include <string>
+
+class MyScreen;
+class ScrollableSlider;
+class IgnorantTextBox;
 
 class App {
     MyScreen* screen{};
-    Slider* slider{};
+    ScrollableSlider* slider{};
     GLFWwindow* window{};
 
     //ui
-    TextBox* time_label{};
+    IgnorantTextBox* time_label{};
 public:
     explicit App(GLFWwindow* glfw_window);
 

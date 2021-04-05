@@ -27,7 +27,7 @@ public:
         static const GeometryType All = 7;
     };
 
-    void render(glm::mat4& view_matrix, glm::vec3 eyePos, GeometryType gtype = GeometryTypes::All);
+    void render(glm::vec3 eyePos, GeometryType gtype = GeometryTypes::All);
 
 private:
     using Point = std::array<float, 2>;
@@ -38,8 +38,8 @@ private:
         std::unique_ptr<Buffer> ibo;
         int indices_count;
         glm::vec3 color;
-        size_t id_;
         float opacity;
+        size_t id_;
     public:
         Polygon(const USV::Restrictions::Polygon& polygon, const glm::vec3& color, size_t id, float opacity = 1.0);
 

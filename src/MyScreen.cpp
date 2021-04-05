@@ -1,5 +1,6 @@
 #include "MyScreen.h"
 #include <GLFW/glfw3.h>
+#include "oglwidget.h"
 
 void MyScreen::draw_contents() {
     clear();
@@ -60,3 +61,9 @@ void MyScreen::cursor_pos_callback(double x, double y) {
         m_redraw = map_->uniforms_dirty();
     }
 }
+
+MyScreen::~MyScreen() {
+    delete map_;
+}
+
+MyScreen::MyScreen() : Screen(), map_(new OGLWidget) {}

@@ -43,7 +43,7 @@ GLRestrictions::GLRestrictions() {
     m_program->release();
 }
 
-void GLRestrictions::render(glm::mat4& view_matrix, glm::vec3 eyePos, GeometryType gtype) {
+void GLRestrictions::render(glm::vec3 eyePos, GeometryType gtype) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_program->bind();
@@ -89,7 +89,7 @@ void GLRestrictions::load_restrictions(const USV::Restrictions::Restrictions& re
             glisles.emplace_back(limitation.polygon, c_soft, meta_.size() - 1);
         else { glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1); glcontours.emplace_back(limitation.polygon, c_soft, meta_.size() - 1); }
     }
-    glm::vec3 c_movement{0.9f, 0.9f, 0.9f};
+    glm::vec3 c_movement{0.5f, 0.5f, 0.5f};
     for (auto& limitation:restrictions.soft.MovementParametersLimitations()) {
         meta_.push_back({limitation._ptr});
         glpolygons.emplace_back(limitation.polygon, c_movement, meta_.size() - 1);
@@ -169,9 +169,7 @@ GLRestrictions::Polygon::Polygon(const USV::Restrictions::Polygon& polygon, cons
     ibo->release();
 }
 
-GLRestrictions::Polygon::~Polygon() {
-
-}
+GLRestrictions::Polygon::~Polygon() = default;
 
 GLRestrictions::Polygon::Polygon(GLRestrictions::Polygon&& o) noexcept:
         vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
@@ -279,9 +277,7 @@ GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const glm:
 
 }
 
-GLRestrictions::Isle::~Isle() {
-
-}
+GLRestrictions::Isle::~Isle() = default;
 
 GLRestrictions::Isle::Isle(GLRestrictions::Isle&& o) noexcept:
         vbo(std::exchange(o.vbo, nullptr)), ibo(std::exchange(o.ibo, nullptr)), indices_count(o.indices_count)
@@ -329,6 +325,4 @@ void GLRestrictions::Contour::render(const Program& program) {
 GLRestrictions::Contour::Contour(GLRestrictions::Contour&& o) noexcept:
         vbo(std::exchange(o.vbo, nullptr)), start_ptrs(std::move(o.start_ptrs)), color(o.color), id_(o.id_) {}
 
-GLRestrictions::Contour::~Contour() {
-
-}
+GLRestrictions::Contour::~Contour() = default;

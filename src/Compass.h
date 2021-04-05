@@ -4,15 +4,15 @@
 #include <nanovg.h>
 
 class Compass {
-    constexpr static const float size{80};
-    constexpr static const float radius_ratio{0.4};
-    float m_x{};
-    float m_y{};
+    constexpr static const double size{80};
+    constexpr static const double radius_ratio{0.4};
+    double m_x{};
+    double m_y{};
     bool m_hover{false};
 public:
     [[nodiscard]] bool isHover() const;
 
-    [[nodiscard]] bool isMouseOver(float x, float y) const;
+    [[nodiscard]] bool isMouseOver(double x, double y) const;
 
     /**
      * Set hover state
@@ -27,20 +27,20 @@ public:
      * @param ctx Pointer to NVG context
      * @param angle Compass pointing angle [rad]
      */
-    void draw(NVGcontext* ctx, float angle);
+    void draw(NVGcontext* ctx, double angle) const;
 
     /**
      * Set position of upper-left corner of compass bounding box
      * @param x [px]
      * @param y [px]
      */
-    void set_position(float x, float y);
+    void set_position(double x, double y);
 
     /**
      * Get size of compass
      * @return [px]
      */
-    constexpr static float getSize() {
+    constexpr static double getSize() {
         return size;
     }
 };

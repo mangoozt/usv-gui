@@ -301,6 +301,7 @@ namespace USV::InputUtils {
             std::cout << "failed to parse" << std::endl;
             throw std::runtime_error("Failed to parse " + filename.string());
         }
+        std::cout << "OK" << std::endl;
     }
 
 }

@@ -9,7 +9,7 @@ class IgnorantTextBox : public TextBox {
 public:
     inline explicit IgnorantTextBox(Widget* parent) : TextBox(parent) {};
 
-    inline bool keyboard_character_event(unsigned int codepoint) override {
+    inline bool keyboard_character_event(unsigned int /*codepoint*/) override {
         return false;
     }
 };

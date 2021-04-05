@@ -11,7 +11,7 @@ class GLGrid {
 public:
     GLGrid();
 
-    void render(const glm::mat4& view_matrix);
+    void render();
 
     static const char* xyGridShaderSource;
 private:
