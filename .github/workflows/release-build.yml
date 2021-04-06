@@ -28,7 +28,6 @@ jobs:
       run: cmake -E make_directory ${{runner.workspace}}/build
     - name: Install deps
       run: | 
-       sudo apt-get install libgeographic-dev 
        sudo apt-get install xorg-dev libglu1-mesa-dev
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable

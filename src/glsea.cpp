@@ -70,7 +70,7 @@ void GLSea::render(glm::vec3& eyePos, double time) {
 
 void GLSea::prepare_grid() {
     std::vector<GLfloat> vertices;
-    vertices.reserve(gridsize * gridsize * 2);
+    vertices.reserve(2l * gridsize * gridsize);
     auto step = size / static_cast<float>(gridsize);
     auto zero = -size * 0.5f;
     for (size_t i = 0; i < gridsize; ++i)
