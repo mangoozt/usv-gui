@@ -47,7 +47,7 @@ void App::initialize_gui() {
 
     time_label = new IgnorantTextBox(panel);
     time_label->set_editable(true);
-    time_label->set_fixed_width(120);
+    time_label->set_fixed_width(200);
     time_label->set_value("");
     time_label->set_units("");
 
@@ -132,7 +132,14 @@ void App::update_time(double time) {
     map.updateTime(time / 3600);
     map.updateSunAngle(static_cast<long>(time), case_data->frame.getRefLat(), case_data->frame.getRefLon());
 
-    time_label->set_value(std::to_string((int) (time)));
+    time_t seconds = static_cast<time_t>(time) - case_data->start_time;
+    int hours = seconds / 3600;
+    seconds = seconds % 3600;
+    int minutes = seconds / 60;
+    seconds = seconds % 60;
+    char t_plus_str[16];
+    snprintf(t_plus_str, sizeof(t_plus_str), "(T+%02d:%02d:%02d)", hours, minutes, (int) seconds);
+    time_label->set_value(std::to_string((int) (time)) + t_plus_str);
     time_label->focus_event(true);
     time_label->focus_event(false);
 }

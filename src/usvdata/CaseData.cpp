@@ -5,7 +5,7 @@ namespace USV {
             radius(input_data.settings->manuever_calculation.safe_diverg_dist * 0.5),
             route(0),
             frame(input_data.navigationParameters->lat, input_data.navigationParameters->lon),
-            directory(input_data.directory){
+            directory(input_data.directory), start_time(input_data.navigationParameters->timestamp){
         route = Path(*input_data.route, frame);
         vessel_names.reserve(input_data.targets_paths->size() + 1);
         vessel_names.emplace_back("Own");

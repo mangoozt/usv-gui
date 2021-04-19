@@ -34,6 +34,7 @@ namespace USV {
         Restrictions::Restrictions restrictions;
         Frame frame;
         std::filesystem::path directory;
+        time_t start_time;
 
         explicit CaseData(const InputTypes::InputData& input_data);
     };
