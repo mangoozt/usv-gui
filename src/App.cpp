@@ -117,14 +117,14 @@ void App::update_time(double time) {
     std::vector<USV::Vessel> vessels;
     auto& map = screen->map();
     auto case_data = map.case_data();
-    USV::Color color{0, 1, 0};
+    USV::Color color{0.8f, 0.8f, 0.8f};;
     push_position(time, case_data->route, vessels, color, case_data->radius);
 
     color = {0, 0, 1};
     for (size_t i = 0; i < case_data->targets_maneuvers.size(); ++i)
         push_position(time, case_data->targets_maneuvers[i], vessels, color, case_data->radius);
 
-    color = {0.8f, 0.8f, 0.8f};
+    color = {0, 1, 0};
     for (const auto& maneuver: case_data->maneuvers)
         push_position(time, maneuver, vessels, color, case_data->radius);
 
