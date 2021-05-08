@@ -8,18 +8,7 @@ namespace USV::InputUtils {
             return std::filesystem::exists(filename);
         }
 
-        struct DataFilenames {
-            std::string_view navigationParameters;
-            std::string_view navigationProblem;
-            std::string_view route;
-            std::string_view maneuvers;
-            std::string_view targets_paths;
-            std::string_view targets_real_paths;
-            std::string_view settings;
-            std::string_view constraints;
-        };
-
-        constexpr DataFilenames data_filenames_native = {
+        constexpr InputTypes::DataFilenames data_filenames_native = {
                 "nav-data.json",
                 "target-data.json",
                 "route-data.json",
@@ -28,9 +17,11 @@ namespace USV::InputUtils {
                 "real-target-maneuvers.json",
                 "settings.json",
                 "constraints.json",
-
+                "hmi-data.json",
+                "nav-report.json",
+                "target-settings.json"
         };
-        constexpr DataFilenames data_filenames_kt = {
+        constexpr InputTypes::DataFilenames data_filenames_kt = {
                 "navigation.json",
                 "targets.json",
                 "route.json",
@@ -39,16 +30,20 @@ namespace USV::InputUtils {
                 "real-target-maneuvers.json",
                 "settings.json",
                 "constraints.json",
+                "hydrometeo.json",
+                "evaluation.json",
+                "targets_settings.json"
         };
     }
 
     InputTypes::InputData loadInputData(const std::string& data_directory) {
         InputTypes::InputData data;
 
-        data.directory={data_directory};
+        data.directory = {data_directory};
+        data.data_filenames = (file_exists(data.directory / data_filenames_native.navigationParameters))
+                              ? &data_filenames_native : &data_filenames_kt;
 
-        auto& filenames = (file_exists(data.directory / data_filenames_native.navigationParameters))
-                          ? data_filenames_native : data_filenames_kt;
+        auto& filenames = *data.data_filenames;
 
         load_from_json_file<true>(data.navigationParameters, data.directory / filenames.navigationParameters);
         load_from_json_file<true>(data.navigationProblem, data.directory / filenames.navigationProblem);

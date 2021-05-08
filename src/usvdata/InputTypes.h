@@ -158,6 +158,27 @@ namespace USV::InputTypes {
 
     typedef std::vector<Maneuver> Maneuvers;
 
+    struct DataFilenames {
+        std::string_view navigationParameters;
+        std::string_view navigationProblem;
+        std::string_view route;
+        std::string_view maneuvers;
+        std::string_view targets_paths;
+        std::string_view targets_real_paths;
+        std::string_view settings;
+        std::string_view constraints;
+        std::string_view hydrometeo;
+        std::string_view analyse;
+        std::string_view target_settings;
+    };
+
+    /*
+     * 'nav_data': 'nav-data.json',
+                      'maneuvers': 'maneuver.json',
+                      'targets_data': 'target-data.json',
+                      'target_settings': 'target-settings.json',
+     */
+
     struct InputData {
         std::unique_ptr<NavigationParameters> navigationParameters;
         std::unique_ptr<TargetsParameters> navigationProblem;
@@ -169,6 +190,7 @@ namespace USV::InputTypes {
         std::unique_ptr<CurvedPathCollection> targets_real_paths;
         std::unique_ptr<FeatureCollection> constraints;
         std::filesystem::path directory;
+        const DataFilenames* data_filenames;
     };
 
 }

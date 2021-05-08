@@ -88,8 +88,6 @@ int main(int /* argc */, char** /* argv */) {
     glfwSwapInterval(0);
     glfwSwapBuffers(window);
 #endif
-
-    app.initialize_gui();
     app.run();
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
