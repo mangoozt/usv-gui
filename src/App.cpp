@@ -86,9 +86,7 @@ void App::initialize_gui() {
         slider->set_width(wwidth);
     }
     screen->clear();
-    screen->draw_all();
-
-    std::cout << run_usv_button->position() + run_usv_button->size() << std::endl;
+    screen->redraw();
 
     glfwSetCursorPosCallback(window, CursorPosCallback);
     glfwSetMouseButtonCallback(window, MouseButtonCallback);
