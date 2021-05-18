@@ -172,6 +172,24 @@ namespace USV::InputTypes {
         std::string_view target_settings;
     };
 
+    struct AnalyseResult {
+        struct TargetStatus {
+            std::string id;
+            DangerType danger_level;
+            ScenarioType scenario_type;
+            double CPA;
+            double TCPA;
+        };
+
+        struct ViolatedLimitation {
+            std::string feature_id;
+            bool violated;
+        };
+
+        std::vector<TargetStatus> target_statuses{};
+        std::vector<ViolatedLimitation> limitations{};
+    };
+
     /*
      * 'nav_data': 'nav-data.json',
                       'maneuvers': 'maneuver.json',
@@ -189,6 +207,7 @@ namespace USV::InputTypes {
         std::unique_ptr<CurvedPathCollection> targets_paths;
         std::unique_ptr<CurvedPathCollection> targets_real_paths;
         std::unique_ptr<FeatureCollection> constraints;
+        std::shared_ptr<AnalyseResult> analyse_result;
         std::filesystem::path directory;
         const DataFilenames* data_filenames;
     };

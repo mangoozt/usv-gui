@@ -33,6 +33,23 @@ namespace USV {
         double width;
         double lengthOffset;
     };
-    
+
+    /**
+ * \brief Тип сценари¤ расхождения согласно ТЗ
+ */
+    enum class ScenarioType {
+        Sc0_None = 0,
+        Sc1_FaceToFace,
+        Sc2_Overtaken,
+        Sc3_Overtake,
+        Sc4_GiveWay,
+        Sc5_Save,
+        Sc6_GiveWayPriority,
+        Sc7_SavePriority,
+        Sc8_CrossMove,
+        Sc9_CrossIn,
+        Sc10_VisionRestricted_Fwd,
+        Sc11_VisionRestricted_Bwd
+    };
 }
 #endif // USV_DEFINES_H

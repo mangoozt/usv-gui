@@ -12,6 +12,21 @@ class GLSea;
 class GLGrid;
 class GLRestrictions;
 
+struct Color {
+    float r;
+    float g;
+    float b;
+    float a{1};
+};
+
+struct Vessel {
+    const USV::Ship* ship;
+    USV::Vector2 position;
+    double course; // radians
+    double radius;
+    ::Color color{0, 0, 0};
+};
+
 class OGLWidget {
 public:
     OGLWidget();
@@ -28,9 +43,9 @@ public:
 
     glm::vec2 WorldToscreen(glm::vec2 pos);
 
-    void loadData(USV::CaseData& case_data);
+    void loadData(std::unique_ptr<USV::CaseData> case_data);
 
-    void updatePositions(const std::vector<USV::Vessel>& vessels);
+    void updatePositions(const std::vector<Vessel>& vessels);
 
     void updateTime(double t);
 
@@ -64,6 +79,7 @@ protected:
     };
 
     std::vector<pathVBOMeta> m_paths_meta;
+    std::vector<Vessel> vessels;
     glm::ivec2 mouse_press_point{};
 
     int m_myMatrixLoc{};

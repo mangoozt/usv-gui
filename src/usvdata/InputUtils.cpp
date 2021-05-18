@@ -25,7 +25,7 @@ namespace USV::InputUtils {
                 "navigation.json",
                 "targets.json",
                 "route.json",
-                "result-maneuver.json",
+                "result_maneuver.json",
                 "predicted_tracks.json",
                 "real-target-maneuvers.json",
                 "settings.json",
@@ -53,6 +53,7 @@ namespace USV::InputUtils {
         load_from_json_file(data.targets_real_paths, data.directory / filenames.targets_real_paths);
         load_from_json_file<true>(data.settings, data.directory / filenames.settings);
         load_from_json_file(data.constraints, data.directory / filenames.constraints);
+        load_from_json_file(data.analyse_result, data.directory / filenames.analyse);
         return data;
     }
 

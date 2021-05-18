@@ -62,12 +62,8 @@ void App::initialize_gui() {
                          {
                              const auto case_data = screen->map().case_data();
                              if (case_data) {
-                                 auto starttime = case_data->route.getStartTime();
-                                 auto endtime = case_data->route.endTime();
-                                 for (const auto& maneuver: case_data->maneuvers) {
-                                     endtime = std::min(endtime, maneuver.endTime());
-                                     starttime = std::min(starttime, maneuver.getStartTime());
-                                 }
+                                 auto starttime = case_data->min_time;
+                                 auto endtime = case_data->max_time;
                                  auto time = starttime + (endtime - starttime) * value;
                                  update_time(time);
                              }
@@ -99,10 +95,8 @@ void App::initialize_gui() {
 
 void App::load_directory(const std::string& data_directory) {
     try {
-        USV::CaseData case_data = USV::CaseData(
-                USV::InputUtils::loadInputData(data_directory));
-        screen->map().loadData(case_data);
-        update_time(case_data.route.getStartTime());
+        screen->map().loadData(std::make_unique<USV::CaseData>(USV::InputUtils::loadInputData(data_directory)));
+        update_time(screen->map().case_data()->min_time);
         if (slider)
             slider->set_value(0);
     } catch (std::runtime_error& e) {
@@ -111,29 +105,53 @@ void App::load_directory(const std::string& data_directory) {
 }
 
 namespace {
-    void push_position(double time, const USV::Path& path, std::vector<USV::Vessel>& vessels, USV::Color& color,
-                       double radius) {
+    void
+    push_position(double time, const USV::Path& path, std::vector<Vessel>& vessels, double radius, ::Color& color, const USV::Ship* ship) {
         try {
             auto position = path.position(time);
-            vessels.push_back({position.point, position.course.radians(), radius, color});
+            Vessel v{ship, position.point, position.course.radians(), radius, color};
+            vessels.push_back(v);
         } catch (std::out_of_range&) {}
     }
 }
 
 void App::update_time(double time) {
-    std::vector<USV::Vessel> vessels;
+    std::vector<Vessel> vessels;
     auto& map = screen->map();
     auto case_data = map.case_data();
-    USV::Color color{0.8f, 0.8f, 0.8f};
-    push_position(time, case_data->route, vessels, color, case_data->radius);
-
-    color = {0, 0, 1};
-    for (size_t i = 0; i < case_data->targets_maneuvers.size(); ++i)
-        push_position(time, case_data->targets_maneuvers[i], vessels, color, case_data->radius);
-
-    color = {0, 1, 0};
-    for (const auto& maneuver: case_data->maneuvers)
-        push_position(time, maneuver, vessels, color, case_data->radius);
+    vessels.reserve(case_data->paths.size());
+    for (const auto& pe: case_data->paths) {
+        ::Color color;
+        switch (pe.pathType) {
+            case USV::PathType::TargetManeuver:
+                if (pe.ship->target_status == nullptr) {
+                    color = {0, 1, 0};
+                } else {
+                    switch (pe.ship->target_status->danger_level) {
+                        case USV::DangerType::NotDangerous:
+                            color = {0, 1, 0};
+                            break;
+                        case USV::DangerType::PotentiallyDangerous:
+                            color = {1, 1, 0};
+                            break;
+                        case USV::DangerType::Dangerous:
+                            color = {1, 0, 0};
+                            break;
+                    }
+                }
+                break;
+            case USV::PathType::TargetRealManeuver:
+                color = {0.8f, 0.8f, 0.8f};
+                break;
+            case USV::PathType::ShipManeuver:
+                color = {0.1f, 1.0f, 0.1f};
+                break;
+            case USV::PathType::Route:
+                color = {1.0f, 1.0f, 1.0f};
+                break;
+        }
+        push_position(time, pe.path, vessels, case_data->radius, color, pe.ship);
+    }
 
     map.updatePositions(vessels);
     map.updateTime(time / 3600);

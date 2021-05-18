@@ -10,7 +10,6 @@
 #include "glsea.h"
 #include "glgrid.h"
 #include "glrestrictions.h"
-#include <sstream>
 #include <iostream>
 
 #define FOV 90.0f
@@ -175,7 +174,6 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
     m_cull_face_backup = glIsEnabled(GL_CULL_FACE);
     m_blend_backup = glIsEnabled(GL_BLEND);
 
-    auto& case_data = *case_data_;
     glBindVertexArray(vao);
 
     glEnable(GL_DEPTH_TEST);
@@ -239,7 +237,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (3 * sizeof(float)));
            glVertexAttrib1f(4, 1.0f);
            glLineWidth(1.0f);
-           glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei) case_data.vessels.size());
+           glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei) vessels.size());
            m_vessels->release();
 
            // Circle
@@ -250,7 +248,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
            glEnableVertexAttribArray(4);
            glVertexAttribDivisor(4, 1);
            glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (6 * sizeof(float)));
-           glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei) case_data.vessels.size());
+           glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei) vessels.size());
            glVertexAttribDivisor(1, 0);
            glVertexAttribDivisor(2, 0);
            glVertexAttribDivisor(3, 0);
@@ -264,10 +262,9 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         nvgFontFace(ctx, "sans");
         nvgTextAlign(ctx, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFillColor(ctx, {1, 1.0, 1, 1});
-        for (size_t i = 0; i < case_data.vessel_names.size(); ++i) {
-            auto& vessel = case_data.vessels[i];
+        for (const auto & vessel : vessels) {
             auto coord = WorldToscreen({vessel.position.x(), vessel.position.y()});
-            nvgText(ctx, coord.x, coord.y, case_data.vessel_names[i].c_str(), nullptr);
+            nvgText(ctx, coord.x, coord.y, vessel.ship->name.c_str(), nullptr);
         }
 
         // Draw distances
@@ -277,12 +274,13 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             nvgStrokeWidth(ctx, 1.0f);
             nvgStrokeColor(ctx, {1.0, 1.0, 1.0, 1.0});
             const auto distance_capSq = distance_cap * distance_cap;
-            for (size_t i = 0; i < case_data.vessels.size(); ++i) {
-                const auto& a = case_data.vessels[i].position;
-                for (size_t j = i + 1; j < case_data.vessels.size(); ++j) {
-                    const auto& b = case_data.vessels[j].position;
+            for (size_t i = 0; i < vessels.size(); ++i) {
+                const auto& a = vessels[i].position;
+                for (size_t j = i + 1; j < vessels.size(); ++j) {
+                    const auto& b = vessels[j].position;
                     const auto ba = a - b;
-                    if (absSq(ba) > distance_capSq)
+                    const auto ba_Sq = absSq(ba);
+                    if (ba_Sq > distance_capSq || ba_Sq < 1)
                         continue;
 
                     const auto m = (a + b) * 0.5;
@@ -365,44 +363,35 @@ glm::vec3 OGLWidget::screenToWorld(glm::ivec2 pos) {
     return position;
 }
 
-void OGLWidget::loadData(USV::CaseData& caseData) {
-    case_data_ = std::make_unique<USV::CaseData>(caseData);
+void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
+    case_data_ = std::move(case_data);
+    const auto& caseData = *case_data_;
+
+//    enum class PathType {
+//        TargetManeuver=0,
+//        TargetRealManeuver,
+//        ShipManeuver,
+//        Route,
+//        End
+//    };
+
+    const glm::vec4 colors[static_cast<size_t>(USV::PathType::End)] = {glm::vec4(0, 0, 0, 0),         //  TargetManeuver
+                                                                       glm::vec4(0.7f, 0.7f, 0.5f, 0),//  TargetRealManeuver
+                                                                       glm::vec4(0.1f, 0.8f, 0.1f, 0),//  ShipManeuver
+                                                                       glm::vec4(0, 0, 1.0f, 0)};     //  ShipManeuver
 
     std::vector<GLfloat> paths;
-    auto path_points = case_data_->route.getPointsPath();
-    for (const auto& v: path_points) {
-        paths.push_back(static_cast<float>(v.x()));
-        paths.push_back(static_cast<float>(v.y()));
-    }
     m_paths_meta.clear();
-    m_paths_meta.emplace_back(0, path_points.size(), glm::vec4(0, 0, 1.0f, 0));
-    for (const auto& path:case_data_->targets_maneuvers) {
-        path_points = path.getPointsPath();
+    for (const auto& pe : caseData.paths) {
+        auto path_points = pe.path.getPointsPath();
         size_t ptr = paths.size() / 2;
         for (const auto& v: path_points) {
             paths.push_back(static_cast<float>(v.x()));
             paths.push_back(static_cast<float>(v.y()));
         }
-        m_paths_meta.emplace_back(ptr, path_points.size(), glm::vec4(0, 0, 0, 0));
+        m_paths_meta.emplace_back(ptr, path_points.size(), colors[static_cast<size_t>(pe.pathType)]);
     }
-    for (const auto& path:case_data_->targets_real_maneuvers) {
-        path_points = path.getPointsPath();
-        size_t ptr = paths.size() / 2;
-        for (const auto& v: path_points) {
-            paths.push_back(static_cast<float>(v.x()));
-            paths.push_back(static_cast<float>(v.y()));
-        }
-        m_paths_meta.emplace_back(ptr, path_points.size(), glm::vec4(0.7f, 0.7f, 0.5f, 0));
-    }
-    for (const auto& path:case_data_->maneuvers) {
-        path_points = path.getPointsPath();
-        size_t ptr = paths.size() / 2;
-        for (const auto& v: path_points) {
-            paths.push_back(static_cast<float>(v.x()));
-            paths.push_back(static_cast<float>(v.y()));
-        }
-        m_paths_meta.emplace_back(ptr, path_points.size(), glm::vec4(0.1f, 0.8f, 0.1f, 0));
-    }
+
     m_paths->bind();
     m_paths->allocate(paths.data(), (int) (sizeof(GLfloat) * paths.size()));
     m_paths->release();
@@ -411,8 +400,8 @@ void OGLWidget::loadData(USV::CaseData& caseData) {
 }
 
 
-void OGLWidget::updatePositions(const std::vector<USV::Vessel>& vessels) {
-    case_data_->vessels = vessels;
+void OGLWidget::updatePositions(const std::vector<Vessel>& new_vessels) {
+    vessels = new_vessels;
     std::vector<GLfloat> spos;
     for (const auto& v: vessels) {
         spos.push_back(static_cast<GLfloat>(v.position.x()));

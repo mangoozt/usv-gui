@@ -276,11 +276,72 @@ namespace spotify::json {
             return codec;
         }
     };
+
+    template<>
+    struct default_codec_t<AnalyseResult> {
+        static codec::object_t<AnalyseResult> codec() {
+            auto codec = codec::object<AnalyseResult>();
+            codec.required("target_statuses", &AnalyseResult::target_statuses);
+            codec.required("limitations", &AnalyseResult::limitations);
+            return codec;
+        }
+    };
+
+    template<>
+    struct default_codec_t<AnalyseResult::TargetStatus> {
+        using TS = AnalyseResult::TargetStatus;
+
+        static int DTDecode(const DangerType type) {
+            return static_cast<int>(type);
+        }
+
+        static DangerType DTEncode(const int type) {
+            return static_cast<DangerType>(type);
+        }
+
+        static codec::object_t<TS> codec() {
+            const static auto danger_type_codec = codec::transform(codec::number<int>(), DTDecode, DTEncode);
+            const static auto scenario_type_codec = codec::enumeration<ScenarioType, std::string>(
+                    {
+                            {ScenarioType::Sc0_None,                  "None"},
+                            {ScenarioType::Sc1_FaceToFace,            "Face to face"},
+                            {ScenarioType::Sc2_Overtaken,             "Overtaken"},
+                            {ScenarioType::Sc3_Overtake,              "Overtake"},
+                            {ScenarioType::Sc4_GiveWay,               "Give way"},
+                            {ScenarioType::Sc5_Save,                  "Save"},
+                            {ScenarioType::Sc6_GiveWayPriority,       "Give way priority"},
+                            {ScenarioType::Sc7_SavePriority,          "Save priority"},
+                            {ScenarioType::Sc8_CrossMove,             "Cross move"},
+                            {ScenarioType::Sc9_CrossIn,               "Cross in"},
+                            {ScenarioType::Sc10_VisionRestricted_Fwd, "Vision restricted forward"},
+                            {ScenarioType::Sc11_VisionRestricted_Bwd, "Vision restricted backward"},
+                    });
+            auto codec = codec::object<TS>();
+            codec.required("id", &TS::id);
+            codec.required("danger_level", &TS::danger_level, danger_type_codec);
+            codec.required("scenario_type", &TS::scenario_type, scenario_type_codec);
+            codec.required("CPA", &TS::CPA);
+            codec.required("TCPA", &TS::TCPA);
+            return codec;
+        }
+    };
+
+    template<>
+    struct default_codec_t<AnalyseResult::ViolatedLimitation> {
+        using VL = AnalyseResult::ViolatedLimitation;
+
+        static codec::object_t<VL> codec() {
+            auto codec = codec::object<VL>();
+            codec.required("feature_id", &VL::feature_id);
+            codec.required("violated", &VL::violated);
+            return codec;
+        }
+    };
 }
 
 namespace USV::InputUtils {
     template<bool R = false, typename T>
-    void load_from_json_file(std::unique_ptr<T>& data, const std::filesystem::path& filename) {
+    void load_from_json_file(T* data, const std::filesystem::path& filename) {
         using namespace spotify::json;
 
         if (filename.empty()) {
@@ -296,7 +357,6 @@ namespace USV::InputUtils {
         }
         std::stringstream buffer;
         buffer << ifs.rdbuf();
-        data = std::make_unique<T>();
         if (!try_decode<T>(*data, buffer.str())) {
             std::cout << "failed to parse" << std::endl;
             throw std::runtime_error("Failed to parse " + filename.string());
@@ -304,6 +364,17 @@ namespace USV::InputUtils {
         std::cout << "OK" << std::endl;
     }
 
+    template<bool R = false, typename T>
+    void load_from_json_file(std::unique_ptr<T>& data, const std::filesystem::path& filename) {
+        data = std::make_unique<T>();
+        load_from_json_file<R>(data.get(), filename);
+    }
+
+    template<bool R = false, typename T>
+    void load_from_json_file(std::shared_ptr<T>& data, const std::filesystem::path& filename) {
+        data = std::make_shared<T>();
+        load_from_json_file<R>(data.get(), filename);
+    }
 }
 
 #endif //USV_GUI_INPUTDATAJSONDEFINES_H
