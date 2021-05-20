@@ -55,8 +55,8 @@ jobs:
       - name: Zip executable
         working-directory: ${{runner.workspace}}/build
         run: |
-          zip --junk-paths USV-gui.zip ./src/USV-gui.exe
-          ls USV-gui.zip
+          zip --junk-paths usv-gui.zip ./src/usv-gui.exe
+          ls usv-gui.zip
 
       - name: Create Release
         id: create_release
@@ -82,6 +82,6 @@ jobs:
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ${{ runner.workspace }}/build/USV-gui.zip
-          asset_name: USV-gui-${{ steps.tag_name.outputs.SOURCE_TAG }}.zip
+          asset_path: ${{ runner.workspace }}/build/usv-gui.zip
+          asset_name: usv-gui-${{ steps.tag_name.outputs.SOURCE_TAG }}.zip
           asset_content_type: application/zip
