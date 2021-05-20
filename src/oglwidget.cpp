@@ -14,6 +14,7 @@
 
 #define FOV 90.0f
 #define CIRCLE_POINTS_N 360
+#define PATH_POINT_MARK_N 5
 
 static const char* vertexShaderSource =
         "#version 330\n"
@@ -211,29 +212,48 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         glVertexAttrib4f(1, 0.0f, 0.0f, 0.0f, 0.0f);
         m_paths->release();
 
-           for (const auto& path_meta:m_paths_meta) {
-               glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
-               glDrawArrays(GL_LINE_STRIP, (GLint) path_meta.ptr, (GLsizei) path_meta.points_count);
-           }
+        for (const auto &path_meta:m_paths_meta) {
+            glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
+            glDrawArrays(GL_LINE_STRIP, (GLint) path_meta.ptr, (GLsizei) path_meta.points_count);
+        }
 
-           // Draw vessels
-           m_ship_vbo->bind();
-           glEnableVertexAttribArray(0);
-           glEnableVertexAttribArray(1);
-           glEnableVertexAttribArray(2);
-           glEnableVertexAttribArray(3);
-           glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-           m_ship_vbo->release();
+        // Paths start points
+        m_paths->bind();
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glVertexAttrib1f(4, 0.05f); //scale
+        for (const auto &path_meta:m_paths_meta) {
+            glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
+            for (const auto &segment: path_meta.path->getSegments()) {
+                const auto start_point = segment.second.getStartPoint();
+                glVertexAttrib2f(1, (GLfloat) start_point.x(), (GLfloat) start_point.y());
+                glVertexAttrib1f(2, (GLfloat) segment.second.getBeginAngle().radians());
+                glDrawArrays(GL_LINE_LOOP, 0, PATH_POINT_MARK_N);
+            }
+        }
+        m_paths->release();
+        glVertexAttribDivisor(1, 0);
+        glVertexAttribDivisor(2, 0);
+        glVertexAttribDivisor(3, 0);
+        glVertexAttribDivisor(4, 0);
 
-           m_vessels->bind();
+        // Draw vessels
+        m_ship_vbo->bind();
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        m_ship_vbo->release();
 
-           glVertexAttribDivisor(1, 1);
-           glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) nullptr);
+        m_vessels->bind();
 
-           glVertexAttribDivisor(2, 1);
-           glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (2 * sizeof(float)));
+        glVertexAttribDivisor(1, 1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *) nullptr);
 
-           glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(2, 1);
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *) (2 * sizeof(float)));
+
+        glVertexAttribDivisor(3, 1);
            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (3 * sizeof(float)));
            glVertexAttrib1f(4, 1.0f);
            glLineWidth(1.0f);
@@ -377,19 +397,24 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
 
     const glm::vec4 colors[static_cast<size_t>(USV::PathType::End)] = {glm::vec4(0, 0, 0, 0),         //  TargetManeuver
                                                                        glm::vec4(0.7f, 0.7f, 0.5f, 0),//  TargetRealManeuver
-                                                                       glm::vec4(0.1f, 0.8f, 0.1f, 0),//  ShipManeuver
+                                                                       glm::vec4(1.0f, 1.0f, 79.f/255.0f,0),//  ShipManeuver
                                                                        glm::vec4(0, 0, 1.0f, 0)};     //  ShipManeuver
 
     std::vector<GLfloat> paths;
+    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(-1));
+    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(-0.3));
+    paths.push_back(static_cast<float>(0.3));paths.push_back(static_cast<float>(0.0));
+    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(0.3));
+    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(1));
     m_paths_meta.clear();
-    for (const auto& pe : caseData.paths) {
+    for (const auto &pe : caseData.paths) {
         auto path_points = pe.path.getPointsPath();
         size_t ptr = paths.size() / 2;
-        for (const auto& v: path_points) {
+        for (const auto &v: path_points) {
             paths.push_back(static_cast<float>(v.x()));
             paths.push_back(static_cast<float>(v.y()));
         }
-        m_paths_meta.emplace_back(ptr, path_points.size(), colors[static_cast<size_t>(pe.pathType)]);
+        m_paths_meta.emplace_back(ptr, &pe.path, path_points.size(), colors[static_cast<size_t>(pe.pathType)]);
     }
 
     m_paths->bind();

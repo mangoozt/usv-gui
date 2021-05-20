@@ -6,10 +6,15 @@
 #include "usvdata/CaseData.h"
 
 class Compass;
+
 class Program;
+
 class Buffer;
+
 class GLSea;
+
 class GLGrid;
+
 class GLRestrictions;
 
 struct Color {
@@ -20,7 +25,7 @@ struct Color {
 };
 
 struct Vessel {
-    const USV::Ship* ship;
+    const USV::Ship *ship;
     USV::Vector2 position;
     double course; // radians
     double radius;
@@ -37,7 +42,7 @@ public:
 
     void resizeGL(int w, int h);
 
-    void paintGL(NVGcontext* ctx);
+    void paintGL(NVGcontext *ctx);
 
     glm::vec3 screenToWorld(glm::ivec2 pos);
 
@@ -45,7 +50,7 @@ public:
 
     void loadData(std::unique_ptr<USV::CaseData> case_data);
 
-    void updatePositions(const std::vector<Vessel>& vessels);
+    void updatePositions(const std::vector<Vessel> &vessels);
 
     void updateTime(double t);
 
@@ -71,11 +76,14 @@ protected:
 
     struct pathVBOMeta {
         size_t ptr;
+        const USV::Path *path;
         size_t points_count;
         glm::vec4 color;
 
-        pathVBOMeta(size_t ptr, size_t points_count, glm::vec4 color) : ptr(ptr), points_count(points_count), color(
-                color) {};
+        pathVBOMeta(size_t ptr, const USV::Path *path, size_t points_count, glm::vec4 color) : ptr(ptr),
+                                                                                               path(path),
+                                                                                               points_count(points_count),
+                                                                                               color(color) {};
     };
 
     std::vector<pathVBOMeta> m_paths_meta;
@@ -105,7 +113,7 @@ protected:
     void updateUniforms();
 
 public:
-    [[nodiscard]] const USV::CaseData* case_data() const {
+    [[nodiscard]] const USV::CaseData *case_data() const {
         return case_data_.get();
     }
 

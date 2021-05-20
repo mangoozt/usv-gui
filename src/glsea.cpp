@@ -27,8 +27,8 @@ GLSea::GLSea() {
     m_program->setUniformValue(m_program->uniformLocation("height_scale"), 0.2f);
 
     struct {
-        glm::vec3 ambient = glm::vec3(127, 205, 255) / 255.0f;
-        glm::vec3 diffuse = glm::vec3(127, 205, 255) / 255.0f;
+        glm::vec3 ambient = glm::vec3(189, 229, 255) / 255.0f;
+        glm::vec3 diffuse = glm::vec3(159, 217, 255) / 255.0f;
         glm::vec3 specular = glm::vec3(255, 204, 51) / 400.0f;
         float shininess{256};
     } material;

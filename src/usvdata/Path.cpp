@@ -293,4 +293,8 @@ namespace USV {
         }
         return points;
     }
+
+    const Path::SegmentsType &Path::getSegments() const {
+        return segments;
+    }
 }

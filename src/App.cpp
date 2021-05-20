@@ -129,10 +129,10 @@ void App::update_time(double time) {
                 } else {
                     switch (pe.ship->target_status->danger_level) {
                         case USV::DangerType::NotDangerous:
-                            color = {0, 1, 0};
+                            color = {0, 0, 0};
                             break;
                         case USV::DangerType::PotentiallyDangerous:
-                            color = {1, 1, 0};
+                            color = {1, 153.0f/255.0f, 51.0f/255.0f};
                             break;
                         case USV::DangerType::Dangerous:
                             color = {1, 0, 0};
@@ -144,7 +144,7 @@ void App::update_time(double time) {
                 color = {0.8f, 0.8f, 0.8f};
                 break;
             case USV::PathType::ShipManeuver:
-                color = {0.1f, 1.0f, 0.1f};
+                color = {1.0f, 1.0f, 79.f/255.0f};
                 break;
             case USV::PathType::Route:
                 color = {1.0f, 1.0f, 1.0f};

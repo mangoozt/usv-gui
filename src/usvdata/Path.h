@@ -108,9 +108,10 @@ namespace USV {
 
     private:
         SegmentsType segments{};
-
     public:
         void appendSegment(Segment segment);
+
+        [[nodiscard]] const SegmentsType &getSegments() const;
 
         [[nodiscard]] Position position(double t) const;
 
