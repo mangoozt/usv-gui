@@ -287,6 +287,26 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             nvgText(ctx, coord.x, coord.y, vessel.ship->name.c_str(), nullptr);
         }
 
+        // Draw segments courses
+        for (const auto &path_meta:m_paths_meta) {
+            glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
+            for (const auto &segment: path_meta.path->getSegments()) {
+                const auto start_point = segment.second.getStartPoint();
+                auto c = WorldToscreen({start_point.x(), start_point.y()});
+                nvgTranslate(ctx, c.x, c.y);
+                nvgRotate(ctx, (GLfloat) (-segment.second.getBeginAngle().radians() + rotation + M_PI_2));
+
+                std::stringstream tmp;
+                tmp << std::setw(5) << fmod(450-segment.second.getBeginAngle().degrees(), 360) << "°";
+
+                nvgText(ctx, 0.0, 0.0, tmp.str().c_str(), nullptr);
+                nvgResetTransform(ctx);
+
+//                glVertexAttrib2f(1, (GLfloat) start_point.x(), (GLfloat) start_point.y());
+//                glVertexAttrib1f(2, (GLfloat) segment.second.getBeginAngle().radians());
+//                glDrawArrays(GL_LINE_LOOP, 0, PATH_POINT_MARK_N);
+            }
+        }
         // Draw distances
         {
             nvgTextAlign(ctx, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
@@ -295,7 +315,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             nvgStrokeColor(ctx, {1.0, 1.0, 1.0, 1.0});
             const auto distance_capSq = distance_cap * distance_cap;
             for (size_t i = 0; i < vessels.size(); ++i) {
-                const auto& a = vessels[i].position;
+                const auto &a = vessels[i].position;
                 for (size_t j = i + 1; j < vessels.size(); ++j) {
                     const auto& b = vessels[j].position;
                     const auto ba = a - b;
@@ -305,7 +325,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
 
                     const auto m = (a + b) * 0.5;
 
-                    const auto angle = static_cast<float>(fmod(atan2(ba.x(), ba.y()) - M_PI * 0.5f, M_PI));
+                    const auto angle = static_cast<float>(fmod(atan2(ba.x(), ba.y()) - M_PI, M_PI));
                     auto c = WorldToscreen({a.x(), a.y()});
 
                     nvgBeginPath(ctx);
@@ -316,7 +336,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
                     nvgStroke(ctx);
 
                     nvgTranslate(ctx, c.x, c.y);
-                    nvgRotate(ctx, angle);
+                    nvgRotate(ctx, angle + rotation);
 
                     std::stringstream tmp;
                     tmp << std::setw(5) << abs(ba);
