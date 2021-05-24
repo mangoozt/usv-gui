@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include <memory>
+#include <nanogui/window.h>
 
 class MyScreen;
 class ScrollableSlider;
@@ -21,6 +22,7 @@ class App {
 
     //ui
     IgnorantTextBox* time_label{};
+    nanogui::Window* w_settings{};
     std::unique_ptr<USV::USVRunner> usv_runner{};
 public:
     explicit App(GLFWwindow* glfw_window);

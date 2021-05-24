@@ -17,23 +17,24 @@ class GLGrid;
 
 class GLRestrictions;
 
-struct Color {
-    float r;
-    float g;
-    float b;
-    float a{1};
-};
-
 struct Vessel {
     const USV::Ship *ship;
     USV::Vector2 position;
     double course; // radians
     double radius;
-    ::Color color{0, 0, 0};
+    glm::vec4 color{0, 0, 0, 1};
 };
 
 class OGLWidget {
 public:
+
+    struct AppearanceSettings {
+        glm::vec4 sea_ambient;
+        glm::vec4 sea_diffuse;
+        glm::vec4 sea_specular;
+        float sea_shininess;
+    };
+
     OGLWidget();
 
     virtual ~OGLWidget();
@@ -64,6 +65,10 @@ public:
 
     void updateSunAngle(long timestamp, double lat, double lon);
 
+    void updateAppearanceSettings(const AppearanceSettings &settings);
+
+    [[nodiscard]] const AppearanceSettings &getAppearanceSettings() const;
+
 protected:
     unsigned int vao{};
     std::unique_ptr<Program> m_program{nullptr};
@@ -73,6 +78,7 @@ protected:
     std::unique_ptr<Buffer> m_paths{};
     unsigned int ubo_matrices{};
     unsigned int ubo_light{};
+    AppearanceSettings appearance_settings;
 
     struct pathVBOMeta {
         size_t ptr;
