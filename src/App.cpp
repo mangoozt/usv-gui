@@ -397,10 +397,7 @@ void App::DropCallback(GLFWwindow* window, int count, const char** filenames) {
 
 void App::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
     auto app = reinterpret_cast<App*>(glfwGetWindowUserPointer(window));
-    auto& slider = app->slider;
-    slider->parent()->set_width(width);
-    slider->parent()->set_position({0, height - slider->parent()->height()});
-    slider->set_width(width);
+    app->update_slider_width(width, height);
     app->screen->resize_callback_event(width, height);
     app->screen->map().resizeGL(width, height);
 }
@@ -411,14 +408,23 @@ App::~App() {
 
 void App::show_settings() {
     // Settings
-    if(!w_settings){
+    if (!w_settings) {
         w_settings = new SettingsWindow(screen, &screen->map(), "Settings");
-        w_settings->set_position({0,0});
+        w_settings->set_position({0, 0});
         w_settings->set_width(300);
         w_settings->set_visible(false);
     }
     w_settings->set_visible(!(w_settings->visible()));
     w_settings->center();
     screen->perform_layout();
-    screen->redraw();
+    auto& size = screen->size();
+    update_slider_width(size.x(), size.y());
+}
+
+void App::update_slider_width(int width, int height) {
+    if (slider) {
+        slider->parent()->set_width(width);
+        slider->parent()->set_position({0, height - slider->parent()->height()});
+        slider->set_width(width);
+    }
 }
