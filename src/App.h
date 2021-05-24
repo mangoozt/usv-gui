@@ -48,6 +48,8 @@ private:
 
     void show_settings();
 
+    void update_slider_width(int width, int height);
+
     static void CursorPosCallback(GLFWwindow* window, double x, double y);
 
     static void MouseButtonCallback(GLFWwindow* window, int button, int action, int modifiers);
