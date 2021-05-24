@@ -5,6 +5,7 @@
 #include "usvdata/UsvRun.h"
 #include "ui/IgnorantTextBox.h"
 #include "ui/ScrollableSlider.h"
+#include "ui/SettingsWindow.h"
 #include <iostream>
 
 #define USV_GUI_USV_EXECUTABLE_ENV_NAME "USV_GUI_USV_EXECUTABLE"
@@ -45,9 +46,15 @@ void App::initialize_gui() {
     ref<Button> select_exec_button = new Button(screen, "exe...");
     select_exec_button->set_callback([this] { select_usv_executable(); });
     select_exec_button->set_position({189, 10});
-//    select_exec_button->set_icon(FA_FOLDER_OPEN);
 
+    // Settings
+    w_settings = new SettingsWindow(screen, &screen->map(), "Settings");
 
+    w_settings->set_position({0,0});
+    w_settings->set_visible(true);
+    // color_picker.se
+
+    // bottom
     ref<Widget> panel = new Widget(screen);
     panel->set_layout(new BoxLayout(nanogui::Orientation::Vertical, nanogui::Alignment::Fill));
 
@@ -106,7 +113,7 @@ void App::load_directory(const std::string& data_directory) {
 
 namespace {
     void
-    push_position(double time, const USV::Path& path, std::vector<Vessel>& vessels, double radius, ::Color& color, const USV::Ship* ship) {
+    push_position(double time, const USV::Path& path, std::vector<Vessel>& vessels, double radius, glm::vec4& color, const USV::Ship* ship) {
         try {
             auto position = path.position(time);
             Vessel v{ship, position.point, position.course.radians(), radius, color};
@@ -121,33 +128,33 @@ void App::update_time(double time) {
     auto case_data = map.case_data();
     vessels.reserve(case_data->paths.size());
     for (const auto& pe: case_data->paths) {
-        ::Color color;
+        glm::vec4 color;
         switch (pe.pathType) {
             case USV::PathType::TargetManeuver:
                 if (pe.ship->target_status == nullptr) {
-                    color = {0, 1, 0};
+                    color = {0, 1, 0, 1};
                 } else {
                     switch (pe.ship->target_status->danger_level) {
                         case USV::DangerType::NotDangerous:
-                            color = {0, 0, 0};
+                            color = {0, 1, 0, 1};
                             break;
                         case USV::DangerType::PotentiallyDangerous:
-                            color = {1, 153.0f/255.0f, 51.0f/255.0f};
+                            color = {1.0f, 153.0f/255.0f, 51.0f/255.0f, 1.0f};
                             break;
                         case USV::DangerType::Dangerous:
-                            color = {1, 0, 0};
+                            color = {1, 0, 0, 1};
                             break;
                     }
                 }
                 break;
             case USV::PathType::TargetRealManeuver:
-                color = {0.8f, 0.8f, 0.8f};
+                color = {0.8f, 0.8f, 0.8f, 1.0f};
                 break;
             case USV::PathType::ShipManeuver:
-                color = {1.0f, 1.0f, 79.f/255.0f};
+                color = {1.0f, 1.0f, 79.f/255.0f,1.0f};
                 break;
             case USV::PathType::Route:
-                color = {1.0f, 1.0f, 1.0f};
+                color = {1.0f, 1.0f, 1.0f, 1.0f};
                 break;
         }
         push_position(time, pe.path, vessels, case_data->radius, color, pe.ship);

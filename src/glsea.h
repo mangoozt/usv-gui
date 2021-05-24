@@ -1,7 +1,7 @@
 #ifndef GLSEA_H
 #define GLSEA_H
 #include <glm/glm.hpp>
-
+#include "Defines.h"
 #include <memory>
 
 class Program;
@@ -12,6 +12,7 @@ class GLSea
 public:
     GLSea();
     void render(glm::vec3& eyePos, double time=0);
+    void set_material(const Material& new_material);
 private:
     unsigned int vertexLocation{};
     void prepare_grid();

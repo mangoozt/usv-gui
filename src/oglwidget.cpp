@@ -146,6 +146,12 @@ void OGLWidget::initializeGL() {
 
     restrictions = std::make_unique<GLRestrictions>();
 //    skybox = new Skybox();
+    updateAppearanceSettings({
+                                     {189 / 255.0f, 229 / 255.0f, 255 / 255.0f, 1},
+                                     {159 / 255.0f, 217 / 255.0f, 255 / 255.0f, 1},
+                                     {255 / 400.0f, 204 / 400.0f, 51 / 400.0f, 1},
+                                     256
+                             });
 }
 
 void OGLWidget::resizeGL(int w, int h) {
@@ -616,6 +622,21 @@ void OGLWidget::updateUniforms() {
     m_program->setUniformValue(m_lightPosLoc, glm::vec3(0, 0, 70));
 
     m_uniformsDirty = false;
+}
+
+void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &settings) {
+    appearance_settings = settings;
+    Material sea_material{
+            appearance_settings.sea_ambient,
+            appearance_settings.sea_diffuse,
+            appearance_settings.sea_specular,
+            appearance_settings.sea_shininess,
+    };
+    sea->set_material(sea_material);
+}
+
+const OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() const {
+    return appearance_settings;
 }
 
 OGLWidget::~OGLWidget() = default;

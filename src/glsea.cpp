@@ -26,16 +26,6 @@ GLSea::GLSea() {
     m_timeLoc = m_program->uniformLocation("time");
     m_program->setUniformValue(m_program->uniformLocation("height_scale"), 0.2f);
 
-    struct {
-        glm::vec3 ambient = glm::vec3(189, 229, 255) / 255.0f;
-        glm::vec3 diffuse = glm::vec3(159, 217, 255) / 255.0f;
-        glm::vec3 specular = glm::vec3(255, 204, 51) / 400.0f;
-        float shininess{256};
-    } material;
-    m_program->setUniformValue(m_program->uniformLocation("material.ambient"), material.ambient);
-    m_program->setUniformValue(m_program->uniformLocation("material.diffuse"), material.diffuse);
-    m_program->setUniformValue(m_program->uniformLocation("material.specular"), material.specular);
-    m_program->setUniformValue(m_program->uniformLocation("material.shininess"), material.shininess);
     glUniform1i(m_program->uniformLocation("tex_normal"), 0);
     glUniform1i(m_program->uniformLocation("depthMap"), 2);
     glUniform1i(m_program->uniformLocation("specularMap"), 4);
@@ -99,4 +89,11 @@ void GLSea::prepare_grid() {
     ibo->bind();
     ibo->allocate(indices.data(), static_cast<int>(data_sizeof(indices)));
     ibo->release();
+}
+
+void GLSea::set_material(const Material &new_material) {
+    m_program->setUniformValue(m_program->uniformLocation("material.ambient"), new_material.ambient);
+    m_program->setUniformValue(m_program->uniformLocation("material.diffuse"), new_material.diffuse);
+    m_program->setUniformValue(m_program->uniformLocation("material.specular"), new_material.specular);
+    m_program->setUniformValue(m_program->uniformLocation("material.shininess"), new_material.shininess);
 }
