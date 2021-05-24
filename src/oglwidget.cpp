@@ -214,12 +214,12 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
     glDisableVertexAttribArray(4);
     glVertexAttrib1f(4, 1.0f);
     m_program->release();
+    restrictions->render(m_eye, GLRestrictions::GeometryTypes::Isle);
+    sea->render(m_eye, time);
     //Draw plane
     glDisable(GL_DEPTH_TEST);
     grid->render();
     glEnable(GL_DEPTH_TEST);
-    restrictions->render(m_eye, GLRestrictions::GeometryTypes::Isle);
-    sea->render(m_eye, time);
     restrictions->render(m_eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
