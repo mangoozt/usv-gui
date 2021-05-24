@@ -21,7 +21,8 @@ namespace USV {
     enum class DangerType {
         NotDangerous = 0,
         PotentiallyDangerous,
-        Dangerous
+        Dangerous,
+        Undefined
     };
 
     struct SafeZone {

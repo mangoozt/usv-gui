@@ -18,11 +18,21 @@ class GLGrid;
 class GLRestrictions;
 
 struct Vessel {
-    const USV::Ship *ship;
+    enum class Type {
+        TargetNotDangerous = static_cast<int>(USV::DangerType::NotDangerous),
+        TargetPotentiallyDangerous = static_cast<int>(USV::DangerType::PotentiallyDangerous),
+        TargetDangerous = static_cast<int>(USV::DangerType::Dangerous),
+        TargetUndefined,
+        TargetOnRealManeuver,
+        ShipOnRoute,
+        ShipOnManeuver,
+        End
+    };
+    const USV::Ship* ship;
     USV::Vector2 position;
     double course; // radians
     double radius;
-    glm::vec4 color{0, 0, 0, 1};
+    Type type;
 };
 
 class OGLWidget {
@@ -33,6 +43,8 @@ public:
         glm::vec4 sea_diffuse;
         glm::vec4 sea_specular;
         float sea_shininess;
+        glm::vec4 path_colors[static_cast<size_t>(USV::PathType::End)];
+        glm::vec4 vessels_colors[static_cast<size_t>(Vessel::Type::End)];
     };
 
     OGLWidget();
@@ -52,6 +64,8 @@ public:
     void loadData(std::unique_ptr<USV::CaseData> case_data);
 
     void updatePositions(const std::vector<Vessel> &vessels);
+
+    void updatePositions();
 
     void updateTime(double t);
 
@@ -82,14 +96,12 @@ protected:
 
     struct pathVBOMeta {
         size_t ptr;
-        const USV::Path *path;
+        const USV::Path* path;
         size_t points_count;
-        glm::vec4 color;
+        USV::PathType type;
 
-        pathVBOMeta(size_t ptr, const USV::Path *path, size_t points_count, glm::vec4 color) : ptr(ptr),
-                                                                                               path(path),
-                                                                                               points_count(points_count),
-                                                                                               color(color) {};
+        pathVBOMeta(size_t ptr, const USV::Path* path, size_t points_count, USV::PathType path_type) : ptr(ptr), path(
+                path), points_count(points_count), type(path_type) {};
     };
 
     std::vector<pathVBOMeta> m_paths_meta;
