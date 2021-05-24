@@ -46,6 +46,8 @@ private:
 
     void select_usv_executable();
 
+    void show_settings();
+
     static void CursorPosCallback(GLFWwindow* window, double x, double y);
 
     static void MouseButtonCallback(GLFWwindow* window, int button, int action, int modifiers);

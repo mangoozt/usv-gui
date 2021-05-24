@@ -47,14 +47,6 @@ void App::initialize_gui() {
     select_exec_button->set_callback([this] { select_usv_executable(); });
     select_exec_button->set_position({189, 10});
 
-    // Settings
-    w_settings = new SettingsWindow(screen, &screen->map(), "Settings");
-
-    w_settings->set_position({0,0});
-    w_settings->set_visible(true);
-    w_settings->set_width(300);
-    // color_picker.se
-
     // bottom
     ref<Widget> panel = new Widget(screen);
     panel->set_layout(new BoxLayout(nanogui::Orientation::Vertical, nanogui::Alignment::Fill));
@@ -386,6 +378,10 @@ void App::CharCallback(GLFWwindow* window, unsigned int codepoint) {
 
 void App::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     auto app = static_cast<App*>(glfwGetWindowUserPointer(window));
+    if(action & GLFW_PRESS && mods & GLFW_MOD_CONTROL && key == GLFW_KEY_P){
+        app->show_settings();
+        return;
+    }
     app->screen->key_callback(key, scancode, action, mods);
 }
 
@@ -411,4 +407,18 @@ void App::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
 
 App::~App() {
     delete screen;
+}
+
+void App::show_settings() {
+    // Settings
+    if(!w_settings){
+        w_settings = new SettingsWindow(screen, &screen->map(), "Settings");
+        w_settings->set_position({0,0});
+        w_settings->set_width(300);
+        w_settings->set_visible(false);
+    }
+    w_settings->set_visible(!(w_settings->visible()));
+    w_settings->center();
+    screen->perform_layout();
+    screen->redraw();
 }
