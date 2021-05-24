@@ -147,24 +147,24 @@ void OGLWidget::initializeGL() {
     restrictions = std::make_unique<GLRestrictions>();
 //    skybox = new Skybox();
     updateAppearanceSettings({
-                                     {189 / 255.0f, 229 / 255.0f, 255 / 255.0f, 1}, // sea ambient
-                                     {159 / 255.0f, 217 / 255.0f, 255 / 255.0f, 1}, // sea diffuse
-                                     {255 / 400.0f, 204 / 400.0f, 51 / 400.0f, 1}, // sea specular
+                                     {0.300804853, 0.446960151, 0.541961133, 1}, // sea ambient
+                                     {0.623529434, 0.850980401, 1, 1}, // sea diffuse
+                                     {0, 0, 0, 1}, // sea specular
                                      256, // sea shininess
                                      {
                                              glm::vec4(0, 0, 0, 1),         //  TargetManeuver
                                              glm::vec4(0.7f, 0.7f, 0.5f, 1),//  TargetRealManeuver
-                                             glm::vec4(1.0f, 1.0f, 79.f / 255.0f, 1),//  ShipManeuver
-                                             glm::vec4(0, 0, 1.0f, 1)
+                                             glm::vec4(0.769072533, 0.0, 1, 1),//  ShipManeuver
+                                             glm::vec4(0, 0, 1, 1)
                                      },     //  Route
                                      {
                                              {0, 1, 0, 1}, // TargetNotDangerous
-                                             {1.0f, 153.0f / 255.0f, 51.0f / 255.0f, 1.0f}, // TargetPotentiallyDangerous
+                                             {1.0f, 0.6, 0.2, 1.0f}, // TargetPotentiallyDangerous
                                              {1, 0, 0, 1}, // TargetDangerous
-                                             {0, 1, 0, 1}, // TargetUndefined
-                                             {0, 1, 0, 1}, // TargetOnRealManeuver
+                                             {0, 0.426016808, 1, 1}, // TargetUndefined
+                                             {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
                                              {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
-                                             {1.0f, 1.0f, 79.f / 255.0f, 1.0f} // ShipOnManeuver
+                                             {0.66566503, 0.0, 0.738230228, 1.0f} // ShipOnManeuver
                                      }
                              });
 }

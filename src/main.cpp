@@ -26,7 +26,11 @@
 #define MAIN_WINDOW_WIDTH 800
 #define MAIN_WINDOW_HEIGHT 600
 
+#define COMPLETE_VERSION "v" USV_GUI_VERSION " built on " __DATE__ " " __TIME__
+
+
 int main(int /* argc */, char** /* argv */) {
+    std::cout<< "usv-gui " COMPLETE_VERSION << std::endl;
 //HIDE OWN CONSOLE WINDOW BUT still output to CLI (DIRTY)
 #ifdef WIN32
     HWND consoleWnd = GetConsoleWindow();

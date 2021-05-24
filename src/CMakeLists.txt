@@ -5,6 +5,7 @@ option(NANOGUI_BUILD_PYTHON OFF)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/nanogui" "vendor/nanogui" EXCLUDE_FROM_ALL)
 add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/glm" "vendor/glm" EXCLUDE_FROM_ALL)
+add_compile_definitions(USV_GUI_VERSION=\"${CMAKE_PROJECT_VERSION}\")
 
 add_executable(usv-gui
                main.cpp
