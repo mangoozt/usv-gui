@@ -52,6 +52,7 @@ void App::initialize_gui() {
 
     w_settings->set_position({0,0});
     w_settings->set_visible(true);
+    w_settings->set_width(300);
     // color_picker.se
 
     // bottom
@@ -113,10 +114,10 @@ void App::load_directory(const std::string& data_directory) {
 
 namespace {
     void
-    push_position(double time, const USV::Path& path, std::vector<Vessel>& vessels, double radius, glm::vec4& color, const USV::Ship* ship) {
+    push_position(double time, const USV::Path& path, std::vector<Vessel>& vessels, double radius, Vessel::Type type, const USV::Ship* ship) {
         try {
             auto position = path.position(time);
-            Vessel v{ship, position.point, position.course.radians(), radius, color};
+            Vessel v{ship, position.point, position.course.radians(), radius, type};
             vessels.push_back(v);
         } catch (std::out_of_range&) {}
     }
@@ -128,36 +129,29 @@ void App::update_time(double time) {
     auto case_data = map.case_data();
     vessels.reserve(case_data->paths.size());
     for (const auto& pe: case_data->paths) {
-        glm::vec4 color;
+        Vessel::Type type;
         switch (pe.pathType) {
             case USV::PathType::TargetManeuver:
                 if (pe.ship->target_status == nullptr) {
-                    color = {0, 1, 0, 1};
+                    type = Vessel::Type::TargetUndefined;
                 } else {
-                    switch (pe.ship->target_status->danger_level) {
-                        case USV::DangerType::NotDangerous:
-                            color = {0, 1, 0, 1};
-                            break;
-                        case USV::DangerType::PotentiallyDangerous:
-                            color = {1.0f, 153.0f/255.0f, 51.0f/255.0f, 1.0f};
-                            break;
-                        case USV::DangerType::Dangerous:
-                            color = {1, 0, 0, 1};
-                            break;
-                    }
+                    type = static_cast<Vessel::Type>(pe.ship->target_status->danger_level);
                 }
                 break;
             case USV::PathType::TargetRealManeuver:
-                color = {0.8f, 0.8f, 0.8f, 1.0f};
+                type = Vessel::Type::TargetOnRealManeuver;
                 break;
             case USV::PathType::ShipManeuver:
-                color = {1.0f, 1.0f, 79.f/255.0f,1.0f};
+                type = Vessel::Type::ShipOnManeuver;
                 break;
             case USV::PathType::Route:
-                color = {1.0f, 1.0f, 1.0f, 1.0f};
+                type = Vessel::Type::ShipOnRoute;
+                break;
+            case USV::PathType::End:
+                type = Vessel::Type::TargetUndefined;
                 break;
         }
-        push_position(time, pe.path, vessels, case_data->radius, color, pe.ship);
+        push_position(time, pe.path, vessels, case_data->radius, type, pe.ship);
     }
 
     map.updatePositions(vessels);

@@ -147,10 +147,25 @@ void OGLWidget::initializeGL() {
     restrictions = std::make_unique<GLRestrictions>();
 //    skybox = new Skybox();
     updateAppearanceSettings({
-                                     {189 / 255.0f, 229 / 255.0f, 255 / 255.0f, 1},
-                                     {159 / 255.0f, 217 / 255.0f, 255 / 255.0f, 1},
-                                     {255 / 400.0f, 204 / 400.0f, 51 / 400.0f, 1},
-                                     256
+                                     {189 / 255.0f, 229 / 255.0f, 255 / 255.0f, 1}, // sea ambient
+                                     {159 / 255.0f, 217 / 255.0f, 255 / 255.0f, 1}, // sea diffuse
+                                     {255 / 400.0f, 204 / 400.0f, 51 / 400.0f, 1}, // sea specular
+                                     256, // sea shininess
+                                     {
+                                             glm::vec4(0, 0, 0, 1),         //  TargetManeuver
+                                             glm::vec4(0.7f, 0.7f, 0.5f, 1),//  TargetRealManeuver
+                                             glm::vec4(1.0f, 1.0f, 79.f / 255.0f, 1),//  ShipManeuver
+                                             glm::vec4(0, 0, 1.0f, 1)
+                                     },     //  Route
+                                     {
+                                             {0, 1, 0, 1}, // TargetNotDangerous
+                                             {1.0f, 153.0f / 255.0f, 51.0f / 255.0f, 1.0f}, // TargetPotentiallyDangerous
+                                             {1, 0, 0, 1}, // TargetDangerous
+                                             {0, 1, 0, 1}, // TargetUndefined
+                                             {0, 1, 0, 1}, // TargetOnRealManeuver
+                                             {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
+                                             {1.0f, 1.0f, 79.f / 255.0f, 1.0f} // ShipOnManeuver
+                                     }
                              });
 }
 
@@ -219,7 +234,8 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         m_paths->release();
 
         for (const auto &path_meta:m_paths_meta) {
-            glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
+            const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
+            glVertexAttrib3f(3, color.x, color.y, color.z);
             glDrawArrays(GL_LINE_STRIP, (GLint) path_meta.ptr, (GLsizei) path_meta.points_count);
         }
 
@@ -228,8 +244,9 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
         glVertexAttrib1f(4, 0.05f); //scale
         for (const auto &path_meta:m_paths_meta) {
-            glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
-            for (const auto &segment: path_meta.path->getSegments()) {
+            const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
+            glVertexAttrib3f(3, color.x, color.y, color.z);
+            for (const auto& segment: path_meta.path->getSegments()) {
                 const auto start_point = segment.second.getStartPoint();
                 glVertexAttrib2f(1, (GLfloat) start_point.x(), (GLfloat) start_point.y());
                 glVertexAttrib1f(2, (GLfloat) segment.second.getBeginAngle().radians());
@@ -295,15 +312,16 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
 
         // Draw segments courses
         for (const auto &path_meta:m_paths_meta) {
-            glVertexAttrib3f(3, path_meta.color.x, path_meta.color.y, path_meta.color.z);
-            for (const auto &segment: path_meta.path->getSegments()) {
+            const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
+            glVertexAttrib3f(3, color.x, color.y, color.z);
+            for (const auto& segment: path_meta.path->getSegments()) {
                 const auto start_point = segment.second.getStartPoint();
                 auto c = WorldToscreen({start_point.x(), start_point.y()});
                 nvgTranslate(ctx, c.x, c.y);
                 nvgRotate(ctx, (GLfloat) (-segment.second.getBeginAngle().radians() + rotation + M_PI_2));
 
                 std::stringstream tmp;
-                tmp << std::setw(5) << fmod(450-segment.second.getBeginAngle().degrees(), 360) << "°";
+                tmp << std::setw(5) << fmod(450 - segment.second.getBeginAngle().degrees(), 360) << "°";
 
                 nvgText(ctx, 0.0, 0.0, tmp.str().c_str(), nullptr);
                 nvgResetTransform(ctx);
@@ -421,11 +439,6 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
 //        End
 //    };
 
-    const glm::vec4 colors[static_cast<size_t>(USV::PathType::End)] = {glm::vec4(0, 0, 0, 0),         //  TargetManeuver
-                                                                       glm::vec4(0.7f, 0.7f, 0.5f, 0),//  TargetRealManeuver
-                                                                       glm::vec4(1.0f, 1.0f, 79.f/255.0f,0),//  ShipManeuver
-                                                                       glm::vec4(0, 0, 1.0f, 0)};     //  ShipManeuver
-
     std::vector<GLfloat> paths;
     paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(-1));
     paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(-0.3));
@@ -440,7 +453,7 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
             paths.push_back(static_cast<float>(v.x()));
             paths.push_back(static_cast<float>(v.y()));
         }
-        m_paths_meta.emplace_back(ptr, &pe.path, path_points.size(), colors[static_cast<size_t>(pe.pathType)]);
+        m_paths_meta.emplace_back(ptr, &pe.path, path_points.size(), pe.pathType);
     }
 
     m_paths->bind();
@@ -453,14 +466,19 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
 
 void OGLWidget::updatePositions(const std::vector<Vessel>& new_vessels) {
     vessels = new_vessels;
+    updatePositions();
+}
+
+void OGLWidget::updatePositions() {
     std::vector<GLfloat> spos;
     for (const auto& v: vessels) {
+        auto color = appearance_settings.vessels_colors[static_cast<size_t>(v.type)];
         spos.push_back(static_cast<GLfloat>(v.position.x()));
         spos.push_back(static_cast<GLfloat>(v.position.y()));
         spos.push_back(static_cast<GLfloat>(v.course));
-        spos.push_back(v.color.r);
-        spos.push_back(v.color.g);
-        spos.push_back(v.color.b);
+        spos.push_back(color.r);
+        spos.push_back(color.g);
+        spos.push_back(color.b);
         spos.push_back(static_cast<GLfloat>(v.radius));
     }
     m_vessels->bind();

@@ -175,10 +175,10 @@ namespace USV::InputTypes {
     struct AnalyseResult {
         struct TargetStatus {
             std::string id;
-            DangerType danger_level;
             ScenarioType scenario_type;
             double CPA;
             double TCPA;
+            DangerType danger_level{DangerType::Undefined};
         };
 
         struct ViolatedLimitation {
