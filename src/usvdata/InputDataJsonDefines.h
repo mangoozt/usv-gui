@@ -351,15 +351,21 @@ namespace USV::InputUtils {
         std::cout << "Loading `" << filename << "` ... ";
         std::ifstream ifs(filename);
         if (!ifs.good()) {
-            std::cout << "failed to open" << std::endl;
             if constexpr (R) { throw std::runtime_error("Failed to open " + filename.string()); }
-            else { return; }
+            else {
+                std::cout << "failed to open" << std::endl;
+                return;
+            }
         }
         std::stringstream buffer;
         buffer << ifs.rdbuf();
         if (!try_decode<T>(*data, buffer.str())) {
-            std::cout << "failed to parse" << std::endl;
-            throw std::runtime_error("Failed to parse " + filename.string());
+            if constexpr(R) {
+                throw std::runtime_error("Failed to parse " + filename.string());
+            } else {
+                std::cout << "failed to parse" << std::endl;
+                return;
+            }
         }
         std::cout << "OK" << std::endl;
     }
