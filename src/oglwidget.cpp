@@ -163,8 +163,10 @@ void OGLWidget::initializeGL() {
                                              {1, 0, 0, 1}, // TargetDangerous
                                              {0, 0.426016808, 1, 1}, // TargetUndefined
                                              {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
+                                             {0.7, 0.7, 0.7, 1}, // TargetInitPosition
                                              {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
-                                             {0.66566503, 0.0, 0.738230228, 1.0f} // ShipOnManeuver
+                                             {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
+                                             {0.66566503, 0.0, 0.738230228, 1.0f} // ShipInitPosition
                                      }
                              });
 }
@@ -280,7 +282,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (3 * sizeof(float)));
            glVertexAttrib1f(4, 1.0f);
            glLineWidth(1.0f);
-           glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei) vessels.size());
+           glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei) (vessels.size() + case_data_->targets.size()));
            m_vessels->release();
 
            // Circle
@@ -291,7 +293,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
            glEnableVertexAttribArray(4);
            glVertexAttribDivisor(4, 1);
            glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (6 * sizeof(float)));
-           glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei) vessels.size());
+           glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei) (vessels.size() + case_data_->targets.size()));
            glVertexAttribDivisor(1, 0);
            glVertexAttribDivisor(2, 0);
            glVertexAttribDivisor(3, 0);
@@ -471,8 +473,10 @@ void OGLWidget::updatePositions(const std::vector<Vessel>& new_vessels) {
 
 void OGLWidget::updatePositions() {
     std::vector<GLfloat> spos;
+    double radius = 0;
     for (const auto& v: vessels) {
         auto color = appearance_settings.vessels_colors[static_cast<size_t>(v.type)];
+        radius = v.radius;
         spos.push_back(static_cast<GLfloat>(v.position.x()));
         spos.push_back(static_cast<GLfloat>(v.position.y()));
         spos.push_back(static_cast<GLfloat>(v.course));
@@ -481,6 +485,17 @@ void OGLWidget::updatePositions() {
         spos.push_back(color.b);
         spos.push_back(static_cast<GLfloat>(v.radius));
     }
+    auto color = appearance_settings.vessels_colors[static_cast<size_t>(Vessel::Type::TargetInitPosition)];
+    for (const auto &t: case_data_->targets) {
+        spos.push_back(static_cast<GLfloat>(t.initPosition.point.y()));
+        spos.push_back(static_cast<GLfloat>(t.initPosition.point.x()));
+        spos.push_back(static_cast<GLfloat>(t.initPosition.course.radians()));
+        spos.push_back(color.r);
+        spos.push_back(color.g);
+        spos.push_back(color.b);
+        spos.push_back(static_cast<GLfloat>(radius));
+    }
+
     m_vessels->bind();
     m_vessels->allocate(spos.data(), (int) (sizeof(GLfloat) * spos.size()));
     m_vessels->release();

@@ -24,8 +24,10 @@ struct Vessel {
         TargetDangerous = static_cast<int>(USV::DangerType::Dangerous),
         TargetUndefined,
         TargetOnRealManeuver,
+        TargetInitPosition,
         ShipOnRoute,
         ShipOnManeuver,
+        ShipInitPosition,
         End
     };
     const USV::Ship* ship;
