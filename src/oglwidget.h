@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <nanovg.h>
 #include "usvdata/CaseData.h"
+#include "glvessels.h"
 
 class Compass;
 
@@ -17,26 +18,6 @@ class GLGrid;
 
 class GLRestrictions;
 
-struct Vessel {
-    enum class Type {
-        TargetNotDangerous = static_cast<int>(USV::DangerType::NotDangerous),
-        TargetPotentiallyDangerous = static_cast<int>(USV::DangerType::PotentiallyDangerous),
-        TargetDangerous = static_cast<int>(USV::DangerType::Dangerous),
-        TargetUndefined,
-        TargetOnRealManeuver,
-        TargetInitPosition,
-        ShipOnRoute,
-        ShipOnManeuver,
-        ShipInitPosition,
-        End
-    };
-    const USV::Ship* ship;
-    USV::Vector2 position;
-    double course; // radians
-    double radius;
-    Type type;
-};
-
 class OGLWidget {
 public:
 
@@ -46,7 +27,7 @@ public:
         glm::vec4 sea_specular;
         float sea_shininess;
         glm::vec4 path_colors[static_cast<size_t>(USV::PathType::End)];
-        glm::vec4 vessels_colors[static_cast<size_t>(Vessel::Type::End)];
+        GLVessels::AppearanceSettings vessels_colors{};
     };
 
     OGLWidget();
@@ -88,9 +69,6 @@ public:
 protected:
     unsigned int vao{};
     std::unique_ptr<Program> m_program{nullptr};
-    std::unique_ptr<Buffer> m_ship_vbo{};
-    std::unique_ptr<Buffer> m_circle_vbo{};
-    std::unique_ptr<Buffer> m_vessels{};
     std::unique_ptr<Buffer> m_paths{};
     unsigned int ubo_matrices{};
     unsigned int ubo_light{};
@@ -107,7 +85,6 @@ protected:
     };
 
     std::vector<pathVBOMeta> m_paths_meta;
-    std::vector<Vessel> vessels;
     glm::ivec2 mouse_press_point{};
 
     int m_myMatrixLoc{};
@@ -123,6 +100,7 @@ protected:
     std::unique_ptr<GLSea> sea{};
     std::unique_ptr<GLRestrictions> restrictions{};
     std::unique_ptr<Compass> compass;
+    std::unique_ptr<GLVessels> vessels;
 
     double time{0.0f};
     double distance_cap{12.0};

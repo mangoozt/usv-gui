@@ -13,7 +13,6 @@
 #include <iostream>
 
 #define FOV 90.0f
-#define CIRCLE_POINTS_N 360
 #define PATH_POINT_MARK_N 5
 
 static const char* vertexShaderSource =
@@ -44,7 +43,7 @@ static const char* fragmentShaderSource =
         "}\n";
 
 
-OGLWidget::OGLWidget() : m_uniformsDirty(true), compass(new Compass()) {}
+OGLWidget::OGLWidget() : m_uniformsDirty(true), compass(new Compass()), vessels(new GLVessels()) {}
 
 void OGLWidget::initializeGL() {
 
@@ -89,61 +88,12 @@ void OGLWidget::initializeGL() {
 
 
     m_program->bind();
-    m_ship_vbo = std::make_unique<Buffer>();
-    m_ship_vbo->create();
-    m_ship_vbo->bind();
-    GLfloat ship[] = {
-            -0.43301270189f * 0.2f, 0.5f * 0.2f, 0.0f,
-            -0.43301270189f * 0.2f, -0.5f * 0.2f, 0.0f,
-            0.43301270189f * 0.2f, 0.0f, 0.0f,
-    };
-    m_ship_vbo->allocate(ship, sizeof(ship));
-    m_ship_vbo->release();
-
-    {
-        std::vector<GLfloat> circles;
-        size_t circle_N{CIRCLE_POINTS_N};
-        circles.reserve(circle_N * 2);
-        float x{1};
-        float y{0};
-        auto sin_ = std::sin((float) M_2PI / (float) circle_N);
-        auto cos_ = std::cos((float) M_2PI / (float) circle_N);
-        for (size_t i = 0; i < circle_N; ++i) {
-            circles.push_back(x);
-            circles.push_back(y);
-            auto x_ = x;
-            x = cos_ * x - sin_ * y;
-            y = sin_ * x_ + cos_ * y;
-        }
-        m_circle_vbo = std::make_unique<Buffer>();
-        m_circle_vbo->create();
-        m_circle_vbo->bind();
-        m_circle_vbo->allocate(circles.data(), (int) (sizeof(GLfloat) * circles.size()));
-        m_circle_vbo->release();
-    }
-
-    m_vessels = std::make_unique<Buffer>();
-    m_vessels->create();
 
     m_paths = std::make_unique<Buffer>();
     m_paths->create();
 
-//    glEnable(GL_FRAMEBUFFER_SRGB);
-//    glClearColor(1.0f, 1.0f, 1.0f, 1);
-
-//    {
-//        QFile fontfile(":/resource/font.fnt");
-//        QImage fontimage(":/resource/font.png");
-//        text = new Text(fontfile, fontimage);
-//    }
     grid = std::make_unique<GLGrid>();
-//    {
-//        QImage tex(":/resource/Water_001_DISP.png");
-//        QImage tex_norm(":resource/Water_001_NORM.jpg");
-//        QImage spec(":resource/Water_001_SPEC.jpg");
     sea = std::make_unique<GLSea>();
-//    }
-
     restrictions = std::make_unique<GLRestrictions>();
 //    skybox = new Skybox();
     updateAppearanceSettings({
@@ -157,17 +107,17 @@ void OGLWidget::initializeGL() {
                                              glm::vec4(0.769072533, 0.0, 1, 1),//  ShipManeuver
                                              glm::vec4(0, 0, 1, 1)
                                      },     //  Route
-                                     {
-                                             {0, 1, 0, 1}, // TargetNotDangerous
-                                             {1.0f, 0.6, 0.2, 1.0f}, // TargetPotentiallyDangerous
-                                             {1, 0, 0, 1}, // TargetDangerous
-                                             {0, 0.426016808, 1, 1}, // TargetUndefined
-                                             {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
-                                             {0.7, 0.7, 0.7, 1}, // TargetInitPosition
-                                             {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
-                                             {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
-                                             {0.66566503, 0.0, 0.738230228, 1.0f} // ShipInitPosition
-                                     }
+                                     {{
+                                              {0, 1, 0, 1}, // TargetNotDangerous
+                                              {1.0f, 0.6, 0.2, 1.0f}, // TargetPotentiallyDangerous
+                                              {1, 0, 0, 1}, // TargetDangerous
+                                              {0, 0.426016808, 1, 1}, // TargetUndefined
+                                              {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
+                                              {0.7, 0.7, 0.7, 1}, // TargetInitPosition
+                                              {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
+                                              {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
+                                              {0.66566503, 0.0, 0.738230228, 1.0f} // ShipInitPosition
+                                      }}
                              });
 }
 
@@ -261,45 +211,9 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         glVertexAttribDivisor(3, 0);
         glVertexAttribDivisor(4, 0);
 
-        // Draw vessels
-        m_ship_vbo->bind();
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-        m_ship_vbo->release();
+        m_program->release();
 
-        m_vessels->bind();
-
-        glVertexAttribDivisor(1, 1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *) nullptr);
-
-        glVertexAttribDivisor(2, 1);
-        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *) (2 * sizeof(float)));
-
-        glVertexAttribDivisor(3, 1);
-           glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (3 * sizeof(float)));
-           glVertexAttrib1f(4, 1.0f);
-           glLineWidth(1.0f);
-           glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei) (vessels.size() + case_data_->targets.size()));
-           m_vessels->release();
-
-           // Circle
-           m_circle_vbo->bind();
-           glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-           m_circle_vbo->release();
-           m_vessels->bind();
-           glEnableVertexAttribArray(4);
-           glVertexAttribDivisor(4, 1);
-           glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*) (6 * sizeof(float)));
-           glDrawArraysInstanced(GL_LINE_LOOP, 0, CIRCLE_POINTS_N, (GLsizei) (vessels.size() + case_data_->targets.size()));
-           glVertexAttribDivisor(1, 0);
-           glVertexAttribDivisor(2, 0);
-           glVertexAttribDivisor(3, 0);
-           glVertexAttribDivisor(4, 0);
-           m_vessels->release();
-           m_program->release();
+        vessels->render(m_eye);
 
 //      Draw ship captions
         float font_size{16};
@@ -307,7 +221,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         nvgFontFace(ctx, "sans");
         nvgTextAlign(ctx, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFillColor(ctx, {1, 1.0, 1, 1});
-        for (const auto & vessel : vessels) {
+        for (const auto& vessel : vessels->getVessels()) {
             auto coord = WorldToscreen({vessel.position.x(), vessel.position.y()});
             nvgText(ctx, coord.x, coord.y, vessel.ship->name.c_str(), nullptr);
         }
@@ -340,10 +254,11 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             nvgStrokeWidth(ctx, 1.0f);
             nvgStrokeColor(ctx, {1.0, 1.0, 1.0, 1.0});
             const auto distance_capSq = distance_cap * distance_cap;
-            for (size_t i = 0; i < vessels.size(); ++i) {
-                const auto &a = vessels[i].position;
-                for (size_t j = i + 1; j < vessels.size(); ++j) {
-                    const auto& b = vessels[j].position;
+            auto _vessels = vessels->getVessels();
+            for (size_t i = 0; i < _vessels.size(); ++i) {
+                const auto& a = _vessels[i].position;
+                for (size_t j = i + 1; j < _vessels.size(); ++j) {
+                    const auto& b = _vessels[j].position;
                     const auto ba = a - b;
                     const auto ba_Sq = absSq(ba);
                     if (ba_Sq > distance_capSq || ba_Sq < 1)
@@ -432,7 +347,7 @@ glm::vec3 OGLWidget::screenToWorld(glm::ivec2 pos) {
 void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
     case_data_ = std::move(case_data);
     const auto& caseData = *case_data_;
-
+    vessels->setCaseData(case_data_.get());
 //    enum class PathType {
 //        TargetManeuver=0,
 //        TargetRealManeuver,
@@ -467,38 +382,12 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
 
 
 void OGLWidget::updatePositions(const std::vector<Vessel>& new_vessels) {
-    vessels = new_vessels;
-    updatePositions();
+    vessels->setVessels(new_vessels);
+    vessels->updatePositions();
 }
 
 void OGLWidget::updatePositions() {
-    std::vector<GLfloat> spos;
-    double radius = 0;
-    for (const auto& v: vessels) {
-        auto color = appearance_settings.vessels_colors[static_cast<size_t>(v.type)];
-        radius = v.radius;
-        spos.push_back(static_cast<GLfloat>(v.position.x()));
-        spos.push_back(static_cast<GLfloat>(v.position.y()));
-        spos.push_back(static_cast<GLfloat>(v.course));
-        spos.push_back(color.r);
-        spos.push_back(color.g);
-        spos.push_back(color.b);
-        spos.push_back(static_cast<GLfloat>(v.radius));
-    }
-    auto color = appearance_settings.vessels_colors[static_cast<size_t>(Vessel::Type::TargetInitPosition)];
-    for (const auto &t: case_data_->targets) {
-        spos.push_back(static_cast<GLfloat>(t.initPosition.point.y()));
-        spos.push_back(static_cast<GLfloat>(t.initPosition.point.x()));
-        spos.push_back(static_cast<GLfloat>(t.initPosition.course.radians()));
-        spos.push_back(color.r);
-        spos.push_back(color.g);
-        spos.push_back(color.b);
-        spos.push_back(static_cast<GLfloat>(radius));
-    }
-
-    m_vessels->bind();
-    m_vessels->allocate(spos.data(), (int) (sizeof(GLfloat) * spos.size()));
-    m_vessels->release();
+    vessels->updatePositions();
 }
 
 void OGLWidget::updateTime(double t) {
@@ -666,6 +555,7 @@ void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &se
             appearance_settings.sea_shininess,
     };
     sea->set_material(sea_material);
+    vessels->setAppearanceSettings(appearance_settings.vessels_colors);
 }
 
 const OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() const {

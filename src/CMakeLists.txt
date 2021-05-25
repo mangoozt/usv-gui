@@ -25,13 +25,18 @@ add_executable(usv-gui
                ui/IgnorantTextBox.h
                ui/ScrollableSlider.cpp ui/ScrollableSlider.h
                App.cpp App.h
-               Compass.cpp Compass.h ui/SettingsWindow.cpp ui/SettingsWindow.h)
+               Compass.cpp Compass.h
+               ui/SettingsWindow.cpp ui/SettingsWindow.h
+               glvessels.cpp glvessels.h)
 
 set_property(TARGET usv-gui PROPERTY CXX_STANDARD 17)
 set_property(TARGET usv-gui PROPERTY CXX_STANDARD_REQUIRED ON)
 
 include(${PROJECT_SOURCE_DIR}/modules/CMakeRC.cmake)
-cmrc_add_resource_library(glsl_resources glsl/general.vert glsl/glsea.frag glsl/glsea.vert glsl/restrictions.frag)
+cmrc_add_resource_library(glsl_resources
+                          glsl/general.vert glsl/glsea.frag
+                          glsl/glsea.vert glsl/restrictions.frag
+                          glsl/vessels.frag glsl/vessels.vert)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)

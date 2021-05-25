@@ -91,6 +91,7 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
         add_color_picker(tab, "Ship maneuver:", &AS::path_colors, USV::PathType::ShipManeuver, map);
     }
     // Ships
+    /*
     {
         auto* tab = new Widget(tab_widget);
         tab_widget->append_tab("Ships", tab);
@@ -110,6 +111,7 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
         add_color_picker_pos(tab, "Ship on route:", &AS::vessels_colors, Vessel::Type::ShipOnRoute, map);
         add_color_picker_pos(tab, "Ship on maneuver:", &AS::vessels_colors, Vessel::Type::ShipOnManeuver, map);
     }
+    */
     // sea
     {
         auto* tab = new Widget(tab_widget);

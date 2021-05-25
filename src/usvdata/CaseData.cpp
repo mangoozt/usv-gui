@@ -8,10 +8,14 @@ namespace USV {
             , data_filenames(input_data.data_filenames), start_time(input_data.navigationParameters->timestamp) {
 
         // LOAD OWN SHIP
+
+        //
+        //{localPos.y(),localPos.x()}, M_PI_2 - degrees_to_radians(segment.begin_angle)
         auto& nav_params = *input_data.navigationParameters;
+        auto localPos = frame.fromWgs(nav_params.lat, nav_params.lon);
         ownShip = {{nav_params.cat,
                            nav_params.timestamp,
-                           {frame.fromWgs(nav_params.lat, nav_params.lon), nav_params.SOG, nav_params.COG},
+                           {{localPos.y(), localPos.x()}, degrees_to_radians(nav_params.COG), nav_params.SOG},
                            "Own"}};
         if (input_data.maneuvers)
             for (const auto& path:*input_data.maneuvers)
@@ -39,12 +43,14 @@ namespace USV {
         const auto& nav_problem = *input_data.navigationProblem;
         targets.reserve(nav_problem.size());
         for (size_t i = 0; i < nav_problem.size(); ++i) {
+            localPos = frame.fromWgs(nav_problem[i].lat, nav_problem[i].lon);
             targets.push_back({
                                       {nav_problem[i].cat,
                                               nav_problem[i].timestamp,
-                                              {frame.fromWgs(nav_problem[i].lat, nav_problem[i].lon),
-                                                      nav_problem[i].SOG,
-                                                      nav_problem[i].COG},
+                                              {{localPos.y(), localPos.x()},
+                                                      M_PI_2 - degrees_to_radians(nav_problem[i].COG),
+                                                      nav_problem[i].SOG
+                                                      },
                                               nav_problem[i].id,
                                               (analyse_result != nullptr ? target_statuses.find(
                                                       nav_problem[i].id)->second : nullptr)
