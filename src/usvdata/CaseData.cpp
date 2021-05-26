@@ -15,7 +15,7 @@ namespace USV {
         auto localPos = frame.fromWgs(nav_params.lat, nav_params.lon);
         ownShip = {{nav_params.cat,
                            nav_params.timestamp,
-                           {{localPos.y(), localPos.x()}, degrees_to_radians(nav_params.COG), nav_params.SOG},
+                           {{localPos.y(), localPos.x()}, M_PI_2 - degrees_to_radians(nav_params.COG), nav_params.SOG},
                            "Own"}};
         if (input_data.maneuvers)
             for (const auto& path:*input_data.maneuvers)

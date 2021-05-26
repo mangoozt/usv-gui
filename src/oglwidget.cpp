@@ -105,8 +105,8 @@ void OGLWidget::initializeGL() {
                                              glm::vec4(0, 0, 0, 1),         //  TargetManeuver
                                              glm::vec4(0.7f, 0.7f, 0.5f, 1),//  TargetRealManeuver
                                              glm::vec4(0.769072533, 0.0, 1, 1),//  ShipManeuver
-                                             glm::vec4(0, 0, 1, 1)
-                                     },     //  Route
+                                             glm::vec4(0, 0, 1, 1)//  Route
+                                     },
                                      {{
                                               {0, 1, 0, 1}, // TargetNotDangerous
                                               {1.0f, 0.6, 0.2, 1.0f}, // TargetPotentiallyDangerous
@@ -116,7 +116,7 @@ void OGLWidget::initializeGL() {
                                               {0.7, 0.7, 0.7, 1}, // TargetInitPosition
                                               {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
                                               {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
-                                              {0.66566503, 0.0, 0.738230228, 1.0f} // ShipInitPosition
+                                              {0.4, 0.4, 1.0, 1.0f} // ShipInitPosition
                                       }}
                              });
 }
