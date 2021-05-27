@@ -181,7 +181,6 @@ void GLRestrictions::Isle::render(const Program& program) {
     program.setUniformValue(program.uniformLocation("material.diffuse"), color);
     program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(255, 255, 255) / 400.0f);
     program.setUniformValue(program.uniformLocation("material.shininess"), 16);
-    glUniform1i(program.uniformLocation("_id"), (GLint) id_);
     vbo->bind();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->bufferId());
     int vertexLocation = glGetAttribLocation(program.programId(), "vertex");
@@ -237,7 +236,7 @@ GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const glm:
                  static_cast<float>(-d.y()), static_cast<float>(d.x()), 0});
         // bottom
         vertices.push_back(
-                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), -5 * z,
+                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), 0,
                  static_cast<float>(-d.y()), static_cast<float>(d.x()), 0});
         // next
         //top
@@ -246,7 +245,7 @@ GLRestrictions::Isle::Isle(const USV::Restrictions::Polygon& polygon, const glm:
                  static_cast<float>(-d1.y()), static_cast<float>(d1.x()), 0});
         //bottom
         vertices.push_back(
-                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), -5 * z,
+                {(GLfloat) polygon.rings[0][i].x(), (GLfloat) polygon.rings[0][i].y(), 0,
                  static_cast<float>(-d1.y()), static_cast<float>(d1.x()), 0});
     }
 

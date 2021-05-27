@@ -70,8 +70,8 @@ GLGrid::GLGrid() {
     auto ul_matrices = glGetUniformBlockIndex(m_program->programId(), "Matrices");
     glUniformBlockBinding(m_program->programId(), ul_matrices, USV_GUI_MATRICES_BINDING);
     m_colorLoc = m_program->uniformLocation("color");
-    m_program->setUniformValue(m_colorLoc, glm::vec4(135, 206, 250, 120) / 255.0f);
-    m_program->setUniformValue(m_program->uniformLocation("bg_color"), glm::vec4(1.0, 1.0, 1.0, 0.0));
+    m_program->setUniformValue(m_colorLoc, glm::vec4(135, 135, 135, 255)/ 255.0f);
+    m_program->setUniformValue(m_program->uniformLocation("bg_color"), glm::vec4(135, 135, 135, 0) / 255.0f);
     m_program->release();
     vbo = std::make_unique<Buffer>();
     GLfloat plane[] = {

@@ -59,7 +59,7 @@ int main(int /* argc */, char** /* argv */) {
     metal_init();
 #endif
 
-    glfwWindowHint(GLFW_SAMPLES, 0);
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_RED_BITS, 8);
     glfwWindowHint(GLFW_GREEN_BITS, 8);
     glfwWindowHint(GLFW_BLUE_BITS, 8);

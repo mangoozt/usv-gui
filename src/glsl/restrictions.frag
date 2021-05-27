@@ -35,8 +35,6 @@ in highp VERTEX_OUT{
     vec3 FragPos;
 } vertex_out;
 
-vec4 xygrid(vec2 coord, vec4 color, vec4 gridcolor);
-
 void main() {
     idB = vec4(5,0,0,0);
     vec3 norm = normalize(TBN[2]);
@@ -52,5 +50,5 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light_specular * (spec * material.specular);
     vec3 result = ambient + diffuse + specular;
-    fragColor = xygrid(vertex_out.FragPos.xy, vec4(result, opacity), vec4(135, 135, 135, 255)/255);
+    fragColor = vec4(result, opacity);
 }

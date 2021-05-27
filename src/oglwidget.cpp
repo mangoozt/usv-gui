@@ -166,12 +166,20 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
     glDisableVertexAttribArray(4);
     glVertexAttrib1f(4, 1.0f);
     m_program->release();
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
     restrictions->render(m_eye, GLRestrictions::GeometryTypes::Isle);
+    glStencilMask(0x00);
     sea->render(m_eye, time);
     //Draw plane
     glDisable(GL_DEPTH_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     grid->render();
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glEnable(GL_DEPTH_TEST);
+
     restrictions->render(m_eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
         m_program->bind();
