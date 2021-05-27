@@ -30,6 +30,14 @@ const char* GLGrid::xyGridShaderSource =
         "   float rline = min(rgrid.x, rgrid.y);\n"
         "   float line = min(grid.x, grid.y);"
         "   return mix(color,gridcolor,1.0 - min(min(rline,line*0.5), 1.0));\n"
+        "}\n"
+
+        "float xygrid2(vec2 coord, float thickness) {\n"
+        "   vec2 grid = abs(fract(coord)-0.5);"
+        "   grid = grid/fwidth(coord*2*thickness);"
+        "   grid = clamp(grid+0.5, 0,1);"
+        "   float line = min(grid.x,grid.y); line=1.0-line*line;"
+        "   return line*2;\n"
         "}\n";
 
 static const char* fragmentShaderSource =
@@ -41,11 +49,15 @@ static const char* fragmentShaderSource =
         "uniform highp vec4 color;\n"
         "uniform highp vec4 bg_color;\n"
         "vec4 xygrid(vec2 coord, vec4 color,vec4 gridcolor);\n"
+        "float xygrid2(vec2 coord, float thickness);\n"
         "void main() {\n"
-        "   vec3 v = invmat*vec3(vert,1);\n"
+        "   vec3 v = invmat*vec3(vert,1);"
         "   v /= v.z;"
-        "   vec2 dv = fwidth(v.xy);"
-        "   fragColor = xygrid(v.xy,bg_color,color)*vec4(vec3(1.0),min(1.0,1/length(dv)));\n"
+        "   vec2 fw = fwidth(v.xy*30);"
+        "   float half_imp = 1.0-max(fw.x,fw.y);"
+        "   float one = xygrid2(v.xy,2*clamp(half_imp,0.5,1));"
+        "   float half = xygrid2(v.xy+0.5,1);"
+        "   fragColor = mix(bg_color,color,max(one,half*half_imp));"
         "}\n";
 
 GLGrid::GLGrid() {

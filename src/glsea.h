@@ -21,7 +21,7 @@ private:
     std::unique_ptr<Buffer> ibo;
     int m_viewLoc;
     int m_timeLoc;
-    const unsigned int gridsize{1000};
+    const unsigned int gridsize{100};
     const float size{2.0f};
 };
 
