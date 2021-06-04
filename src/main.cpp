@@ -28,9 +28,16 @@
 
 #define COMPLETE_VERSION "v" USV_GUI_VERSION " built on " __DATE__ " " __TIME__
 
+void printGlfwError(){
+    const char *description;
+    int code = glfwGetError(& description);
+    if (description) {
+        std::cerr << (code, description) << std::endl;
+    }
+}
 
 int main(int /* argc */, char** /* argv */) {
-    std::cout<< "usv-gui " COMPLETE_VERSION << std::endl;
+    std::cout << "usv-gui " COMPLETE_VERSION << std::endl;
 //HIDE OWN CONSOLE WINDOW BUT still output to CLI (DIRTY)
 #ifdef WIN32
     HWND consoleWnd = GetConsoleWindow();
@@ -39,7 +46,10 @@ int main(int /* argc */, char** /* argv */) {
     if (GetCurrentProcessId()==dwProcessId) FreeConsole();
 #endif
 
-    glfwInit();
+    if (!glfwInit()) {
+        printGlfwError();
+        return -1;
+    }
     glfwSetTime(0);
 
 #if defined(NANOGUI_USE_OPENGL)
@@ -72,6 +82,7 @@ int main(int /* argc */, char** /* argv */) {
     GLFWwindow* window = glfwCreateWindow(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT, "USV-gui", nullptr, nullptr);
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
+        printGlfwError();
         glfwTerminate();
         return -1;
     }

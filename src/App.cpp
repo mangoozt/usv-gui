@@ -11,6 +11,7 @@
 #define USV_GUI_USV_EXECUTABLE_ENV_NAME "USV_GUI_USV_EXECUTABLE"
 
 void App::run() {
+    load_directory("");
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
@@ -99,6 +100,9 @@ void App::load_directory(const std::string& data_directory) {
         update_time(screen->map().case_data()->min_time);
         if (slider)
             slider->set_value(0);
+        glfwSetWindowTitle(window, data_directory.c_str());
+        if (run_usv_button)
+            run_usv_button->set_enabled(usv_runner != nullptr);
     } catch (std::runtime_error& e) {
         std::cout << "Couldn't open: " << e.what() << std::endl;
     }
@@ -186,9 +190,6 @@ void App::open() {
         found = data_path.find_last_of("/\\");
         data_path = data_path.substr(0, found);
         load_directory(data_path);
-        glfwSetWindowTitle(window, data_path.c_str());
-        if (run_usv_button)
-            run_usv_button->set_enabled(usv_runner != nullptr);
     }
 }
 
