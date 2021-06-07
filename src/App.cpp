@@ -11,7 +11,7 @@
 #define USV_GUI_USV_EXECUTABLE_ENV_NAME "USV_GUI_USV_EXECUTABLE"
 
 void App::run() {
-    load_directory("");
+    load_directory(std::filesystem::current_path());
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
