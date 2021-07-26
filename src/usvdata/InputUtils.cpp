@@ -34,14 +34,35 @@ namespace USV::InputUtils {
                 "evaluation.json",
                 "targets_settings.json"
         };
+        constexpr InputTypes::DataFilenames data_filenames_argument_like = {
+                "nav-data.json",
+                "targets.json",
+                "route.json",
+                "maneuver.json",
+                "predict.json",
+                "real-target-maneuvers.json",
+                "settings.json",
+                "constraints.json",
+                "hydrometeo.json",
+                "analyse.json",
+                "targets-settings.json"
+        };
     }
 
     InputTypes::InputData loadInputData(const std::string& data_directory) {
         InputTypes::InputData data;
 
         data.directory = {data_directory};
-        data.data_filenames = (file_exists(data.directory / data_filenames_native.navigationParameters))
-                              ? &data_filenames_native : &data_filenames_kt;
+        if(file_exists(data.directory / data_filenames_native.navigationParameters)){
+            if(file_exists(data.directory / data_filenames_native.navigationProblem)){
+                data.data_filenames = &data_filenames_native;
+            }else{
+                data.data_filenames = &data_filenames_argument_like;
+            }
+        }else{
+            data.data_filenames = &data_filenames_kt;
+        }
+
 
         auto& filenames = *data.data_filenames;
 
