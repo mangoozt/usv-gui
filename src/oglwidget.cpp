@@ -288,7 +288,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
                     nvgRotate(ctx, angle + rotation);
 
                     std::stringstream tmp;
-                    tmp << std::setw(5) << abs(ba);
+                    tmp << std::fixed << std::setprecision( 2 ) << abs(ba);
 
                     nvgText(ctx, 0.0, 0.0, tmp.str().c_str(), nullptr);
                     nvgResetTransform(ctx);
@@ -504,7 +504,7 @@ void OGLWidget::updateSunAngle(long timestamp, double lat, double /*lon*/) {
         glm::vec4 specular;
     };
     LightSource light{
-            glm::vec4(cos_z, -sin_z, sin_alpha, 0),
+        glm::vec4(-sin_z, -cos_z, sin_alpha, 0),
             glm::vec4(0.7f, 0.7f, 0.7f, 0),
             glm::vec4(0.7f, 0.7f, 0.7f, 0),
             glm::vec4(1, 1, 1, 0)
