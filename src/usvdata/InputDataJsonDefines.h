@@ -303,18 +303,18 @@ namespace spotify::json {
             const static auto danger_type_codec = codec::transform(codec::number<int>(), DTDecode, DTEncode);
             const static auto scenario_type_codec = codec::enumeration<ScenarioType, std::string>(
                     {
-                            {ScenarioType::Sc0_None,                  "None"},
-                            {ScenarioType::Sc1_FaceToFace,            "Face to face"},
-                            {ScenarioType::Sc2_Overtaken,             "Overtaken"},
-                            {ScenarioType::Sc3_Overtake,              "Overtake"},
-                            {ScenarioType::Sc4_GiveWay,               "Give way"},
-                            {ScenarioType::Sc5_Save,                  "Save"},
-                            {ScenarioType::Sc6_GiveWayPriority,       "Give way priority"},
-                            {ScenarioType::Sc7_SavePriority,          "Save priority"},
-                            {ScenarioType::Sc8_CrossMove,             "Cross move"},
-                            {ScenarioType::Sc9_CrossIn,               "Cross in"},
-                            {ScenarioType::Sc10_VisionRestricted_Fwd, "Vision restricted forward"},
-                            {ScenarioType::Sc11_VisionRestricted_Bwd, "Vision restricted backward"},
+                            {ScenarioType::Sc0_None,                  "0"},
+                            {ScenarioType::Sc1_FaceToFace,            "1"},
+                            {ScenarioType::Sc2_Overtaken,             "2"},
+                            {ScenarioType::Sc3_Overtake,              "3"},
+                            {ScenarioType::Sc4_GiveWay,               "4"},
+                            {ScenarioType::Sc5_Save,                  "5"},
+                            {ScenarioType::Sc6_GiveWayPriority,       "6"},
+                            {ScenarioType::Sc7_SavePriority,          "7"},
+                            {ScenarioType::Sc8_CrossMove,             "8"},
+                            {ScenarioType::Sc9_CrossIn,               "9"},
+                            {ScenarioType::Sc10_VisionRestricted_Fwd, "10"},
+                            {ScenarioType::Sc11_VisionRestricted_Bwd, "11"},
                     });
             auto codec = codec::object<TS>();
             codec.required("id", &TS::id);
