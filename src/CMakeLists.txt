@@ -46,3 +46,6 @@ target_include_directories(usv-gui PRIVATE ${PROJECT_SOURCE_DIR}/vendor/nanogui/
 target_link_libraries(usv-gui usvdata nanogui glm ${NANOGUI_LIBS} OpenGL::GL glsl_resources)
 
 install(TARGETS usv-gui DESTINATION bin)
+if(UNIX)
+    install(FILES usv-gui.png DESTINATION share/icons)
+endif()
