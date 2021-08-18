@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - v* # Push events to matching v*
-  create:
-    tags:
-      - v* # Push events to matching v*
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
