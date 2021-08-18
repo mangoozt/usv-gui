@@ -55,8 +55,8 @@ static const char* fragmentShaderSource =
         "   v /= v.z;"
         "   vec2 fw = fwidth(v.xy*30);"
         "   float half_imp = 1.0-max(fw.x,fw.y);"
-        "   float one = xygrid2(v.xy,2*clamp(half_imp,0.5,1));"
-        "   float half = xygrid2(v.xy+0.5,1);"
+        "   float one = xygrid2(v.xy+0.5,clamp(3*clamp(half_imp,0.2,1),1,2));"
+        "   float half = xygrid2(v.xy,1);"
         "   fragColor = mix(bg_color,color,max(one,half*half_imp));"
         "}\n";
 

@@ -41,6 +41,6 @@ void main() {
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light_specular * (spec * material.specular);
-    vec3 result = ambient + diffuse + specular;
+    vec3 result = ambient + diffuse + specular*clamp(sign(light_position.z),0,1);
     fragColor = vec4(result, opacity);
 }
