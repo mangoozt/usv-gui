@@ -38,7 +38,7 @@ void main() {
     material.ambient = col*0.9;
     material.diffuse = col;
     material.specular = vec3(0.63, 0.63, 0.63);
-    material.shininess = 16;
+    material.shininess = 32;
 
     gl_Position = projection * view * (translate*rot*m_scale*vertex);
     vec3 Normal = normalize(mat3(rot*m_scale)*normal);

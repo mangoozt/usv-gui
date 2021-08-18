@@ -97,8 +97,8 @@ void OGLWidget::initializeGL() {
     restrictions = std::make_unique<GLRestrictions>();
 //    skybox = new Skybox();
     updateAppearanceSettings({
-                                     {0.300804853, 0.446960151, 0.541961133, 1}, // sea ambient
-                                     {0.623529434, 0.850980401, 1, 1}, // sea diffuse
+        {0, 0.0388058, 0.123756, 1}, // sea ambient
+        {0.281572, 0.442459, 0.850248, 1}, // sea diffuse
                                      {0, 0, 0, 1}, // sea specular
                                      256, // sea shininess
                                      {
@@ -114,7 +114,7 @@ void OGLWidget::initializeGL() {
                                               {0, 0.426016808, 1, 1}, // TargetUndefined
                                               {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
                                               {0.7, 0.7, 0.7, 1}, // TargetInitPosition
-                                              {1.0f, 1.0f, 1.0f, 1.0f}, // ShipOnRoute
+                                              {0.8f, 0.8f, 0.8f, 1.0f}, // ShipOnRoute
                                               {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
                                               {0.4, 0.4, 1.0, 1.0f} // ShipInitPosition
                                       }}
