@@ -57,7 +57,8 @@ static const char* fragmentShaderSource =
         "   float half_imp = 1.0-max(fw.x,fw.y);"
         "   float one = xygrid2(v.xy+0.5,1);"
         "   float half = xygrid2(v.xy,1);"
-        "   fragColor = mix(bg_color,color,max(one,half*half_imp*0.5));"
+        "   float tenth = xygrid2(v.xy*10+0.5,1);"
+        "   fragColor = mix(bg_color,color,max(tenth*0.2,max(one,half*half_imp*0.5)));"
         "}\n";
 
 GLGrid::GLGrid() {
