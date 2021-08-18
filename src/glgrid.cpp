@@ -37,7 +37,7 @@ const char* GLGrid::xyGridShaderSource =
         "   grid = grid/fwidth(coord*2*thickness);"
         "   grid = clamp(grid+0.5, 0,1);"
         "   float line = min(grid.x,grid.y); line=1.0-line*line;"
-        "   return line*2;\n"
+        "   return line;\n"
         "}\n";
 
 static const char* fragmentShaderSource =
@@ -55,9 +55,9 @@ static const char* fragmentShaderSource =
         "   v /= v.z;"
         "   vec2 fw = fwidth(v.xy*30);"
         "   float half_imp = 1.0-max(fw.x,fw.y);"
-        "   float one = xygrid2(v.xy+0.5,clamp(3*clamp(half_imp,0.2,1),1,2));"
+        "   float one = xygrid2(v.xy+0.5,1);"
         "   float half = xygrid2(v.xy,1);"
-        "   fragColor = mix(bg_color,color,max(one,half*half_imp));"
+        "   fragColor = mix(bg_color,color,max(one,half*half_imp*0.5));"
         "}\n";
 
 GLGrid::GLGrid() {
