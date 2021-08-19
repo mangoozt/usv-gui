@@ -102,15 +102,15 @@ void OGLWidget::initializeGL() {
                                      {0, 0, 0, 1}, // sea specular
                                      256, // sea shininess
                                      {
-                                             glm::vec4(0, 0, 0, 1),         //  TargetManeuver
+                                             glm::vec4(0.724168, 0.63479, 0, 1),         //  TargetManeuver
                                              glm::vec4(0.7f, 0.7f, 0.5f, 1),//  TargetRealManeuver
                                              glm::vec4(0.769072533, 0.0, 1, 1),//  ShipManeuver
-                                             glm::vec4(0, 0, 1, 1)//  Route
+                                             glm::vec4(0, 0.600625, 1, 1)//  Route
                                      },
                                      {{
                                               {0, 1, 0, 1}, // TargetNotDangerous
                                               {1.0f, 0.6, 0.2, 1.0f}, // TargetPotentiallyDangerous
-                                              {1, 0, 0, 1}, // TargetDangerous
+                                              {0.8, 0, 0, 1}, // TargetDangerous
                                               {0, 0.426016808, 1, 1}, // TargetUndefined
                                               {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
                                               {0.7, 0.7, 0.7, 1}, // TargetInitPosition
@@ -556,6 +556,8 @@ void OGLWidget::updateUniforms() {
 
 void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &settings) {
     appearance_settings = settings;
+    auto a = appearance_settings.path_colors[static_cast<int>(USV::PathType::Route)];
+    std::cout << a.x <<", " << a.y <<", " << a.z <<", "<<std::endl;
     Material sea_material{
             appearance_settings.sea_ambient,
             appearance_settings.sea_diffuse,
