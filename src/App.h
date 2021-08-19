@@ -60,6 +60,8 @@ private:
 
     static void DropCallback(GLFWwindow* window, int count, const char** filenames);
 
+    static void WindowFocusCallback(GLFWwindow* window, int focused);
+
     static void ScrollCallback(GLFWwindow* window, double x, double y);
 
     static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);

@@ -92,6 +92,7 @@ void App::initialize_gui() {
     glfwSetDropCallback(window, DropCallback);
     glfwSetScrollCallback(window, ScrollCallback);
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+    glfwSetWindowFocusCallback(window, WindowFocusCallback);
 }
 
 void App::load_directory(const std::string& data_directory) {
@@ -394,6 +395,13 @@ void App::ScrollCallback(GLFWwindow* window, double x, double y) {
 void App::DropCallback(GLFWwindow* window, int count, const char** filenames) {
     App* app = reinterpret_cast<App*>(glfwGetWindowUserPointer(window));
     app->screen->drop_callback_event(count, filenames);
+}
+
+void App::WindowFocusCallback(GLFWwindow* window, int focused) {
+    App* app = reinterpret_cast<App*>(glfwGetWindowUserPointer(window));
+    if(focused){
+        app->screen->redraw();
+    }
 }
 
 void App::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
