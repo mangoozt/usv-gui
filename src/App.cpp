@@ -15,7 +15,7 @@ void App::run() {
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Check if any events have been activated (key pressed, mouse moved etc.) and call corresponding response functions
-        glfwPollEvents();
+        glfwWaitEvents();
         // Draw nanogui
         screen->draw_all();
     }
