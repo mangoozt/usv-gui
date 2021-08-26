@@ -80,4 +80,4 @@ Thumbs.db
 cmake-build-*
 
 !/src/main.rc
-!/src/Icon.ico
+!/src/resource/Icon.ico

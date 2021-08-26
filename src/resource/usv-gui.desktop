@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=USV Gui
+Exec=usv-gui
+Icon=usv-gui
+Terminal=false
+Type=Application
+Categories=Application
