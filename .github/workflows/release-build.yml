@@ -7,47 +7,102 @@ on:
     branches: [ main ]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
+
     - name: Create Build Environment
-      # Some projects don't allow in-source building, so create a separate build directory
-      # We'll use this as our working directory for all subsequent commands
       run: cmake -E make_directory ${{runner.workspace}}/build
+
     - name: Install deps
       run: |
-        sudo apt-get update && sudo apt-get install xorg-dev libglu1-mesa-dev
+        sudo apt-get update && sudo apt-get install xorg-dev libglu1-mesa-dev libgeographic-dev
+
     - name: Configure CMake
-      # Use a bash shell so we can use the same syntax for environment variable
-      # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
-      # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
 
     - name: Test
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C $BUILD_TYPE
+
+    - name: Tag name
+      id: tag_name
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+
+    - name: Run CPack
+      working-directory: ${{runner.workspace}}/build
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        cpack .
+        mv ./src/package/usv-gui-linux.deb ./usv-gui-${{ steps.tag_name.outputs.SOURCE_TAG }}.deb
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          ${{runner.workspace}}/build/*.deb
+
+  build-win:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/build
+
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Configure CMake for MinGW build
+        shell: bash
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          echo $GITHUB_WORKSPACE/toolchains/Toolchain-cross-mingw32-linux.cmake
+          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/toolchains/Toolchain-cross-mingw32-linux.cmake
+
+      - name: Build with MinGW
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+        run: cmake --build . --config $BUILD_TYPE
+
+      - name: Tag name
+        id: tag_name
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+
+      - name: Zip executable
+        working-directory: ${{runner.workspace}}/build
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          zip --junk-paths usv-gui-${{ steps.tag_name.outputs.SOURCE_TAG }}.zip ./src/usv-gui.exe
+          ls usv-gui.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ${{runner.workspace}}/build/*.zip
