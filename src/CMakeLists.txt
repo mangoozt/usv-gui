@@ -85,7 +85,7 @@ set(CPACK_PACKAGE_FILE_NAME "${_project_lower}-${_sys}")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${_project_lower}-${PROJECT_VERSION}")
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "misc")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgeographic19, libgl1")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgeographic19, libgl1, zenity")
 
 include(CPack)
 
