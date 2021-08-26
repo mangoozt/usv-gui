@@ -2,13 +2,11 @@
 #include "earcut.h"
 #include "utils.h"
 #include "glgrid.h"
-#include <cmath>
 #include <array>
 #include <cmrc/cmrc.hpp>
 #include "Defines.h"
 #include "Program.h"
 #include "Buffer.h"
-#include <iostream>
 
 CMRC_DECLARE(glsl_resources);
 

@@ -4,7 +4,6 @@
 #include <nanogui/label.h>
 #include <nanogui/textbox.h>
 #include <nanogui/tabwidget.h>
-#include <iostream>
 
 namespace {
     nanogui::Color toColor(const glm::vec4& color) {

@@ -1,10 +1,6 @@
 name: build
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: push
 
 env:
   BUILD_TYPE: Release
@@ -98,7 +94,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           zip --junk-paths usv-gui-${{ steps.tag_name.outputs.SOURCE_TAG }}.zip ./src/usv-gui.exe
-          ls usv-gui.zip
 
       - name: Release
         uses: softprops/action-gh-release@v1

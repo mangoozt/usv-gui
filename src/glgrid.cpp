@@ -1,5 +1,4 @@
 #include "glgrid.h"
-#include <iostream>
 #include "Program.h"
 #include "Buffer.h"
 #include "Defines.h"

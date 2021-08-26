@@ -10,7 +10,6 @@
 #include "glsea.h"
 #include "glgrid.h"
 #include "glrestrictions.h"
-#include <iostream>
 
 #define FOV 90.0f
 #define PATH_POINT_MARK_N 5
@@ -557,7 +556,6 @@ void OGLWidget::updateUniforms() {
 void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &settings) {
     appearance_settings = settings;
     auto a = appearance_settings.path_colors[static_cast<int>(USV::PathType::Route)];
-    std::cout << a.x <<", " << a.y <<", " << a.z <<", "<<std::endl;
     Material sea_material{
             appearance_settings.sea_ambient,
             appearance_settings.sea_diffuse,
