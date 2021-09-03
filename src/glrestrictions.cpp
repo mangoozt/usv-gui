@@ -31,7 +31,7 @@ GLRestrictions::GLRestrictions() {
         glm::vec3 ambient = glm::vec3(255, 0, 0) / 255.0f;
         glm::vec3 diffuse = glm::vec3(255, 200, 0) / 255.0f;
         glm::vec3 specular = glm::vec3(255, 204, 51) / 400.0f;
-        float shininess{256};
+        float shininess{1};
     } material;
     m_program->setUniformValue(m_program->uniformLocation("material.ambient"), material.ambient);
     m_program->setUniformValue(m_program->uniformLocation("material.diffuse"), material.diffuse);
@@ -104,7 +104,7 @@ void GLRestrictions::Polygon::render(const Program& program) {
     program.bind();
     program.setUniformValue(program.uniformLocation("material.ambient"), color);
     program.setUniformValue(program.uniformLocation("material.diffuse"), color * 0.8f);
-    program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(255, 255, 255) / 400.0f);
+    program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(0, 0, 0) / 400.0f);
     program.setUniformValue(program.uniformLocation("material.shininess"), 16.0f);
     program.setUniformValue(program.uniformLocation("opacity"), opacity);
     glUniform1i(program.uniformLocation("_id"), (GLint) id_);
@@ -178,7 +178,7 @@ void GLRestrictions::Isle::render(const Program& program) {
     program.setUniformValue(program.uniformLocation("material.ambient"), color * 0.5f);
     program.setUniformValue(program.uniformLocation("material.diffuse"), color);
     program.setUniformValue(program.uniformLocation("material.specular"), glm::vec3(255, 255, 255) / 400.0f);
-    program.setUniformValue(program.uniformLocation("material.shininess"), 16);
+    program.setUniformValue(program.uniformLocation("material.shininess"), 1);
     vbo->bind();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->bufferId());
     int vertexLocation = glGetAttribLocation(program.programId(), "vertex");
