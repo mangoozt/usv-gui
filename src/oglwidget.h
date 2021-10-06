@@ -1,10 +1,10 @@
 #ifndef OGLWIDGET_H
 #define OGLWIDGET_H
 
-#include <glm/glm.hpp>
-#include <nanovg.h>
 #include "usvdata/CaseData.h"
 #include "glvessels.h"
+#include <glm/glm.hpp>
+#include <nanovg.h>
 
 class Compass;
 

@@ -10,6 +10,7 @@
 #include "glsea.h"
 #include "glgrid.h"
 #include "glrestrictions.h"
+#include <sstream>
 
 #define FOV 90.0f
 #define PATH_POINT_MARK_N 5

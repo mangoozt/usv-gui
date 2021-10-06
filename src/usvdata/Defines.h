@@ -1,6 +1,6 @@
 #ifndef USV_DEFINES_H
 #define USV_DEFINES_H
-
+#define _USE_MATH_DEFINES
 namespace USV {
     /**
      * \brief Категория судна в контексте правила 18 МППСС-72
