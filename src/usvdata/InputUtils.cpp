@@ -75,6 +75,7 @@ namespace USV::InputUtils {
         load_from_json_file<true>(data.settings, data.directory / filenames.settings);
         load_from_json_file(data.constraints, data.directory / filenames.constraints);
         load_from_json_file(data.analyse_result, data.directory / filenames.analyse);
+        load_from_json_file(data.wasted_maneuvers, data.directory / "wasted_maneuvers.json");
         return data;
     }
 

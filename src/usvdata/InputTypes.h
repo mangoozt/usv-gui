@@ -190,6 +190,8 @@ namespace USV::InputTypes {
         std::vector<ViolatedLimitation> limitations{};
     };
 
+    using WastedManeuvers = std::vector<CurvedPath>;
+
     /*
      * 'nav_data': 'nav-data.json',
                       'maneuvers': 'maneuver.json',
@@ -208,6 +210,7 @@ namespace USV::InputTypes {
         std::unique_ptr<CurvedPathCollection> targets_real_paths;
         std::unique_ptr<FeatureCollection> constraints;
         std::shared_ptr<AnalyseResult> analyse_result;
+        std::shared_ptr<WastedManeuvers> wasted_maneuvers;
         std::filesystem::path directory;
         const DataFilenames* data_filenames;
     };

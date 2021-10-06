@@ -40,6 +40,13 @@ namespace USV {
             input_data.targets_real_paths->size() == input_data.navigationProblem->size()) {
             targets_real_paths = input_data.targets_real_paths.get();
         }
+
+        if(input_data.wasted_maneuvers){
+            for(const auto& m : *input_data.wasted_maneuvers){
+                paths.emplace_back(PathType::TargetManeuver, &ownShip, Path(m, frame));
+            }
+        }
+
         const auto& nav_problem = *input_data.navigationProblem;
         targets.reserve(nav_problem.size());
         for (size_t i = 0; i < nav_problem.size(); ++i) {
