@@ -190,7 +190,7 @@ namespace USV::InputTypes {
         std::vector<ViolatedLimitation> limitations{};
     };
 
-    using WastedManeuvers = std::vector<CurvedPath>;
+    using WastedManeuvers = std::vector<std::vector<CurvedPath>>;
 
     /*
      * 'nav_data': 'nav-data.json',

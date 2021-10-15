@@ -42,8 +42,10 @@ namespace USV {
         }
 
         if(input_data.wasted_maneuvers){
-            for(const auto& m : *input_data.wasted_maneuvers){
-                paths.emplace_back(PathType::TargetManeuver, &ownShip, Path(m, frame));
+            for(const auto& solver_wasted : *input_data.wasted_maneuvers){
+                for(const auto& m : solver_wasted){
+                    paths.emplace_back(PathType::TargetManeuver, &ownShip, Path(m, frame));
+                }
             }
         }
 
