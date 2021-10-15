@@ -57,7 +57,7 @@ jobs:
           ${{runner.workspace}}/build/*.deb
 
   build-win:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -66,22 +66,13 @@ jobs:
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
 
-      - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-
-      - name: Configure CMake for MinGW build
-        shell: bash
+      - name: Build
         working-directory: ${{runner.workspace}}/build
+        shell: bash
         run: |
-          echo $GITHUB_WORKSPACE/toolchains/Toolchain-cross-mingw32-linux.cmake
-          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/toolchains/Toolchain-cross-mingw32-linux.cmake
-
-      - name: Build with MinGW
-        working-directory: ${{runner.workspace}}/build
-        shell: bash
-        run: cmake --build . --config $BUILD_TYPE
+          cmake --build . --config $BUILD_TYPE
+          ls -l .
+          ls -l ./src
 
       - name: Tag name
         id: tag_name
