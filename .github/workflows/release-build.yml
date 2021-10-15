@@ -66,13 +66,20 @@ jobs:
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
 
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Configure
+        run: |
+          cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: seanmiddleditch/gha-setup-ninja@master
       - name: Build
-        working-directory: ${{runner.workspace}}/build
         shell: bash
         run: |
-          cmake --build . --config $BUILD_TYPE
-          ls -l .
-          ls -l ./src
+          cmake --build build --config Release
+          echo `pwd`/build/src
+          ls -l ./build/src
 
       - name: Tag name
         id: tag_name
