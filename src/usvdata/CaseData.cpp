@@ -53,6 +53,13 @@ namespace USV {
         targets.reserve(nav_problem.size());
         for (size_t i = 0; i < nav_problem.size(); ++i) {
             localPos = frame.fromWgs(nav_problem[i].lat, nav_problem[i].lon);
+            const InputTypes::AnalyseResult::TargetStatus* target_status{};
+            if(analyse_result != nullptr) {
+                auto traget_status_itr = target_statuses.find(nav_problem[i].id);
+                target_status = (traget_status_itr != target_statuses.end() ? traget_status_itr->second : nullptr);
+            }
+
+
             targets.push_back({
                                       {nav_problem[i].cat,
                                               nav_problem[i].timestamp,
@@ -61,8 +68,7 @@ namespace USV {
                                                       nav_problem[i].SOG
                                                       },
                                               nav_problem[i].id,
-                                              (analyse_result != nullptr ? target_statuses.find(
-                                                      nav_problem[i].id)->second : nullptr)
+                                              target_status
                                       }});
 
             if (targets_paths)
