@@ -135,8 +135,8 @@ void App::update_time(double time) {
                     type = static_cast<Vessel::Type>(pe.ship->target_status->danger_level);
                 }
                 break;
-            case USV::PathType::TargetRealManeuver:
-                type = Vessel::Type::TargetOnRealManeuver;
+            case USV::PathType::WastedManeuver:
+                type = Vessel::Type::ShipOnWastedManeuver;
                 break;
             case USV::PathType::ShipManeuver:
                 type = Vessel::Type::ShipOnManeuver;

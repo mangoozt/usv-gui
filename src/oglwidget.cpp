@@ -237,6 +237,9 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         // Draw segments courses
         for (const auto &path_meta:m_paths_meta) {
             const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
+            if(path_meta.type == USV::PathType::WastedManeuver){
+                continue;
+            }
             glVertexAttrib3f(3, color.x, color.y, color.z);
             for (const auto& segment: path_meta.path->getSegments()) {
                 const auto start_point = segment.second.getStartPoint();
@@ -265,7 +268,13 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             auto _vessels = vessels->getVessels();
             for (size_t i = 0; i < _vessels.size(); ++i) {
                 const auto& a = _vessels[i].position;
+                if(_vessels[i].type==Vessel::Type::ShipOnWastedManeuver){
+                    continue;
+                }
                 for (size_t j = i + 1; j < _vessels.size(); ++j) {
+                    if(_vessels[j].type==Vessel::Type::ShipOnWastedManeuver){
+                        continue;
+                    }
                     const auto& b = _vessels[j].position;
                     const auto ba = a - b;
                     const auto ba_Sq = absSq(ba);

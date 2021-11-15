@@ -32,19 +32,17 @@ namespace USV {
 
         // check for paths
         std::vector<CurvedPath>* targets_paths = nullptr;
-        std::vector<CurvedPath>* targets_real_paths = nullptr;
         if (input_data.targets_paths && input_data.targets_paths->size() == input_data.navigationProblem->size()) {
             targets_paths = input_data.targets_paths.get();
         }
         if (input_data.targets_real_paths &&
             input_data.targets_real_paths->size() == input_data.navigationProblem->size()) {
-            targets_real_paths = input_data.targets_real_paths.get();
         }
 
         if(input_data.wasted_maneuvers){
             for(const auto& solver_wasted : *input_data.wasted_maneuvers){
                 for(const auto& m : solver_wasted){
-                    paths.emplace_back(PathType::TargetManeuver, &ownShip, Path(m, frame));
+                    paths.emplace_back(PathType::WastedManeuver, &ownShip, Path(m, frame));
                 }
             }
         }
@@ -73,8 +71,6 @@ namespace USV {
 
             if (targets_paths)
                 paths.emplace_back(PathType::TargetManeuver, &targets[i], Path(input_data.targets_paths->at(i), frame));
-            if (targets_real_paths)
-                paths.emplace_back(PathType::TargetRealManeuver, &targets[i], Path(input_data.targets_real_paths->at(i), frame));
         }
 
         for (const auto& pe: paths) {

@@ -84,9 +84,9 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
 
         auto& map_settings = map->getAppearanceSettings();
 
-        add_color_picker(tab, "Target real maneuver:", &AS::path_colors, USV::PathType::TargetRealManeuver, map);
         add_color_picker(tab, "Target maneuver:", &AS::path_colors, USV::PathType::TargetManeuver, map);
         add_color_picker(tab, "Ship route:", &AS::path_colors, USV::PathType::Route, map);
+        add_color_picker(tab, "WastedManeuver:", &AS::path_colors, USV::PathType::WastedManeuver, map);
         add_color_picker(tab, "Ship maneuver:", &AS::path_colors, USV::PathType::ShipManeuver, map);
     }
     // Ships

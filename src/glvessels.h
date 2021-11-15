@@ -19,7 +19,7 @@ struct Vessel {
         TargetPotentiallyDangerous = static_cast<int>(USV::DangerType::PotentiallyDangerous),
         TargetDangerous = static_cast<int>(USV::DangerType::Dangerous),
         TargetUndefined,
-        TargetOnRealManeuver,
+        ShipOnWastedManeuver,
         TargetInitPosition,
         ShipOnRoute,
         ShipOnManeuver,

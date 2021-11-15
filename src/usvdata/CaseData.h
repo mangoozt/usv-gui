@@ -13,7 +13,7 @@ namespace USV {
 
     enum class PathType {
         TargetManeuver = 0,
-        TargetRealManeuver,
+        WastedManeuver,
         ShipManeuver,
         Route,
         End
