@@ -22,6 +22,8 @@ void App::run() {
 }
 
 void App::initialize_gui() {
+    const bool show_manuevers = true; // default value
+
     // Create nanogui gui
     // Reload button
     ref<Button> reload_button = new Button(screen, "");
@@ -47,6 +49,14 @@ void App::initialize_gui() {
     ref<Button> select_exec_button = new Button(screen, "exe...");
     select_exec_button->set_callback([this] { select_usv_executable(); });
     select_exec_button->set_position({189, 10});
+
+    // Show/hide manuevers
+    ref<CheckBox> maneuvers_checkbox = new CheckBox(screen, "Show maneuvers");
+    maneuvers_checkbox->set_checked(show_manuevers);
+    maneuvers_checkbox->set_callback([this] (bool checked) {
+        this->screen->map().showManeuvers(checked);
+    });
+    maneuvers_checkbox->set_position({10, 50});
 
     // bottom
     ref<Widget> panel = new Widget(screen);
@@ -83,6 +93,7 @@ void App::initialize_gui() {
         slider->set_width(wwidth);
     }
     screen->clear();
+    screen->map().showManeuvers(show_manuevers);
     screen->redraw();
 
     glfwSetCursorPosCallback(window, CursorPosCallback);
@@ -127,7 +138,7 @@ void App::update_time(double time) {
     vessels.reserve(case_data->paths.size());
     for (const auto& pe: case_data->paths) {
         Vessel::Type type;
-        switch (pe.pathType) {
+        switch (pe.path.getType()) {
             case USV::PathType::TargetManeuver:
                 if (pe.ship->target_status == nullptr) {
                     type = Vessel::Type::TargetUndefined;

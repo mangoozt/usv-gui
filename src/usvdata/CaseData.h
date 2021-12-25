@@ -10,15 +10,6 @@
 #include <map>
 
 namespace USV {
-
-    enum class PathType {
-        TargetManeuver = 0,
-        WastedManeuver,
-        ShipManeuver,
-        Route,
-        End
-    };
-
     struct Ship {
         using TargetStatus = InputTypes::AnalyseResult::TargetStatus;
         ShipCategory category;
@@ -35,15 +26,14 @@ namespace USV {
     };
 
     struct PathEnvelope {
-        PathType pathType;
         const Ship* ship;
         Path path;
 
-        inline PathEnvelope(PathType path_type, const Ship* ship, Path& path) :
-                pathType(path_type), ship(ship), path(path) {}
+        inline PathEnvelope(const Ship* ship, Path& path) :
+                ship(ship), path(path) {}
 
-        inline PathEnvelope(PathType path_type, const Ship* ship, Path path) :
-                pathType(path_type), ship(ship), path(std::move(path)) {}
+        inline PathEnvelope(const Ship* ship, Path path) :
+                ship(ship), path(std::move(path)) {}
 
     };
 

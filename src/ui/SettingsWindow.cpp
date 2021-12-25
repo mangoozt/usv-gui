@@ -73,22 +73,22 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
     using AS = OGLWidget::AppearanceSettings;
 
     // Paths
-    {
-        auto* tab = new Widget(tab_widget);
-        tab_widget->append_tab("Paths", tab);
-        auto* layout = new GridLayout(Orientation::Horizontal, 2,
-                                      Alignment::Middle, 15, 5);
-        layout->set_col_alignment({Alignment::Maximum, Alignment::Fill});
-        layout->set_spacing(0, 10);
-        tab->set_layout(layout);
+    // {
+    //     auto* tab = new Widget(tab_widget);
+    //     tab_widget->append_tab("Paths", tab);
+    //     auto* layout = new GridLayout(Orientation::Horizontal, 2,
+    //                                   Alignment::Middle, 15, 5);
+    //     layout->set_col_alignment({Alignment::Maximum, Alignment::Fill});
+    //     layout->set_spacing(0, 10);
+    //     tab->set_layout(layout);
 
-        auto& map_settings = map->getAppearanceSettings();
+    //     auto& map_settings = map->getAppearanceSettings();
 
-        add_color_picker(tab, "Target maneuver:", &AS::path_colors, USV::PathType::TargetManeuver, map);
-        add_color_picker(tab, "Ship route:", &AS::path_colors, USV::PathType::Route, map);
-        add_color_picker(tab, "WastedManeuver:", &AS::path_colors, USV::PathType::WastedManeuver, map);
-        add_color_picker(tab, "Ship maneuver:", &AS::path_colors, USV::PathType::ShipManeuver, map);
-    }
+    //     add_color_picker(tab, "Target maneuver:", &AS::path_colors, USV::PathType::TargetManeuver, map);
+    //     add_color_picker(tab, "Ship route:", &AS::path_colors, USV::PathType::Route, map);
+    //     add_color_picker(tab, "WastedManeuver:", &AS::path_colors, USV::PathType::WastedManeuver, map);
+    //     add_color_picker(tab, "Ship maneuver:", &AS::path_colors, USV::PathType::ShipManeuver, map);
+    // }
     // Ships
     /*
     {

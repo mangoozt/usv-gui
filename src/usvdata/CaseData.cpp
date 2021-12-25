@@ -19,9 +19,9 @@ namespace USV {
                            "Own"}};
         if (input_data.maneuvers)
             for (const auto& path:*input_data.maneuvers)
-                paths.emplace_back(PathType::ShipManeuver, &ownShip, Path(path.path, frame));
+                paths.emplace_back(&ownShip, Path(path.path, frame, PathType::ShipManeuver));
 
-        paths.emplace_back(PathType::Route, &ownShip, Path(*input_data.route, frame));
+        paths.emplace_back(&ownShip, Path(*input_data.route, frame, PathType::Route));
 
         // LOAD TARGETS
         std::map<std::string, const InputTypes::AnalyseResult::TargetStatus*> target_statuses;
@@ -42,7 +42,7 @@ namespace USV {
         if(input_data.wasted_maneuvers){
             for(const auto& solver_wasted : *input_data.wasted_maneuvers){
                 for(const auto& m : solver_wasted){
-                    paths.emplace_back(PathType::WastedManeuver, &ownShip, Path(m, frame));
+                    paths.emplace_back(&ownShip, Path(m, frame, PathType::WastedManeuver));
                 }
             }
         }
@@ -70,7 +70,7 @@ namespace USV {
                                       }});
 
             if (targets_paths)
-                paths.emplace_back(PathType::TargetManeuver, &targets[i], Path(input_data.targets_paths->at(i), frame));
+                paths.emplace_back(&targets[i], Path(input_data.targets_paths->at(i), frame, PathType::TargetManeuver));
         }
 
         for (const auto& pe: paths) {

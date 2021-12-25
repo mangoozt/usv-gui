@@ -13,50 +13,10 @@
 #include <sstream>
 
 #define FOV 90.0f
-#define PATH_POINT_MARK_N 5
-
-static const char* vertexShaderSource =
-        "#version 330\n"
-        "layout(location = 0) in vec4 vertex;\n"
-        "layout(location = 1) in vec4 position;\n"
-        "layout(location = 2) in float w;\n"
-        "layout(location = 3) in vec3 col;\n"
-        "layout(location = 4) in float scale;\n"
-        "out vec3 color;\n"
-        "uniform mat4 myMatrix;\n"
-        "void main() {\n"
-        "   mat4 rot = mat4(cos(w),sin(w),0,0, -sin(w),cos(w),0,0, 0,0,1,0, 0,0,0,1);\n"
-        "   mat4 translate = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, position.x,position.y,position.z,1);\n"
-        "   mat4 m_scale = mat4(scale,0,0,0, 0,scale,0,0, 0,0,scale,0, 0,0,0,1);\n"
-        "   color = col;\n"
-        "   gl_Position = myMatrix *(translate*rot*m_scale*vertex);\n"
-        "}\n";
-
-static const char* fragmentShaderSource =
-        "#version 330\n"
-        "in highp vec3 vert;\n"
-        "in highp vec3 color;\n"
-        "out highp vec4 fragColor;\n"
-        "uniform highp vec3 lightPos;\n"
-        "void main() {\n"
-        "   fragColor = vec4(color,1.0);\n"
-        "}\n";
-
 
 OGLWidget::OGLWidget() : m_uniformsDirty(true), compass(new Compass()), vessels(new GLVessels()) {}
 
 void OGLWidget::initializeGL() {
-
-    if (!m_program) {
-        m_program = std::make_unique<Program>();
-    }
-
-    m_program->addVertexShader(vertexShaderSource);
-
-    m_program->addFragmentShader(fragmentShaderSource);
-
-    m_program->link();
-
     // Matrices Uniform buffer
     glGenBuffers(1, &ubo_matrices);
 
@@ -80,21 +40,13 @@ void OGLWidget::initializeGL() {
     glBindBufferBase(GL_UNIFORM_BUFFER, USV_GUI_LIGHTS_BINDING, ubo_light);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    m_myMatrixLoc = m_program->uniformLocation("myMatrix");
-    m_lightPosLoc = m_program->uniformLocation("lightPos");
-
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-
-
-    m_program->bind();
-
-    m_paths = std::make_unique<Buffer>();
-    m_paths->create();
 
     grid = std::make_unique<GLGrid>();
     sea = std::make_unique<GLSea>();
     restrictions = std::make_unique<GLRestrictions>();
+    paths = std::make_unique<GlPaths>();
 //    skybox = new Skybox();
     updateAppearanceSettings({
         {0, 0.0388058, 0.123756, 1}, // sea ambient
@@ -152,20 +104,11 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    m_program->bind();
 
     if (m_uniformsDirty) {
         updateUniforms();
     }
-
-    glDisableVertexAttribArray(1);
-    glVertexAttrib4f(1, 0.0f, 0.0f, 0.0f, 0.0f);
-    glDisableVertexAttribArray(2);
-    glVertexAttrib1f(2, 0.0f);
-    glDisableVertexAttribArray(3);
-    glDisableVertexAttribArray(4);
-    glVertexAttrib1f(4, 1.0f);
-    m_program->release();
+    
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -182,45 +125,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
 
     restrictions->render(m_eye, GLRestrictions::GeometryTypes::All ^ GLRestrictions::GeometryTypes::Isle);
     if (case_data_ != nullptr) {
-        m_program->bind();
-        glEnable(GL_LINE_SMOOTH);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        // Draw paths
-        m_paths->bind();
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-        glVertexAttrib4f(1, 0.0f, 0.0f, 0.0f, 0.0f);
-        m_paths->release();
-
-        for (const auto &path_meta:m_paths_meta) {
-            const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
-            glVertexAttrib3f(3, color.x, color.y, color.z);
-            glDrawArrays(GL_LINE_STRIP, (GLint) path_meta.ptr, (GLsizei) path_meta.points_count);
-        }
-
-        // Paths start points
-        m_paths->bind();
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-        glVertexAttrib1f(4, 0.05f); //scale
-        for (const auto &path_meta:m_paths_meta) {
-            const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
-            glVertexAttrib3f(3, color.x, color.y, color.z);
-            for (const auto& segment: path_meta.path->getSegments()) {
-                const auto start_point = segment.second.getStartPoint();
-                glVertexAttrib2f(1, (GLfloat) start_point.x(), (GLfloat) start_point.y());
-                glVertexAttrib1f(2, (GLfloat) segment.second.getBeginAngle().radians());
-                glDrawArrays(GL_LINE_LOOP, 0, PATH_POINT_MARK_N);
-            }
-        }
-        m_paths->release();
-        glVertexAttribDivisor(1, 0);
-        glVertexAttribDivisor(2, 0);
-        glVertexAttribDivisor(3, 0);
-        glVertexAttribDivisor(4, 0);
-
-        m_program->release();
-
+        paths->render();
         vessels->render(m_eye);
 
 //      Draw ship captions
@@ -235,17 +140,24 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         }
 
         // Draw segments courses
-        for (const auto &path_meta:m_paths_meta) {
-            const auto& color = appearance_settings.path_colors[static_cast<size_t>(path_meta.type)];
-            if(path_meta.type == USV::PathType::WastedManeuver){
+        for (const auto &path: pathsInfo) {
+            USV::PathType type = path.getType();
+            const auto &color = appearance_settings.path_colors
+                                .path_colors[static_cast<size_t>(type)];
+            if (type == USV::PathType::WastedManeuver) {
+              continue;
+            }
+
+            if (path.isManeuver() && !show_maneuvers) {
                 continue;
             }
+
             glVertexAttrib3f(3, color.x, color.y, color.z);
-            for (const auto& segment: path_meta.path->getSegments()) {
-                const auto start_point = segment.second.getStartPoint();
-                auto c = WorldToscreen({start_point.x(), start_point.y()});
+            for (const auto& segment: path.getSegments()) {
+                const auto& start_point = segment.second.getStartPoint();
+                const auto c = WorldToscreen({start_point.x(), start_point.y()});
                 nvgTranslate(ctx, c.x, c.y);
-                nvgRotate(ctx, (GLfloat) (-segment.second.getBeginAngle().radians() + rotation + M_PI_2));
+                nvgRotate(ctx, static_cast<GLfloat>(-segment.second.getBeginAngle().radians() + rotation + M_PI_2));
 
                 std::stringstream tmp;
                 tmp << std::setw(5) << fmod(450 - segment.second.getBeginAngle().degrees(), 360) << "°";
@@ -373,26 +285,12 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
 //        End
 //    };
 
-    std::vector<GLfloat> paths;
-    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(-1));
-    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(-0.3));
-    paths.push_back(static_cast<float>(0.3));paths.push_back(static_cast<float>(0.0));
-    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(0.3));
-    paths.push_back(static_cast<float>(0));paths.push_back(static_cast<float>(1));
-    m_paths_meta.clear();
+    pathsInfo.clear();
     for (const auto &pe : caseData.paths) {
-        auto path_points = pe.path.getPointsPath();
-        size_t ptr = paths.size() / 2;
-        for (const auto &v: path_points) {
-            paths.push_back(static_cast<float>(v.x()));
-            paths.push_back(static_cast<float>(v.y()));
-        }
-        m_paths_meta.emplace_back(ptr, &pe.path, path_points.size(), pe.pathType);
+        pathsInfo.push_back(pe.path);
     }
 
-    m_paths->bind();
-    m_paths->allocate(paths.data(), (int) (sizeof(GLfloat) * paths.size()));
-    m_paths->release();
+    paths->initVbo(pathsInfo);
 
     restrictions->load_restrictions(caseData.restrictions);
 }
@@ -557,15 +455,12 @@ void OGLWidget::updateUniforms() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     m_m = m_proj * m_view;
-    m_program->setUniformValue(m_myMatrixLoc, m_m);
-    m_program->setUniformValue(m_lightPosLoc, glm::vec3(0, 0, 70));
 
     m_uniformsDirty = false;
 }
 
 void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &settings) {
     appearance_settings = settings;
-    auto a = appearance_settings.path_colors[static_cast<int>(USV::PathType::Route)];
     Material sea_material{
             appearance_settings.sea_ambient,
             appearance_settings.sea_diffuse,
@@ -574,10 +469,16 @@ void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &se
     };
     sea->set_material(sea_material);
     vessels->setAppearanceSettings(appearance_settings.vessels_colors);
+    paths->setAppearenceSettings(appearance_settings.path_colors);
 }
 
 const OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() const {
     return appearance_settings;
+}
+
+void OGLWidget::showManeuvers(bool should_show) {
+    show_maneuvers = should_show;
+    paths->showManeuvers(should_show);
 }
 
 OGLWidget::~OGLWidget() = default;
