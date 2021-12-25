@@ -5,7 +5,7 @@
 
 #define PATH_POINT_MARK_N 5
 
-const std::string GlPaths::vertexShaderSource =
+const std::string GLPaths::vertexShaderSource =
     "#version 330\n"
     "layout(location = 0) in vec4 vertex;\n"
     "layout(location = 1) in vec4 position;\n"
@@ -29,7 +29,7 @@ const std::string GlPaths::vertexShaderSource =
     "   gl_Position = c *(translate*rot*m_scale*vertex);\n"
     "}\n";
 
-const std::string GlPaths::fragmentShaderSource =
+const std::string GLPaths::fragmentShaderSource =
     "#version 330\n"
     "in highp vec3 vert;\n"
     "in highp vec3 color;\n"
@@ -39,7 +39,7 @@ const std::string GlPaths::fragmentShaderSource =
     "}\n";
 
 
-GlPaths::GlPaths()
+GLPaths::GLPaths()
 {
     m_program = std::make_unique<Program>();
     m_program->addVertexShader(vertexShaderSource.c_str());
@@ -54,7 +54,7 @@ GlPaths::GlPaths()
     vbo->create();
 }
 
-void GlPaths::initVbo(const std::vector<USV::Path>& paths)
+void GLPaths::initVbo(const std::vector<USV::Path>& paths)
 {
     std::vector<GLfloat> pathsData;
     pathsData.push_back(static_cast<float>(0));
@@ -85,17 +85,17 @@ void GlPaths::initVbo(const std::vector<USV::Path>& paths)
     vbo->release();
 }
 
-void GlPaths::setAppearenceSettings(const AppearenceSettings& settings)
+void GLPaths::setAppearenceSettings(const AppearenceSettings& settings)
 {
     appearance_settings = settings;
 }
 
-void GlPaths::showManeuvers(bool should_show)
+void GLPaths::showManeuvers(bool should_show)
 {
     show_maneuvers = should_show;
 }
 
-void GlPaths::render() const
+void GLPaths::render() const
 {
     m_program->bind();
     glEnable(GL_LINE_SMOOTH);

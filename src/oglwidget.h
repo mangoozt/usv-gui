@@ -27,7 +27,7 @@ public:
         glm::vec4 sea_diffuse;
         glm::vec4 sea_specular;
         float sea_shininess;
-        GlPaths::AppearenceSettings path_colors{};
+        GLPaths::AppearenceSettings path_colors{};
         GLVessels::AppearanceSettings vessels_colors{};
     };
 
@@ -94,7 +94,7 @@ protected:
     std::unique_ptr<GLRestrictions> restrictions{};
     std::unique_ptr<Compass> compass;
     std::unique_ptr<GLVessels> vessels;
-    std::unique_ptr<GlPaths> paths;
+    std::unique_ptr<GLPaths> paths;
 
     double time{0.0f};
     double distance_cap{12.0};

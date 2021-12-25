@@ -46,7 +46,7 @@ void OGLWidget::initializeGL() {
     grid = std::make_unique<GLGrid>();
     sea = std::make_unique<GLSea>();
     restrictions = std::make_unique<GLRestrictions>();
-    paths = std::make_unique<GlPaths>();
+    paths = std::make_unique<GLPaths>();
 //    skybox = new Skybox();
     updateAppearanceSettings({
         {0, 0.0388058, 0.123756, 1}, // sea ambient

@@ -11,7 +11,7 @@
 class Program;
 class Buffer;
 
-class GlPaths
+class GLPaths
 {
 public:
     struct AppearenceSettings {
@@ -23,7 +23,7 @@ public:
     void showManeuvers(bool should_show);
     void render() const;
 
-    GlPaths();
+    GLPaths();
 private:
     static const std::string fragmentShaderSource;
     static const std::string vertexShaderSource;
