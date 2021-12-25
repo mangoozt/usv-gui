@@ -311,7 +311,6 @@ void OGLWidget::updateTime(double t) {
 
 
 void OGLWidget::mousePressEvent(double x, double y, int /*button*/, int /*mods*/) {
-    auto world_position = screenToWorld({x, y});
     mouse_press_point = {x, y};
     if (compass->isHover()) {
         if (rotation != init_rotation)

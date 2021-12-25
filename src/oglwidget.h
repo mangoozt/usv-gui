@@ -80,8 +80,6 @@ protected:
 
     glm::ivec2 mouse_press_point{};
 
-    int m_myMatrixLoc{};
-    int m_lightPosLoc{};
     glm::mat4 m_proj{};
     glm::mat4 m_m{};
     constexpr static const glm::vec3 init_m_eye{0, 0, 20};
