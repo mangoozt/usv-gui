@@ -63,13 +63,13 @@ public:
 
     void updateSunAngle(long timestamp, double lat, double lon);
 
-    void updateAppearanceSettings(const AppearanceSettings &settings);
+    void updateAppearanceSettings();
 
     void showManeuvers(bool should_show);
 
     [[nodiscard]] const AppearanceSettings &getAppearanceSettings() const;
-
-protected:
+    [[nodiscard]] AppearanceSettings &getAppearanceSettings();
+  protected:
     unsigned int vao{};
     unsigned int ubo_matrices{};
     unsigned int ubo_light{};

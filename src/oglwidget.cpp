@@ -48,7 +48,8 @@ void OGLWidget::initializeGL() {
     restrictions = std::make_unique<GLRestrictions>();
     paths = std::make_unique<GLPaths>();
 //    skybox = new Skybox();
-    updateAppearanceSettings({
+    appearance_settings = 
+    {
         {0, 0.0388058, 0.123756, 1}, // sea ambient
         {0.281572, 0.442459, 0.850248, 1}, // sea diffuse
                                      {0, 0, 0, 1}, // sea specular
@@ -70,7 +71,9 @@ void OGLWidget::initializeGL() {
                                               {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
                                               {0.4, 0.4, 1.0, 1.0f} // ShipInitPosition
                                       }}
-                             });
+    };
+    
+    updateAppearanceSettings();
 }
 
 void OGLWidget::resizeGL(int w, int h) {
@@ -458,8 +461,7 @@ void OGLWidget::updateUniforms() {
     m_uniformsDirty = false;
 }
 
-void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &settings) {
-    appearance_settings = settings;
+void OGLWidget::updateAppearanceSettings() {
     Material sea_material{
             appearance_settings.sea_ambient,
             appearance_settings.sea_diffuse,
@@ -472,6 +474,10 @@ void OGLWidget::updateAppearanceSettings(const OGLWidget::AppearanceSettings &se
 }
 
 const OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() const {
+    return appearance_settings;
+}
+
+OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() {
     return appearance_settings;
 }
 
