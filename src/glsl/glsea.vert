@@ -8,6 +8,7 @@ layout (std140) uniform Matrices
 {
     mat4 projection;
     mat4 view;
+    mat4 proj_view;
 };
 
 layout (std140) uniform Light
@@ -27,13 +28,12 @@ out highp VERTEX_OUT{
 
 void main() {
     vec4 v = vec4(0, 0, 0, 1);
-    mat4 screen_mat = projection * view;
-    v = screen_mat * v;
+    v = proj_view * v;
     v/=v.w;
     v.xy = vertex.xy*1.1;
-    v = inverse(screen_mat) * v;
+    v = inverse(proj_view) * v;
     v /= v.w;
-    gl_Position = screen_mat * v;
+    gl_Position = proj_view * v;
     gl_Position /= gl_Position.w;
     vec3 Normal = vec3(0, 0, 1);
     vec3 Tangent = normalize(vec3(Normal.z, 0, -Normal.y));

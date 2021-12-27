@@ -28,6 +28,7 @@ layout (std140) uniform Matrices
 {
     mat4 projection;
     mat4 view;
+    mat4 proj_view;
 };
 
 void main() {
@@ -40,7 +41,7 @@ void main() {
     material.specular = vec3(0.63, 0.63, 0.63);
     material.shininess = 32;
 
-    gl_Position = projection * view * (translate*rot*m_scale*vertex);
+    gl_Position = proj_view * (translate*rot*m_scale*vertex);
     vec3 Normal = normalize(mat3(rot*m_scale)*normal);
     vec3 Tangent = normalize(vec3(Normal.z, 0, -Normal.y));
     vec3 Tangent2 = normalize(vec3(0, Normal.z, -Normal.x));

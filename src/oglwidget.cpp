@@ -21,8 +21,8 @@ void OGLWidget::initializeGL() {
     glGenBuffers(1, &ubo_matrices);
 
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
-    glBufferData(GL_UNIFORM_BUFFER, 2 * 16 * sizeof(float), nullptr, GL_STATIC_DRAW);
-    glBindBufferRange(GL_UNIFORM_BUFFER, USV_GUI_MATRICES_BINDING, ubo_matrices, 0, 2 * 16 * sizeof(float));
+    glBufferData(GL_UNIFORM_BUFFER, 3 * 16 * sizeof(float), nullptr, GL_STATIC_DRAW);
+    glBindBufferRange(GL_UNIFORM_BUFFER, USV_GUI_MATRICES_BINDING, ubo_matrices, 0, 3 * 16 * sizeof(float));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     struct LightSource {
@@ -433,7 +433,7 @@ void OGLWidget::updateUniforms() {
     const auto H = static_cast<float>(height);
 
     m_proj = glm::identity<glm::mat4>();
-    glm::mat4 camera;
+    glm::mat4 m_view;
 
     const constexpr auto phi_rad = static_cast<float>(FOV / 180.0 * M_PI);
 
@@ -447,16 +447,16 @@ void OGLWidget::updateUniforms() {
                                   static_cast<float>(b));
 
     auto target = glm::vec3(m_eye.x, m_eye.y, 0);
-    camera = glm::lookAt(m_eye, target, glm::vec3(std::cos(rotation), std::sin(rotation), 0));
+    m_view = glm::lookAt(m_eye, target, glm::vec3(std::cos(rotation), std::sin(rotation), 0));
+    m_m = m_proj * m_view;
 
     // Update matrices UBO
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(float), &m_proj);
-    const auto m_view = camera;
     glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(float), 16 * sizeof(float), &m_view);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBufferSubData(GL_UNIFORM_BUFFER, 2 * 16 * sizeof(float), 16 * sizeof(float), &m_m);
 
-    m_m = m_proj * m_view;
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     m_uniformsDirty = false;
 }

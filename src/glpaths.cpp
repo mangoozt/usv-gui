@@ -17,16 +17,16 @@ const std::string GLPaths::vertexShaderSource =
     "{\n"
     "    mat4 projection;\n"
     "    mat4 view;\n"
+    "    mat4 proj_view;\n"
     "};\n"
     "void main() {\n"
-    "   mat4 c = projection*view;\n"
     "   mat4 rot = mat4(cos(w),sin(w),0,0, -sin(w),cos(w),0,0, 0,0,1,0, "
     "0,0,0,1);\n"
     "   mat4 translate = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, "
     "position.x,position.y,position.z,1);\n"
     "   mat4 m_scale = mat4(scale,0,0,0, 0,scale,0,0, 0,0,scale,0, 0,0,0,1);\n"
     "   color = col;\n"
-    "   gl_Position = c *(translate*rot*m_scale*vertex);\n"
+    "   gl_Position = proj_view *(translate*rot*m_scale*vertex);\n"
     "}\n";
 
 const std::string GLPaths::fragmentShaderSource =
