@@ -22,7 +22,7 @@ void App::run() {
 }
 
 void App::initialize_gui() {
-    const bool show_manuevers = true; // default value
+    const bool show_wasted_manuevers = true; // default value
 
     // Create nanogui gui
     // Reload button
@@ -51,10 +51,10 @@ void App::initialize_gui() {
     select_exec_button->set_position({189, 10});
 
     // Show/hide manuevers
-    ref<CheckBox> maneuvers_checkbox = new CheckBox(screen, "Show maneuvers");
-    maneuvers_checkbox->set_checked(show_manuevers);
+    ref<CheckBox> maneuvers_checkbox = new CheckBox(screen, "Show wasted maneuvers");
+    maneuvers_checkbox->set_checked(show_wasted_manuevers);
     maneuvers_checkbox->set_callback([this] (bool checked) {
-        this->screen->map().showManeuvers(checked);
+        this->screen->map().showWastedManeuvers(checked);
     });
     maneuvers_checkbox->set_position({10, 50});
 
@@ -93,7 +93,7 @@ void App::initialize_gui() {
         slider->set_width(wwidth);
     }
     screen->clear();
-    screen->map().showManeuvers(show_manuevers);
+    screen->map().showWastedManeuvers(show_wasted_manuevers);
     screen->redraw();
 
     glfwSetCursorPosCallback(window, CursorPosCallback);

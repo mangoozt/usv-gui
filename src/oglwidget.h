@@ -65,7 +65,7 @@ public:
 
     void updateAppearanceSettings();
 
-    void showManeuvers(bool should_show);
+    void showWastedManeuvers(bool should_show);
 
     [[nodiscard]] const AppearanceSettings &getAppearanceSettings() const;
     [[nodiscard]] AppearanceSettings &getAppearanceSettings();
@@ -76,7 +76,7 @@ public:
     AppearanceSettings appearance_settings;
 
     std::vector<USV::Path> pathsInfo;
-    bool show_maneuvers{true};
+    bool show_wasted_maneuvers{true};
 
     glm::ivec2 mouse_press_point{};
 

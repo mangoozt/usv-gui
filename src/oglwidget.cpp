@@ -151,7 +151,7 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
               continue;
             }
 
-            if (path.isManeuver() && !show_maneuvers) {
+            if (path.getType() == USV::PathType::WastedManeuver && !show_wasted_maneuvers) {
                 continue;
             }
 
@@ -481,9 +481,9 @@ OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() {
     return appearance_settings;
 }
 
-void OGLWidget::showManeuvers(bool should_show) {
-    show_maneuvers = should_show;
-    paths->showManeuvers(should_show);
+void OGLWidget::showWastedManeuvers(bool should_show) {
+    show_wasted_maneuvers = should_show;
+    paths->showWastedManeuvers(should_show);
 }
 
 OGLWidget::~OGLWidget() = default;

@@ -299,10 +299,4 @@ namespace USV {
     const Path::SegmentsType &Path::getSegments() const {
         return segments;
     }
-
-    bool Path::isManeuver() const {
-        return _type == USV::PathType::ShipManeuver ||
-               _type == USV::PathType::TargetManeuver ||
-               _type == USV::PathType::WastedManeuver;
-    }
 }

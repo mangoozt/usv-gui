@@ -150,7 +150,6 @@ namespace USV {
 
         [[nodiscard]] std::vector<Vector2> getPointsPath(double angle_increment=2.0/180*M_PI) const;
 
-        [[nodiscard]] bool isManeuver() const;
     };
 
 }

@@ -76,8 +76,7 @@ void GLPaths::initVbo(const std::vector<USV::Path>& paths)
             pathsData.push_back(static_cast<float>(v.x()));
             pathsData.push_back(static_cast<float>(v.y()));
         }
-        m_paths_meta.emplace_back(ptr, &path, path_points.size(),
-                                  path.getType());
+        m_paths_meta.emplace_back(ptr, &path, path_points.size());
     }
 
     vbo->bind();
@@ -90,9 +89,9 @@ void GLPaths::setAppearenceSettings(const AppearenceSettings& settings)
     appearance_settings = settings;
 }
 
-void GLPaths::showManeuvers(bool should_show)
+void GLPaths::showWastedManeuvers(bool should_show)
 {
-    show_maneuvers = should_show;
+    show_wasted_maneuvers = should_show;
 }
 
 void GLPaths::render() const
@@ -116,7 +115,7 @@ void GLPaths::render() const
     glVertexAttrib1f(4, 1.0f); // scale
 
     for (const auto &path_meta : m_paths_meta) {
-        if (path_meta.path->isManeuver() && !show_maneuvers) {
+        if (path_meta.path->getType() == USV::PathType::WastedManeuver && !show_wasted_maneuvers) {
             continue;
         }
         
@@ -132,7 +131,7 @@ void GLPaths::render() const
     glVertexAttrib1f(4, 0.05f); // scale
 
     for (const auto &path_meta : m_paths_meta) {
-        if (path_meta.path->isManeuver() && !show_maneuvers) {
+        if (path_meta.path->getType() == USV::PathType::WastedManeuver && !show_wasted_maneuvers) {
             continue;
         }
 
