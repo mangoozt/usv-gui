@@ -3,6 +3,9 @@
 #include "Program.h"
 #include "Defines.h"
 
+#include "path_appearance.h"
+#include "provider.h"
+
 #define PATH_POINT_MARK_N 5
 
 const std::string GLPaths::vertexShaderSource =
@@ -84,16 +87,6 @@ void GLPaths::initVbo(const std::vector<USV::Path>& paths)
     vbo->release();
 }
 
-void GLPaths::setAppearenceSettings(const AppearenceSettings& settings)
-{
-    appearance_settings = settings;
-}
-
-void GLPaths::showWastedManeuvers(bool should_show)
-{
-    show_wasted_maneuvers = should_show;
-}
-
 void GLPaths::render() const
 {
     m_program->bind();
@@ -114,12 +107,14 @@ void GLPaths::render() const
     glVertexAttrib1f(2, 0.0f);
     glVertexAttrib1f(4, 1.0f); // scale
 
+    const PathAppearance &appearence = Provider<PathAppearanceNotifier>::of().value;
+
     for (const auto &path_meta : m_paths_meta) {
-        if (path_meta.path->getType() == USV::PathType::WastedManeuver && !show_wasted_maneuvers) {
+        if (!appearence.isVisible(*path_meta.path)) {
             continue;
         }
-        
-        const auto &color = appearance_settings.path_colors[static_cast<size_t>(path_meta.path->getType())];
+
+        const auto &color = appearence.getColor(*path_meta.path);
         glVertexAttrib3f(3, color.x, color.y, color.z);
         glDrawArrays(GL_LINE_STRIP, static_cast<GLint>(path_meta.ptr),
                     static_cast<GLsizei>(path_meta.points_count));
@@ -131,12 +126,11 @@ void GLPaths::render() const
     glVertexAttrib1f(4, 0.05f); // scale
 
     for (const auto &path_meta : m_paths_meta) {
-        if (path_meta.path->getType() == USV::PathType::WastedManeuver && !show_wasted_maneuvers) {
+        if (!appearence.isVisible(*path_meta.path)) {
             continue;
         }
 
-        const auto &color =
-            appearance_settings.path_colors[static_cast<size_t>(path_meta.path->getType())];
+        const auto &color = appearence.getColor(*path_meta.path);
         glVertexAttrib3f(3, color.x, color.y, color.z);
 
         for (const auto &segment : path_meta.path->getSegments()) {

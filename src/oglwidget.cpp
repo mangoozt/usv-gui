@@ -10,11 +10,14 @@
 #include "glsea.h"
 #include "glgrid.h"
 #include "glrestrictions.h"
+#include "vessel_list.h"
+#include "path_appearance.h"
+#include "provider.h"
 #include <sstream>
 
 #define FOV 90.0f
 
-OGLWidget::OGLWidget() : m_uniformsDirty(true), compass(new Compass()), vessels(new GLVessels()) {}
+OGLWidget::OGLWidget() : m_uniformsDirty(true), compass(new Compass()) {}
 
 void OGLWidget::initializeGL() {
     // Matrices Uniform buffer
@@ -47,33 +50,8 @@ void OGLWidget::initializeGL() {
     sea = std::make_unique<GLSea>();
     restrictions = std::make_unique<GLRestrictions>();
     paths = std::make_unique<GLPaths>();
+    vessels = std::make_unique<GLVessels>();
 //    skybox = new Skybox();
-    appearance_settings = 
-    {
-        {0, 0.0388058, 0.123756, 1}, // sea ambient
-        {0.281572, 0.442459, 0.850248, 1}, // sea diffuse
-                                     {0, 0, 0, 1}, // sea specular
-                                     256, // sea shininess
-                                     {
-                                             glm::vec4(0.724168, 0.63479, 0, 1),         //  TargetManeuver
-                                             glm::vec4(0.7f, 0.7f, 0.5f, 1),//  TargetRealManeuver
-                                             glm::vec4(0.769072533, 0.0, 1, 1),//  ShipManeuver
-                                             glm::vec4(0, 0.600625, 1, 1)//  Route
-                                     },
-                                     {{
-                                              {0, 1, 0, 1}, // TargetNotDangerous
-                                              {1.0f, 0.6, 0.2, 1.0f}, // TargetPotentiallyDangerous
-                                              {0.8, 0, 0, 1}, // TargetDangerous
-                                              {0, 0.426016808, 1, 1}, // TargetUndefined
-                                              {0, 0.333551884, 1, 1}, // TargetOnRealManeuver
-                                              {0.7, 0.7, 0.7, 1}, // TargetInitPosition
-                                              {0.8f, 0.8f, 0.8f, 1.0f}, // ShipOnRoute
-                                              {0.66566503, 0.0, 0.738230228, 1.0f}, // ShipOnManeuver
-                                              {0.4, 0.4, 1.0, 1.0f} // ShipInitPosition
-                                      }}
-    };
-    
-    updateAppearanceSettings();
 }
 
 void OGLWidget::resizeGL(int w, int h) {
@@ -137,22 +115,26 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
         nvgFontFace(ctx, "sans");
         nvgTextAlign(ctx, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFillColor(ctx, {1, 1.0, 1, 1});
-        for (const auto& vessel : vessels->getVessels()) {
+
+        const std::vector<Vessel> &vessel_list = Provider<VesselListNotifier>::of().value;
+
+        for (const auto& vessel : vessel_list) {
             auto coord = WorldToscreen({vessel.position.x(), vessel.position.y()});
             nvgText(ctx, coord.x, coord.y, vessel.ship->name.c_str(), nullptr);
         }
 
+        const PathAppearance path_appearance = Provider<PathAppearanceNotifier>::of().value;
+
         // Draw segments courses
         for (const auto &path: pathsInfo) {
             USV::PathType type = path.getType();
-            const auto &color = appearance_settings.path_colors
-                                .path_colors[static_cast<size_t>(type)];
+            const auto &color = path_appearance.getColor(path);
             if (type == USV::PathType::WastedManeuver) {
               continue;
             }
 
-            if (path.getType() == USV::PathType::WastedManeuver && !show_wasted_maneuvers) {
-                continue;
+            if (!path_appearance.isVisible(path)) {
+              continue;
             }
 
             glVertexAttrib3f(3, color.x, color.y, color.z);
@@ -180,17 +162,16 @@ void OGLWidget::paintGL(NVGcontext *ctx) {
             nvgStrokeWidth(ctx, 1.0f);
             nvgStrokeColor(ctx, {1.0, 1.0, 1.0, 1.0});
             const auto distance_capSq = distance_cap * distance_cap;
-            auto _vessels = vessels->getVessels();
-            for (size_t i = 0; i < _vessels.size(); ++i) {
-                const auto& a = _vessels[i].position;
-                if(_vessels[i].type==Vessel::Type::ShipOnWastedManeuver){
-                    continue;
+            for (size_t i = 0; i < vessel_list.size(); ++i) {
+                const auto& a = vessel_list[i].position;
+                if (vessel_list[i].type == Vessel::Type::ShipOnWastedManeuver) {
+                  continue;
                 }
-                for (size_t j = i + 1; j < _vessels.size(); ++j) {
-                    if(_vessels[j].type==Vessel::Type::ShipOnWastedManeuver){
+                for (size_t j = i + 1; j < vessel_list.size(); ++j) {
+                    if(vessel_list[j].type==Vessel::Type::ShipOnWastedManeuver){
                         continue;
                     }
-                    const auto& b = _vessels[j].position;
+                    const auto& b = vessel_list[j].position;
                     const auto ba = a - b;
                     const auto ba_Sq = absSq(ba);
                     if (ba_Sq > distance_capSq || ba_Sq < 1)
@@ -296,16 +277,6 @@ void OGLWidget::loadData(std::unique_ptr<USV::CaseData> case_data) {
     paths->initVbo(pathsInfo);
 
     restrictions->load_restrictions(caseData.restrictions);
-}
-
-
-void OGLWidget::updatePositions(const std::vector<Vessel>& new_vessels) {
-    vessels->setVessels(new_vessels);
-    vessels->updatePositions();
-}
-
-void OGLWidget::updatePositions() {
-    vessels->updatePositions();
 }
 
 void OGLWidget::updateTime(double t) {
@@ -459,31 +430,6 @@ void OGLWidget::updateUniforms() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     m_uniformsDirty = false;
-}
-
-void OGLWidget::updateAppearanceSettings() {
-    Material sea_material{
-            appearance_settings.sea_ambient,
-            appearance_settings.sea_diffuse,
-            appearance_settings.sea_specular,
-            appearance_settings.sea_shininess,
-    };
-    sea->set_material(sea_material);
-    vessels->setAppearanceSettings(appearance_settings.vessels_colors);
-    paths->setAppearenceSettings(appearance_settings.path_colors);
-}
-
-const OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() const {
-    return appearance_settings;
-}
-
-OGLWidget::AppearanceSettings &OGLWidget::getAppearanceSettings() {
-    return appearance_settings;
-}
-
-void OGLWidget::showWastedManeuvers(bool should_show) {
-    show_wasted_maneuvers = should_show;
-    paths->showWastedManeuvers(should_show);
 }
 
 OGLWidget::~OGLWidget() = default;

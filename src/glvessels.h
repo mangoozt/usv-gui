@@ -3,6 +3,7 @@
 
 #include "usvdata/Restrictions.h"
 #include "usvdata/CaseData.h"
+#include "state_notifier.h"
 #include <glm/glm.hpp>
 #include <utility>
 #include <memory>
@@ -41,24 +42,13 @@ class GLVessels {
     std::unique_ptr<Buffer> m_circle_vbo{};
     int m_viewLoc;
     const USV::CaseData* case_data_{};
-public:
-    struct AppearanceSettings {
-        glm::vec4 vessels_colors[static_cast<size_t>(Vessel::Type::End)];
-    };
 private:
     std::vector<Vessel> vessels{};
-
-    AppearanceSettings appearance_settings{};
+    ListenerRemoveFunc list_listener_remove;
+    ListenerRemoveFunc appearance_listener_remove;
 public:
     GLVessels();
-
-    [[nodiscard]] const std::vector<Vessel>& getVessels() const {
-        return vessels;
-    }
-
-    void setVessels(const std::vector<Vessel>& new_vessels) {
-        vessels = new_vessels;
-    }
+    ~GLVessels();
 
     [[nodiscard]] const USV::CaseData* getCaseData() const {
         return case_data_;
@@ -66,14 +56,6 @@ public:
 
     void setCaseData(const USV::CaseData* caseData) {
         case_data_ = caseData;
-    }
-
-    [[nodiscard]] const AppearanceSettings& getAppearanceSettings() const {
-        return appearance_settings;
-    }
-
-    void setAppearanceSettings(const AppearanceSettings& appearanceSettings) {
-        appearance_settings = appearanceSettings;
     }
 
     void render(glm::vec3 eyePos);

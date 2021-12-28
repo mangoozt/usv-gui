@@ -21,16 +21,6 @@ class GLRestrictions;
 
 class OGLWidget {
 public:
-
-    struct AppearanceSettings {
-        glm::vec4 sea_ambient;
-        glm::vec4 sea_diffuse;
-        glm::vec4 sea_specular;
-        float sea_shininess;
-        GLPaths::AppearenceSettings path_colors{};
-        GLVessels::AppearanceSettings vessels_colors{};
-    };
-
     OGLWidget();
 
     virtual ~OGLWidget();
@@ -47,10 +37,6 @@ public:
 
     void loadData(std::unique_ptr<USV::CaseData> case_data);
 
-    void updatePositions(const std::vector<Vessel> &vessels);
-
-    void updatePositions();
-
     void updateTime(double t);
 
     void scroll([[maybe_unused]] double dx, double dy);
@@ -63,20 +49,12 @@ public:
 
     void updateSunAngle(long timestamp, double lat, double lon);
 
-    void updateAppearanceSettings();
-
-    void showWastedManeuvers(bool should_show);
-
-    [[nodiscard]] const AppearanceSettings &getAppearanceSettings() const;
-    [[nodiscard]] AppearanceSettings &getAppearanceSettings();
   protected:
     unsigned int vao{};
     unsigned int ubo_matrices{};
     unsigned int ubo_light{};
-    AppearanceSettings appearance_settings;
 
     std::vector<USV::Path> pathsInfo;
-    bool show_wasted_maneuvers{true};
 
     glm::ivec2 mouse_press_point{};
 

@@ -5,6 +5,8 @@
 #include "Defines.h"
 #include "Program.h"
 #include "Buffer.h"
+#include "provider.h"
+#include "sea_appearance.h"
 
 CMRC_DECLARE(glsl_resources);
 
@@ -36,6 +38,16 @@ GLSea::GLSea() {
     vbo->create();
     ibo->create();
     prepare_grid();
+
+    // Add listener to material changes
+    listener_remove =
+    Provider<SeaAppearanceNotifier>::of().addListener([this](const SeaAppearance& appearance) {
+        this->set_material(appearance.material);
+    });
+}
+
+GLSea::~GLSea() {
+    listener_remove();
 }
 
 void GLSea::render(glm::vec3& eyePos, double time) {
