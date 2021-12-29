@@ -49,6 +49,26 @@ namespace {
                              appearance.updateColor(type, toVec4(c));
                          });
     }
+
+    template <typename TMember>
+    void add_sea_color_picker(nanogui::Widget* w, const std::string& label, TMember member) {
+                using namespace nanogui;
+        new Label(w, label, "sans-bold");
+        auto cp = new ColorPicker(w);
+
+        auto& appearance = Provider<SeaAppearanceNotifier>::of();
+        Material material = appearance.value.material;
+
+        cp->set_color(toColor({material.*member, 1.0}));
+
+        cp->set_fixed_size({100, 20});
+        cp->set_callback([&appearance, member](const Color& c)
+                         {
+                             Material material = appearance.value.material;
+                             material.*member = glm::vec3(toVec4(c));
+                             appearance.updateMaterial(material);
+                         });
+    }
 }
 
 SettingsWindow::SettingsWindow(nanogui::Widget* parent, const std::string& title) :
@@ -91,38 +111,39 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, const std::string& title
         add_vessel_color_picker(tab, "Ship on maneuver:", Vessel::Type::ShipOnManeuver);
     }
     // sea
-    // {
-    //     auto* tab = new Widget(tab_widget);
-    //     tab_widget->append_tab("Sea", tab);
-    //     auto* layout = new GridLayout(Orientation::Horizontal, 2,
-    //                                   Alignment::Middle, 15, 5);
-    //     layout->set_col_alignment({Alignment::Maximum, Alignment::Fill});
-    //     layout->set_spacing(0, 10);
-    //     tab->set_layout(layout);
+    {
+        auto* tab = new Widget(tab_widget);
+        tab_widget->append_tab("Sea", tab);
+        auto* layout = new GridLayout(Orientation::Horizontal, 2,
+                                      Alignment::Middle, 15, 5);
+        layout->set_col_alignment({Alignment::Maximum, Alignment::Fill});
+        layout->set_spacing(0, 10);
+        tab->set_layout(layout);
 
-    //     auto& map_settings = map->getAppearanceSettings();
+        auto &appearance = Provider<SeaAppearanceNotifier>::of();
+        Material material = appearance.value.material;
 
-    //     add_color_picker(tab, "Sea ambient:", map_settings.sea_ambient, map);
-    //     add_color_picker(tab, "Sea diffuse:", map_settings.sea_diffuse, map);
-    //     add_color_picker(tab, "Sea specular", map_settings.sea_specular, map);
-    //     {
-    //         new Label(tab, "Sea shininess:", "sans-bold");
-    //         auto intBox = new FloatBox<float>(tab);
-    //         intBox->set_editable(true);
-    //         intBox->set_fixed_size(Vector2i(100, 20));
-    //         intBox->set_value(map_settings.sea_shininess);
-    //         intBox->set_font_size(16);
-    //         intBox->set_spinnable(true);
-    //         intBox->set_min_value(1);
-    //         intBox->set_max_value(1024);
-    //         intBox->set_value_increment(2);
-    //         intBox->set_callback([this](const float s)
-    //                              {
-    //                                  auto& settings = map->getAppearanceSettings();
-    //                                  settings.sea_shininess = s;
-    //                                  map->updateAppearanceSettings();
-    //                              });
-    //     }
-    // }
+        add_sea_color_picker(tab, "Sea ambient:", &Material::ambient);
+        add_sea_color_picker(tab, "Sea diffuse:", &Material::diffuse);
+        add_sea_color_picker(tab, "Sea specular", &Material::specular);
+        {
+            new Label(tab, "Sea shininess:", "sans-bold");
+            auto intBox = new FloatBox<float>(tab);
+            intBox->set_editable(true);
+            intBox->set_fixed_size(Vector2i(100, 20));
+            intBox->set_value(material.shininess);
+            intBox->set_font_size(16);
+            intBox->set_spinnable(true);
+            intBox->set_min_value(1);
+            intBox->set_max_value(1024);
+            intBox->set_value_increment(2);
+            intBox->set_callback([&appearance](const float s)
+                                 {
+                                     Material material = appearance.value.material;
+                                     material.shininess = s;
+                                     appearance.updateMaterial(material);
+                                 });
+        }
+    }
 
 }
