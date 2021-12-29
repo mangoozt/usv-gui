@@ -9,27 +9,19 @@ set(GLM_TEST_ENABLE OFF)
 add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/glm" "vendor/glm" EXCLUDE_FROM_ALL)
 add_compile_definitions(USV_GUI_VERSION=\"${CMAKE_PROJECT_VERSION}\")
 
+file(GLOB SRC_FILES "*.cpp")
+file(GLOB INC_FILES "*.h")
+file(GLOB SRC_UI_FILES "ui/*.cpp" )
+file(GLOB INC_UI_FILES "ui/*.h" )
+
 add_executable(usv-gui
-               main.cpp
-               oglwidget.h
-               oglwidget.cpp
-               glgrid.cpp
-               glsea.cpp
-               earcut.h
-               glrestrictions.cpp
-               Program.cpp
-               Program.h
-               Buffer.cpp Buffer.h
+               ${SRC_FILES}
+               ${INC_FILES}
+               ${SRC_UI_FILES}
+               ${INC_UI_FILES}
                # Unfortunately need to do this
                ${PROJECT_SOURCE_DIR}/vendor/nanogui/ext/glad/src/glad.c
-               main.rc
-               MyScreen.cpp MyScreen.h
-               ui/IgnorantTextBox.h
-               ui/ScrollableSlider.cpp ui/ScrollableSlider.h
-               App.cpp App.h
-               Compass.cpp Compass.h
-               ui/SettingsWindow.cpp ui/SettingsWindow.h
-               glvessels.cpp glvessels.h)
+               main.rc)
 
 set_property(TARGET usv-gui PROPERTY CXX_STANDARD 17)
 set_property(TARGET usv-gui PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -52,7 +44,7 @@ if(MSVC)
 else()
     add_compile_options(-Wall -Wextra -pedantic -pedantic-errors -Werror -Wno-unknown-pragmas)
     add_compile_options(-msse -msse2 -mssse3 -msse4 -msse4.1 -msse4.2 -ffast-math)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -D_GLIBCXX_DEBUG")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -O0")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -O0")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")

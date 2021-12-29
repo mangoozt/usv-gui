@@ -3,6 +3,7 @@
 
 #include "usvdata/CaseData.h"
 #include "glvessels.h"
+#include "glpaths.h"
 #include <glm/glm.hpp>
 #include <nanovg.h>
 
@@ -20,16 +21,6 @@ class GLRestrictions;
 
 class OGLWidget {
 public:
-
-    struct AppearanceSettings {
-        glm::vec4 sea_ambient;
-        glm::vec4 sea_diffuse;
-        glm::vec4 sea_specular;
-        float sea_shininess;
-        glm::vec4 path_colors[static_cast<size_t>(USV::PathType::End)];
-        GLVessels::AppearanceSettings vessels_colors{};
-    };
-
     OGLWidget();
 
     virtual ~OGLWidget();
@@ -46,10 +37,6 @@ public:
 
     void loadData(std::unique_ptr<USV::CaseData> case_data);
 
-    void updatePositions(const std::vector<Vessel> &vessels);
-
-    void updatePositions();
-
     void updateTime(double t);
 
     void scroll([[maybe_unused]] double dx, double dy);
@@ -62,33 +49,15 @@ public:
 
     void updateSunAngle(long timestamp, double lat, double lon);
 
-    void updateAppearanceSettings(const AppearanceSettings &settings);
-
-    [[nodiscard]] const AppearanceSettings &getAppearanceSettings() const;
-
-protected:
+  protected:
     unsigned int vao{};
-    std::unique_ptr<Program> m_program{nullptr};
-    std::unique_ptr<Buffer> m_paths{};
     unsigned int ubo_matrices{};
     unsigned int ubo_light{};
-    AppearanceSettings appearance_settings;
 
-    struct pathVBOMeta {
-        size_t ptr;
-        const USV::Path* path;
-        size_t points_count;
-        USV::PathType type;
+    std::vector<USV::Path> pathsInfo;
 
-        pathVBOMeta(size_t ptr, const USV::Path* path, size_t points_count, USV::PathType path_type) : ptr(ptr), path(
-                path), points_count(points_count), type(path_type) {};
-    };
-
-    std::vector<pathVBOMeta> m_paths_meta;
     glm::ivec2 mouse_press_point{};
 
-    int m_myMatrixLoc{};
-    int m_lightPosLoc{};
     glm::mat4 m_proj{};
     glm::mat4 m_m{};
     constexpr static const glm::vec3 init_m_eye{0, 0, 20};
@@ -101,6 +70,7 @@ protected:
     std::unique_ptr<GLRestrictions> restrictions{};
     std::unique_ptr<Compass> compass;
     std::unique_ptr<GLVessels> vessels;
+    std::unique_ptr<GLPaths> paths;
 
     double time{0.0f};
     double distance_cap{12.0};

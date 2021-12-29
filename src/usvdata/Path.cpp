@@ -249,8 +249,10 @@ namespace USV {
     }
 
 
-    Path::Path(const CurvedPath& curved_path, const Frame& reference_frame) : start_time(
-            static_cast<double>(curved_path.start_time)) {
+    Path::Path(const CurvedPath& curved_path, const Frame& reference_frame, PathType type) 
+        : start_time(static_cast<double>(curved_path.start_time))
+        , _type(type) 
+    {
         for (const auto& segment : curved_path.items) {
             Vector2 localPos = reference_frame.fromWgs(segment.lat, segment.lon);
             appendSegment({{localPos.y(),localPos.x()}, M_PI_2 - degrees_to_radians(segment.begin_angle), -segment.curve, segment.length,

@@ -7,15 +7,26 @@
 #include "Frame.h"
 
 namespace USV {
+
+    enum class PathType {
+        TargetManeuver = 0,
+        WastedManeuver,
+        ShipManeuver,
+        Route,
+        End
+    };
+
     class Path {
     private:
         double start_time;
+        PathType _type;
     public:
         struct Position {
             Vector2 point;
             Angle course;
             double speed{0.0};
         };
+
 
         class Segment {
 
@@ -98,9 +109,9 @@ namespace USV {
             [[nodiscard]] inline Position end() const { return position(_duration); }
         };
 
-        explicit Path(double startTime) : start_time(startTime) {}
+        explicit Path(double startTime, PathType type) : start_time(startTime), _type(type) {}
 
-        explicit Path(const CurvedPath& curved_path, const Frame& reference_frame);
+        explicit Path(const CurvedPath& curved_path, const Frame& reference_frame, PathType type);
 
         typedef std::vector<std::pair<double, Segment>> SegmentsType;
 
@@ -123,6 +134,8 @@ namespace USV {
 
         [[nodiscard]] inline size_t size() const { return segments.size(); };
 
+        [[nodiscard]] inline PathType getType() const { return _type; };
+
         [[nodiscard]] Position endPosition() const;
 
         void cut(double t);
@@ -135,7 +148,7 @@ namespace USV {
             return start_time;
         }
 
-        [[nodiscard]] std::vector<Vector2> getPointsPath(double angle_increment=2.0/180*M_PI)const;
+        [[nodiscard]] std::vector<Vector2> getPointsPath(double angle_increment=2.0/180*M_PI) const;
 
     };
 

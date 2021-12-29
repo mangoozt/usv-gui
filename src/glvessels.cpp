@@ -6,6 +6,10 @@
 #include "Defines.h"
 #include "Program.h"
 #include "Buffer.h"
+#include "vessel_appearance.h"
+#include "vessel_list.h"
+#include "provider.h"
+
 
 #define CIRCLE_POINTS_N 360
 const glm::vec3 vessel_vertices[] = {
@@ -101,6 +105,24 @@ GLVessels::GLVessels() {
         m_circle_vbo->allocate(circles.data(), (int) (sizeof(GLfloat) * circles.size()));
         m_circle_vbo->release();
     }
+
+    // Add listener to position updates
+    list_listener_remove = Provider<VesselListNotifier>::of().addListener(
+        [this](const std::vector<Vessel>& vessels) {
+            updatePositions(vessels);
+        }
+    );
+
+    appearance_listener_remove = Provider<VesselAppearanceNotifier>::of().addListener(
+        [this](const VesselAppearance&) {
+            updatePositions();
+        }
+    );
+}
+
+GLVessels::~GLVessels() {
+    list_listener_remove();
+    appearance_listener_remove();
 }
 
 void GLVessels::render(glm::vec3 eyePos) {
@@ -167,8 +189,11 @@ void GLVessels::updatePositions(const std::vector<Vessel>& new_vessels) {
 void GLVessels::updatePositions() {
     std::vector<GLfloat> spos;
     double radius = 0;
+
+    const VesselAppearance& appearance = Provider<VesselAppearanceNotifier>::of().value;
+
     for (const auto& v: vessels) {
-        auto color = appearance_settings.vessels_colors[static_cast<size_t>(v.type)];
+        auto color = appearance.getColor(v.type);
         radius = v.radius;
         spos.push_back(static_cast<GLfloat>(v.position.x()));
         spos.push_back(static_cast<GLfloat>(v.position.y()));
@@ -179,7 +204,7 @@ void GLVessels::updatePositions() {
         spos.push_back(static_cast<GLfloat>(v.radius));
     }
     if (case_data_ != nullptr) {
-        auto color = appearance_settings.vessels_colors[static_cast<size_t>(Vessel::Type::TargetInitPosition)];
+        auto color = appearance.getColor(Vessel::Type::TargetInitPosition);
         for (const auto& t: case_data_->targets) {
             spos.push_back(static_cast<GLfloat>(t.initPosition.point.x()));
             spos.push_back(static_cast<GLfloat>(t.initPosition.point.y()));
@@ -190,7 +215,7 @@ void GLVessels::updatePositions() {
             spos.push_back(static_cast<GLfloat>(radius));
         }
 
-        color = appearance_settings.vessels_colors[static_cast<size_t>(Vessel::Type::ShipInitPosition)];
+        color = appearance.getColor(Vessel::Type::ShipInitPosition);
         {
             const auto& ownShip = case_data_->ownShip;
             spos.push_back(static_cast<GLfloat>(ownShip.initPosition.point.x()));

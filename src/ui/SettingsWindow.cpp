@@ -1,4 +1,8 @@
 #include "SettingsWindow.h"
+#include "../provider.h"
+#include "../path_appearance.h"
+#include "../sea_appearance.h"
+#include "../vessel_appearance.h"
 #include <nanogui/colorpicker.h>
 #include <nanogui/layout.h>
 #include <nanogui/label.h>
@@ -14,63 +18,65 @@ namespace {
         return {color.r(), color.g(), color.b(), color.a()};
     }
 
-    template<typename TMember>
-    void add_color_picker(nanogui::Widget* widget, const std::string& label, TMember member, OGLWidget* map) {
-        using namespace nanogui;
-        new Label(widget, label, "sans-bold");
-        auto cp = new ColorPicker(widget);
-        cp->set_color(toColor(map->getAppearanceSettings().*member));
-
-        cp->set_fixed_size({100, 20});
-        cp->set_callback([map, member](const Color& c)
-                         {
-                             auto settings = map->getAppearanceSettings();
-                             settings.*member = toVec4(c);
-                             map->updateAppearanceSettings(settings);
-                         });
-    }
-
-    template<typename TMember, typename Enum>
-    void add_color_picker(nanogui::Widget* w, const std::string& label, TMember member, Enum anEnum, OGLWidget* map) {
+    void add_path_color_picker(nanogui::Widget* w, const std::string& label, USV::PathType type) {
         using namespace nanogui;
         new Label(w, label, "sans-bold");
         auto cp = new ColorPicker(w);
-        cp->set_color(toColor((map->getAppearanceSettings().*member)[static_cast<size_t>(anEnum)]));
+
+        auto& appearance = Provider<PathAppearanceNotifier>::of();
+
+        cp->set_color(toColor(appearance.value.getColor(type)));
 
         cp->set_fixed_size({100, 20});
-        cp->set_callback([map, member, anEnum](const Color& c)
+        cp->set_callback([&appearance, type](const Color& c)
                          {
-                             auto settings = map->getAppearanceSettings();
-                             (settings.*member)[static_cast<size_t>(anEnum)] = toVec4(c);
-                             map->updateAppearanceSettings(settings);
+                             appearance.updateColor(type, toVec4(c));
                          });
     }
 
-    template<typename TMember, typename E>
-    void add_color_picker_pos(nanogui::Widget* w, const std::string& label, TMember member, E anEnum, OGLWidget* map) {
+    void add_vessel_color_picker(nanogui::Widget* w, const std::string& label, Vessel::Type type) {
         using namespace nanogui;
         new Label(w, label, "sans-bold");
         auto cp = new ColorPicker(w);
-        cp->set_color(toColor((map->getAppearanceSettings().*member)[static_cast<size_t>(anEnum)]));
+
+        auto& appearance = Provider<VesselAppearanceNotifier>::of();
+
+        cp->set_color(toColor(appearance.value.getColor(type)));
 
         cp->set_fixed_size({100, 20});
-        cp->set_callback([map, member, anEnum](const Color& c)
+        cp->set_callback([&appearance, type](const Color& c)
                          {
-                             auto settings = map->getAppearanceSettings();
-                             (settings.*member)[static_cast<size_t>(anEnum)] = toVec4(c);
-                             map->updateAppearanceSettings(settings);
-                             map->updatePositions();
+                             appearance.updateColor(type, toVec4(c));
+                         });
+    }
+
+    template <typename TMember>
+    void add_sea_color_picker(nanogui::Widget* w, const std::string& label, TMember member) {
+                using namespace nanogui;
+        new Label(w, label, "sans-bold");
+        auto cp = new ColorPicker(w);
+
+        auto& appearance = Provider<SeaAppearanceNotifier>::of();
+        Material material = appearance.value.material;
+
+        cp->set_color(toColor({material.*member, 1.0}));
+
+        cp->set_fixed_size({100, 20});
+        cp->set_callback([&appearance, member](const Color& c)
+                         {
+                             Material material = appearance.value.material;
+                             material.*member = glm::vec3(toVec4(c));
+                             appearance.updateMaterial(material);
                          });
     }
 }
 
-SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, const std::string& title) :
-        nanogui::Window(parent, title), map(map_widget) {
+SettingsWindow::SettingsWindow(nanogui::Widget* parent, const std::string& title) :
+        nanogui::Window(parent, title) {
     using namespace nanogui;
     set_layout(new BoxLayout(nanogui::Orientation::Vertical));
     auto* tab_widget = this->add<TabWidget>();
     tab_widget->set_callback([](size_t) {});
-    using AS = OGLWidget::AppearanceSettings;
 
     // Paths
     {
@@ -82,15 +88,12 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
         layout->set_spacing(0, 10);
         tab->set_layout(layout);
 
-        auto& map_settings = map->getAppearanceSettings();
-
-        add_color_picker(tab, "Target maneuver:", &AS::path_colors, USV::PathType::TargetManeuver, map);
-        add_color_picker(tab, "Ship route:", &AS::path_colors, USV::PathType::Route, map);
-        add_color_picker(tab, "WastedManeuver:", &AS::path_colors, USV::PathType::WastedManeuver, map);
-        add_color_picker(tab, "Ship maneuver:", &AS::path_colors, USV::PathType::ShipManeuver, map);
+        add_path_color_picker(tab, "Target maneuver:", USV::PathType::TargetManeuver);
+        add_path_color_picker(tab, "Ship route:", USV::PathType::Route);
+        add_path_color_picker(tab, "WastedManeuver:", USV::PathType::WastedManeuver);
+        add_path_color_picker(tab, "Ship maneuver:", USV::PathType::ShipManeuver);
     }
     // Ships
-    /*
     {
         auto* tab = new Widget(tab_widget);
         tab_widget->append_tab("Ships", tab);
@@ -100,17 +103,13 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
         layout->set_spacing(0, 10);
         tab->set_layout(layout);
 
-        auto& map_settings = map->getAppearanceSettings();
-
-        add_color_picker_pos(tab, "Target dangerous:", &AS::vessels_colors, Vessel::Type::TargetDangerous, map);
-        add_color_picker_pos(tab, "Target real maneuver:", &AS::vessels_colors, Vessel::Type::TargetPotentiallyDangerous, map);
-        add_color_picker_pos(tab, "Target not dangerous:", &AS::vessels_colors, Vessel::Type::TargetNotDangerous, map);
-        add_color_picker_pos(tab, "Target undefined:", &AS::vessels_colors, Vessel::Type::TargetUndefined, map);
-        add_color_picker_pos(tab, "Target on real maneuver:", &AS::vessels_colors, Vessel::Type::TargetOnRealManeuver, map);
-        add_color_picker_pos(tab, "Ship on route:", &AS::vessels_colors, Vessel::Type::ShipOnRoute, map);
-        add_color_picker_pos(tab, "Ship on maneuver:", &AS::vessels_colors, Vessel::Type::ShipOnManeuver, map);
+        add_vessel_color_picker(tab, "Target dangerous:", Vessel::Type::TargetDangerous);
+        add_vessel_color_picker(tab, "Target real maneuver:", Vessel::Type::TargetPotentiallyDangerous);
+        add_vessel_color_picker(tab, "Target not dangerous:", Vessel::Type::TargetNotDangerous);
+        add_vessel_color_picker(tab, "Target undefined:", Vessel::Type::TargetUndefined);
+        add_vessel_color_picker(tab, "Ship on route:", Vessel::Type::ShipOnRoute);
+        add_vessel_color_picker(tab, "Ship on maneuver:", Vessel::Type::ShipOnManeuver);
     }
-    */
     // sea
     {
         auto* tab = new Widget(tab_widget);
@@ -121,27 +120,28 @@ SettingsWindow::SettingsWindow(nanogui::Widget* parent, OGLWidget* map_widget, c
         layout->set_spacing(0, 10);
         tab->set_layout(layout);
 
-        auto& map_settings = map->getAppearanceSettings();
+        auto &appearance = Provider<SeaAppearanceNotifier>::of();
+        Material material = appearance.value.material;
 
-        add_color_picker(tab, "Sea ambient:", &AS::sea_ambient, map);
-        add_color_picker(tab, "Sea diffuse:", &AS::sea_diffuse, map);
-        add_color_picker(tab, "Sea specular", &AS::sea_specular, map);
+        add_sea_color_picker(tab, "Sea ambient:", &Material::ambient);
+        add_sea_color_picker(tab, "Sea diffuse:", &Material::diffuse);
+        add_sea_color_picker(tab, "Sea specular", &Material::specular);
         {
             new Label(tab, "Sea shininess:", "sans-bold");
             auto intBox = new FloatBox<float>(tab);
             intBox->set_editable(true);
             intBox->set_fixed_size(Vector2i(100, 20));
-            intBox->set_value(map_settings.sea_shininess);
+            intBox->set_value(material.shininess);
             intBox->set_font_size(16);
             intBox->set_spinnable(true);
             intBox->set_min_value(1);
             intBox->set_max_value(1024);
             intBox->set_value_increment(2);
-            intBox->set_callback([this](const float s)
+            intBox->set_callback([&appearance](const float s)
                                  {
-                                     auto settings = map->getAppearanceSettings();
-                                     settings.sea_shininess = s;
-                                     map->updateAppearanceSettings(settings);
+                                     Material material = appearance.value.material;
+                                     material.shininess = s;
+                                     appearance.updateMaterial(material);
                                  });
         }
     }

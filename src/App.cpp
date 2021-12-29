@@ -6,6 +6,11 @@
 #include "ui/IgnorantTextBox.h"
 #include "ui/ScrollableSlider.h"
 #include "ui/SettingsWindow.h"
+#include "provider.h"
+#include "path_appearance.h"
+#include "sea_appearance.h"
+#include "vessel_appearance.h"
+#include "vessel_list.h"
 #include <iostream>
 
 #define USV_GUI_USV_EXECUTABLE_ENV_NAME "USV_GUI_USV_EXECUTABLE"
@@ -47,6 +52,16 @@ void App::initialize_gui() {
     ref<Button> select_exec_button = new Button(screen, "exe...");
     select_exec_button->set_callback([this] { select_usv_executable(); });
     select_exec_button->set_position({189, 10});
+
+
+    auto& path_appearance_notifier = Provider<PathAppearanceNotifier>::of();
+    // Show/hide manuevers
+    ref<CheckBox> maneuvers_checkbox = new CheckBox(screen, "Show wasted maneuvers");
+    maneuvers_checkbox->set_checked(path_appearance_notifier.value.isVisible(USV::PathType::WastedManeuver));
+    maneuvers_checkbox->set_callback([&path_appearance_notifier] (bool checked) {
+        path_appearance_notifier.setVisible(USV::PathType::WastedManeuver, checked);
+    });
+    maneuvers_checkbox->set_position({10, 50});
 
     // bottom
     ref<Widget> panel = new Widget(screen);
@@ -127,7 +142,7 @@ void App::update_time(double time) {
     vessels.reserve(case_data->paths.size());
     for (const auto& pe: case_data->paths) {
         Vessel::Type type;
-        switch (pe.pathType) {
+        switch (pe.path.getType()) {
             case USV::PathType::TargetManeuver:
                 if (pe.ship->target_status == nullptr) {
                     type = Vessel::Type::TargetUndefined;
@@ -151,7 +166,7 @@ void App::update_time(double time) {
         push_position(time, pe.path, vessels, case_data->radius, type, pe.ship);
     }
 
-    map.updatePositions(vessels);
+    Provider<VesselListNotifier>::of().updateVessels(vessels);
     map.updateTime(time / 3600);
     map.updateSunAngle(static_cast<long>(time), case_data->frame.getRefLat(), case_data->frame.getRefLon());
 
@@ -348,6 +363,11 @@ void App::select_usv_executable() {
 }
 
 App::App(GLFWwindow* glfw_window) : screen(new MyScreen()), window(glfw_window) {
+    Provider<PathAppearanceNotifier>::create();
+    Provider<SeaAppearanceNotifier>::create();
+    Provider<VesselAppearanceNotifier>::create();
+    Provider<VesselListNotifier>::create();
+
     // Create a nanogui screen and pass the glfw pointer to initialize
     screen->set_background({1.0f, 1.0f, 1.0f, 1.0f});
     screen->initialize(window, true);
@@ -360,6 +380,8 @@ App::App(GLFWwindow* glfw_window) : screen(new MyScreen()), window(glfw_window) 
     auto usv_executable = get_usv_exec_path();
     if (!usv_executable.empty())
         usv_runner = std::make_unique<USV::USVRunner>(usv_executable);
+
+
     initialize_gui();
 }
 
@@ -418,7 +440,7 @@ App::~App() {
 void App::show_settings() {
     // Settings
     if (!w_settings) {
-        w_settings = new SettingsWindow(screen, &screen->map(), "Settings");
+        w_settings = new SettingsWindow(screen, "Settings");
         w_settings->set_position({0, 0});
         w_settings->set_width(300);
         w_settings->set_visible(false);
