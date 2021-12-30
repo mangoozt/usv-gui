@@ -104,7 +104,8 @@ namespace USV {
     }
 
     Path::Segment::Segment(Path::Position start_position, double curve, Angle angle) :
-            _start_point(start_position.point), _begin_angle(start_position.course) {
+            _start_point(start_position.point),
+            _begin_angle(start_position.course) {
 
         curve = std::abs(curve);
         if (curve < 0.0000001) throw std::runtime_error("Zero curvature");
@@ -154,8 +155,12 @@ namespace USV {
 
     Path::Segment::Segment(Vector2 start_point, Angle beginAngle, double curve, double length, double duration,
                            double port_dev, double starboard_dev) :
-            _start_point(start_point), _begin_angle(beginAngle), _curve(curve), _length(length), _duration(
-            duration), _port_dev(port_dev), _starboard_dev(starboard_dev) {
+            _start_point(start_point),
+            _begin_angle(beginAngle),
+            _curve(curve), _length(length),
+            _duration(duration),
+            _port_dev(port_dev),
+            _starboard_dev(starboard_dev) {
         if (std::isinf(duration) || std::isnan(duration))
             throw std::runtime_error("Non-normal duration value");
 
@@ -185,7 +190,7 @@ namespace USV {
 
 
     void Path::appendSegment(Path::Segment segment) {
-
+        if (segment._duration == 0 && segment._length == 0) return;
         double key = segment._duration;
         if (segments.empty()) {
             key += start_time;
@@ -249,11 +254,22 @@ namespace USV {
     }
 
 
-    Path::Path(const CurvedPath& curved_path, const Frame& reference_frame) : start_time(
+    Path::Path(const CurvedPath &curved_path, const Frame &reference_frame) : start_time(
             static_cast<double>(curved_path.start_time)) {
-        for (const auto& segment : curved_path.items) {
+        for (const auto &segment: curved_path.items) {
             Vector2 localPos = reference_frame.fromWgs(segment.lat, segment.lon);
-            appendSegment({{localPos.y(),localPos.x()}, M_PI_2 - degrees_to_radians(segment.begin_angle), -segment.curve, segment.length,
+            Angle begin_angle = Angle::Degrees(segment.begin_angle);
+            Frame frame_local(segment.lat, segment.lon);
+            auto length = segment.length;
+            auto course_point = Vector2::polar(length, begin_angle);
+            double lat_course, lon_course;
+            frame_local.toWgs(course_point, lat_course, lon_course);
+            course_point = reference_frame.fromWgs(lat_course, lon_course) - localPos;
+            begin_angle = atan2(course_point.y(), course_point.x());
+
+            if (segment.curve == 0) length = course_point.r();
+
+            appendSegment({{localPos.y(),localPos.x()}, M_PI_2 - begin_angle.radians(), -segment.curve, segment.length,
                            segment.duration, segment.port_dev, segment.starboard_dev});
         }
     }
